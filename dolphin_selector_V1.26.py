@@ -20,29 +20,37 @@ except:
     pass
 
 # ====================================================================
-# 25.65 參數設定區 (HTML 雲端自動同步哨站 × 2年自適應體檢完全體)
+# 25.70 參數設定區 (時空分流閘門 × HTML雲端自動同步 × 2年自適應體檢完全體)
 # ====================================================================
 VOLUME_FILTER = 500        
 VOLUME_5MA_FILTER = 400    
 
+# 🎯 【手動模擬除名清單】
 REMOVE_LIST = [] 
+
+# 🎯 【每檔模擬投入預算】
 SIM_BUDGET = 30000         
 
+# 🎯 【全局預設移動停利參數】(當新股剛進場、尚未被優化器洗牌時，以此為防呆初始值)
 GLOBAL_TP_THRESHOLD = 0.15   
 GLOBAL_TP_DROP = 0.03        
 
+# 🎯 流派一：【起飆股】
 MA_SPREAD_LIMIT = 0.035    
 BB_COMPRESS_LIMIT = 0.18   
 
+# 🚀 流派二：【真·海豚正飆股】
 WAS_COMPRESSED_LIMIT = 0.04 
 LOOKBACK_WINDOW = 5        
 
+# 📊 【台股模擬交易成本設定】
 FEE_RATE = 0.001425        
 FEE_DISCOUNT = 0.28         
 TAX_RATE = 0.003            
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
 HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" 
 
+# 🎯【LINE Messaging API 設定】
 LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
 TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
 
@@ -50,6 +58,7 @@ URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&c
 URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 
 def run_pre_backtest(api, stock_id):
+    """【2年動態自適應 AI 預回測體檢】"""
     today = datetime.date.today()
     bt_start = (today - datetime.timedelta(days=730)).strftime("%Y-%m-%d") 
     bt_end = today.strftime("%Y-%m-%d")
@@ -166,9 +175,21 @@ def update_and_print_portfolio(api, today_str):
     exit_p_rows = []     
     html_portfolio_data = [] 
     
-    real_today_str = datetime.date.today().strftime("%Y-%m-%d")
-    # 🎯 【時空防護優化】將回溯天數從 90 天擴大到 150 天，確保扣除假期後絕對有 50 根 K 線可用
-    real_start_str = (datetime.date.today() - datetime.timedelta(days=150)).strftime("%Y-%m-%d")
+    # ====================================================
+    # 🎯 【25.70版·時空分流閘門】: 徹底切斷開盤空窗期斷層
+    # ====================================================
+    now_time = datetime.datetime.now().time()
+    border_time = datetime.time(15, 0, 0) 
+    
+    if now_time < border_time:
+        real_today_str = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        print("⏳ [時空分流] 目前為下午 3 點前，自動切換為【昨日收盤價流派】進行精密結算...")
+    else:
+        real_today_str = datetime.date.today().strftime("%Y-%m-%d")
+        print("🚀 [時空分流] 目前為盤後完全體時段，正常導入【今日最新收盤價】...")
+        
+    real_start_str = (datetime.datetime.strptime(real_today_str, "%Y-%m-%d").date() - datetime.timedelta(days=150)).strftime("%Y-%m-%d")
+    # ====================================================
     
     for idx, row in df_pf.iterrows():
         sid = row["stock_id"]
@@ -218,14 +239,12 @@ def update_and_print_portfolio(api, today_str):
             
         dynamic_lock_price = round(max_price * (1 - tp_dr), 2)
         
-        # 1️⃣ 檢查是否滿足動態移動鎖利通報
         if max_price >= target_tp_price and current_price <= dynamic_lock_price:
             exit_msg = f"🎉 鎖利通知：{sid} {sname} 曾創波段高點 {max_price} (已過起跑線 {target_tp_price})，今日收 {current_price} 已跌破黃金鎖利線 {dynamic_lock_price} (高點拉回 {tp_dr*100:.1f}%)！目前波段淨利: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)"
             print(exit_msg)
             exit_p_rows.append(exit_msg)
             continue 
             
-        # 2️⃣ 檢查現價是否「跌破自適應波段停損線」
         if active_stop_loss_value > 0.0 and current_price < active_stop_loss_value:
             exit_msg = f"⚠️ 停損出場：{sid} {sname} 昨收 {current_price} 跌破專屬停損線 {target_ma_line}({active_stop_loss_value:.2f})！零股 {shares} 股強制結算！最終損益: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)"
             print(exit_msg)
@@ -282,7 +301,6 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         .card {{ background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }}
         .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }}
         
-        /* 🎯 【25.65 網頁高對比工控覆蓋】 解決灰色文字隱形問題 */
         .table-custom-dark {{ color: #ffffff !important; }}
         .table-custom-dark th {{ background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }}
         .table-custom-dark td {{ background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }}
@@ -300,7 +318,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.65 完工體</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.70 完全體</small></span>
     <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 
@@ -477,7 +495,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 25.65：[時空對齊高對比完全體] 啟動...")
+    print("🚀 海豚選股 25.70：[開盤防震·自適應雲端網頁完全體] 啟動...")
     print("====================================================")
 
     STOCK_POOL = await fetch_union_pyramid_pool()
@@ -693,13 +711,13 @@ async def main():
         df_am = pd.DataFrame(raw_ambush_data)
         df_am = df_am.sort_values(by="spread", ascending=True)
         for _, row in df_am.iterrows():
-            msg = f"{row['stars']} {row['title']}\n  [均線: {row['spread']*100:.1f}% | Bro: {row['bb']*100:.1f}% | MACD: {row['macd']}]"
+            msg = f"{row['stars']} {row['title']}\n  [均線: {row['spread']*100:.1f}% | 布林: {row['bb']*100:.1f}% | MACD: {row['macd']}]"
             final_ambush_list.append(msg)
             
             html_msg = f'<span class="badge badge-ambush me-2">{row["stars"]}潛伏</span> <strong>{row["title"]}</strong> <br> <span class="text-muted-custom small">現價: {row["close"]} | 均線張開度: {row["spread"]*100:.1f}% | MACD: {row["macd"]}</span>'
             html_ambush_strings.append(html_msg)
 
-    # 🎯 結算真實大帳（此時已具備 150 天大數據）
+    # 🎯 結算真實大帳（此處已融入時空閘門，安全不震網）
     exit_report_text, portfolio_report_text, html_portfolio_data = update_and_print_portfolio(api, today_str)
 
     # 🎨 渲染並輸出高對比網頁
@@ -721,7 +739,7 @@ async def main():
 
     if final_breakout_list or final_ambush_list or exit_report_text:
         report_chunks = [
-            f"🐬 海豚選股 25.65 [雙向自適應移動鎖利完全體] 🐬",
+            f"🐬 海豚選股 25.70 [雙向自適應移動鎖利完全體] 🐬",
             f"📅 數據日期：{today_str}",
             f"───────────────────"
         ]
