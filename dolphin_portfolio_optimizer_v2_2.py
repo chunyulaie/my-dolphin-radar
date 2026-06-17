@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from io import StringIO  # 👈 新增這行
 import pandas as pd
 from FinMind.data import DataLoader
 from multiprocessing import Pool, cpu_count  # 👉 導入多程序核心工廠
@@ -21,10 +22,14 @@ TAX_RATE = 0.003
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
 
 def check_single_combination(args):
-    """ 🎯 被平行拆解的最小運算單元：計算單一參數組合的利潤 """
-    df_bytes, tp_threshold, tp_trailing_drop, ma_field = args
+
     # 用回傳的 dict 或經由 msgpack 還原 DataFrame，確保跨進程傳輸效率
-    df = pd.read_json(df_bytes) 
+    df_bytes, tp_threshold, tp_trailing_drop, ma_field = args
+    
+    # df = pd.read_json(df_bytes)   # ❌ 原本這行會噴警告
+    df = pd.read_json(StringIO(df_bytes))  #  改用 StringIO 包裝
+    
+    in_position = False
     
     in_position = False
     buy_price = 0.0
