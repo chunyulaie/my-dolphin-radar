@@ -502,7 +502,7 @@ async def main():
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2Vy_idIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
     
     try:
         df_info = api.taiwan_stock_info()
@@ -737,7 +737,11 @@ async def main():
     print("----------------------------------------------------")
     print("====================================================")
 
-    if final_breakout_list or final_ambush_list or exit_report_text:
+# ====================================================================
+    # 📲 【LINE 通知觸發閘門】(保證格式 100% 相同，修正判定漏勾)
+    # ====================================================================
+    # 只要有【出場警報】或【新飆股】或【新潛伏】或【持股部位回報】，就必須發送 LINE 戰報！
+    if final_breakout_list or final_ambush_list or exit_report_text or portfolio_report_text.strip():
         report_chunks = [
             f"🐬 海豚選股 25.70 [雙向自適應移動鎖利完全體] 🐬",
             f"📅 數據日期：{today_str}",
