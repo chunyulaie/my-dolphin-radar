@@ -1,0 +1,181 @@
+import datetime
+import logging
+import os
+import pandas as pd
+from FinMind.data import DataLoader
+
+logging.getLogger('FinMind').setLevel(logging.CRITICAL)
+
+# ==========================================
+# 📊 【海豚量化自適應「雙向防線」最佳化設定】
+# ==========================================
+# 🎯 核心修正：拒絕寫死！以今天執行日為基準，動態自動往前推兩年（730天）
+TODAY = datetime.date.today()
+START_DATE = (TODAY - datetime.timedelta(days=730)).strftime("%Y-%m-%d") # 👉 自動動態回溯兩年
+END_DATE = TODAY.strftime("%Y-%m-%d")                                    # 👉 永遠對齊今天最新數據
+
+SIM_BUDGET = 30000         
+FEE_RATE = 0.001425         
+FEE_DISCOUNT = 0.28         
+TAX_RATE = 0.003            
+PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
+
+def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field):
+    """【修復版核心運算】: 真正揉入『目標起跑 × 專屬拉回』的連續性時空回測"""
+    in_position = False
+    buy_price = 0.0
+    buy_shares = 0
+    max_price_after_buy = 0.0
+    grand_net_profit = 0
+    
+    tp_radar_activated = False 
+
+    # 🎯 兩年數據約有 500 根日 K，週線指標需要至少 50 天緩衝
+    for i in range(50, len(df)): 
+        today_k = df.iloc[i]
+        yesterday_k = df.iloc[i-1]
+        pre_yesterday_k = df.iloc[i-2]
+        current_close = today_k['close']
+
+        if in_position:
+            if current_close > max_price_after_buy:
+                max_price_after_buy = current_close
+                
+            max_profit_percent = ((max_price_after_buy - buy_price) / buy_price)
+            if max_profit_percent >= tp_threshold:
+                tp_radar_activated = True
+                
+            buy_fee = int(buy_price * buy_shares * FEE_RATE * FEE_DISCOUNT)
+            if buy_fee < 20: buy_fee = 20
+            total_buy_spent = (buy_price * buy_shares) + buy_fee
+            
+            sell_fee = int(current_close * buy_shares * FEE_RATE * FEE_DISCOUNT)
+            if sell_fee < 20: sell_fee = 20
+            sell_tax = int(current_close * buy_shares * TAX_RATE)
+            total_sell_get = (current_close * buy_shares) - sell_fee - sell_tax
+            
+            net_profit = int(total_sell_get - total_buy_spent)
+            
+            if tp_radar_activated and current_close <= (max_price_after_buy * (1 - tp_trailing_drop)):
+                grand_net_profit += net_profit
+                in_position = False 
+                tp_radar_activated = False 
+                
+            elif today_k[ma_field] > 0 and current_close < today_k[ma_field]:
+                grand_net_profit += net_profit
+                in_position = False 
+                tp_radar_activated = False
+        else:
+            if today_k["volume"] < 500 or today_k["5MA_Vol"] < 400: continue
+            y_ma = [pre_yesterday_k["5MA"], pre_yesterday_k["10MA"], pre_yesterday_k["20MA"]]
+            y_spread = (max(y_ma) - min(y_ma)) / pre_yesterday_k["close"] if pre_yesterday_k["close"] > 0 else 99
+            is_breakout = (y_spread <= 0.04 and yesterday_k["close"] > yesterday_k["open"] and yesterday_k["close"] > max(yesterday_k["5MA"], yesterday_k["10MA"], yesterday_k["20MA"]) and current_close >= max(today_k["5MA"], today_k["10MA"], today_k["20MA"]))
+            
+            is_ambush = False
+            if not is_breakout and today_k["5MA"] >= today_k["10MA"] >= today_k["20MA"]:
+                t_spread = (max([today_k["5MA"], today_k["10MA"], today_k["20MA"]]) - min([today_k["5MA"], today_k["10MA"], today_k["20MA"]])) / today_k["20MA"]
+                if t_spread <= 0.035 and today_k["BB_Width"] <= 0.18 and today_k["MACD"] > 0: is_ambush = True
+            
+            if is_breakout or is_ambush:
+                in_position = True
+                buy_price = current_close
+                buy_shares = int(SIM_BUDGET // current_close)
+                max_price_after_buy = current_close
+
+    return grand_net_profit
+
+def main():
+    print("====================================================")
+    print(f"🐬 海豚雙向 AI 優化器：[動態 2 年時空回測滅殺完全體]")
+    print(f"📅 演算歷史區間：{START_DATE} ~ {END_DATE}")
+    print("====================================================")
+    
+    if not os.path.exists(PORTFOLIO_FILE): return
+    df_pf = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
+    if df_pf.empty: return
+    
+    unique_stocks = df_pf["stock_id"].unique()
+    api = DataLoader()
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
+    
+    threshold_range = [t / 100 for t in range(5, 31)]       
+    drop_range = [d / 200 for d in range(4, 21)]            
+    ma_options = ["5MA", "10MA", "20MA", "5WMA", "10WMA"]   
+    
+    best_params_dict = {}
+    
+    for stock_id in unique_stocks:
+        print(f"🔍 正在精密演算 {stock_id} 過去兩年的波段抗震基因...")
+        df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=START_DATE, end_date=END_DATE)
+        if df_raw.empty or len(df_raw) < 50: continue
+            
+        df = pd.DataFrame()
+        df["close"] = df_raw["close"].astype(float)
+        df["open"] = df_raw["open"].astype(float)
+        df["volume"] = df_raw["Trading_Volume"].astype(float) / 1000 
+        
+        df["5MA"] = df["close"].rolling(window=5).mean()
+        df["10MA"] = df["close"].rolling(window=10).mean()
+        df["20MA"] = df["close"].rolling(window=20).mean()
+        df["5MA_Vol"] = df["volume"].rolling(window=5).mean()
+        df['20STD'] = df['close'].rolling(window=20).std(ddof=0)
+        df['BB_Width'] = ((df['20MA'] + 2*df['20STD']) - (df['20MA'] - 2*df['20STD'])) / df['20MA']
+        df['EMA12'] = df['close'].ewm(span=12, adjust=False).mean()
+        df['EMA26'] = df['close'].ewm(span=26, adjust=False).mean()
+        df['MACD'] = df['EMA12'] - df['EMA26']
+        
+        df["5WMA"] = df["close"].rolling(window=25).mean()
+        df["10WMA"] = df["close"].rolling(window=50).mean()
+
+        best_profit = -999999
+        best_th, best_dr, best_ma = 0.15, 0.03, "20MA"
+        
+        for ma_opt in ma_options:
+            for th in threshold_range:
+                for dr in drop_range:
+                    profit = optimize_core(df, th, dr, ma_opt)
+                    if profit > best_profit:
+                        best_profit = profit
+                        best_th = th
+                        best_dr = dr
+                        best_ma = ma_opt
+                        
+        print(f"🏆 {stock_id} 最佳中長線解：守【{best_ma}】，且獲利 {best_th*100:.1f}% 達標自高點拉回 {best_dr*100:.1f}% 通報 | 歷史總利潤: {best_profit} 元")
+        
+        best_params_dict[stock_id] = {
+            "best_tp": best_th, 
+            "best_drop": best_dr, 
+            "best_ma": best_ma,
+            "best_profit": best_profit
+        }
+
+    print("\n📝 正在把黃金密碼回寫至實戰記帳簿...")
+    rows_to_delete = []  
+    
+    for idx, row in df_pf.iterrows():
+        sid = row["stock_id"]
+        if sid in best_params_dict:
+            
+            if best_params_dict[sid]["best_profit"] <= 0:
+                print(f"❌ [因果滅殺] 偵測到劣質股 {sid} 最佳解依然賠錢 ({best_params_dict[sid]['best_profit']} 元)，直接自名單踢除封殺！")
+                rows_to_delete.append(idx)
+                continue  
+                
+            df_pf.at[idx, "best_tp"] = best_params_dict[sid]["best_tp"]
+            df_pf.at[idx, "best_drop"] = best_params_dict[sid]["best_drop"]
+            df_pf.at[idx, "best_ma"] = best_params_dict[sid]["best_ma"] 
+            
+            if "max_price" in df_pf.columns and not pd.isna(row["max_price"]):
+                df_pf.at[idx, "max_price"] = row["max_price"]
+                
+    if rows_to_delete:
+        df_pf = df_pf.drop(rows_to_delete)
+        print(f"♻️ [記帳簿重組] 已成功清理 {len(rows_to_delete)} 檔劣質持股。")
+        
+    df_pf.to_csv(PORTFOLIO_FILE, index=False)
+    print("====================================================")
+    print("🏁 【優化與洗牌完畢】名單已保持絕對純淨，唯有純金精兵留存！")
+    print("====================================================\n")
+
+if __name__ == "__main__":
+    main()

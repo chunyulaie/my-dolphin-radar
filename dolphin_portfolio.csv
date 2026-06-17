@@ -1,0 +1,4 @@
+stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma
+2867,三商壽,7.97,3764,3星起飆,2026-06-09,0.28,0.02,8.53,10WMA
+4741,泓瀚,69.1,434,正飆(0天),2026-06-09,0.05,0.055,72.5,10WMA
+1460,宏遠,7.29,4115,正飆(0天),2026-06-16,0.05,0.035,7.29,10WMA
