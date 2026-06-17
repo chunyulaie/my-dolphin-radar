@@ -4,7 +4,7 @@ import logging
 import os
 import time
 import requests
-import subprocess  # 👉 25.60 導入外部工控管線模組
+import subprocess  
 from FinMind.data import DataLoader
 import pandas as pd
 from pyppeteer import launch
@@ -20,37 +20,29 @@ except:
     pass
 
 # ====================================================================
-# 25.60 參數設定區 (HTML 雲端自動同步哨站 × 2年自適應體檢完全體)
+# 25.65 參數設定區 (HTML 雲端自動同步哨站 × 2年自適應體檢完全體)
 # ====================================================================
 VOLUME_FILTER = 500        
 VOLUME_5MA_FILTER = 400    
 
-# 🎯 【手動模擬除名清單】
 REMOVE_LIST = [] 
-
-# 🎯 【每檔模擬投入預算】
 SIM_BUDGET = 30000         
 
-# 🎯 【全局預設移動停利參數】(當新股剛進場、尚未被優化器洗牌時，以此為防呆初始值)
 GLOBAL_TP_THRESHOLD = 0.15   
 GLOBAL_TP_DROP = 0.03        
 
-# 🎯 流派一：【起飆股】
 MA_SPREAD_LIMIT = 0.035    
 BB_COMPRESS_LIMIT = 0.18   
 
-# 🚀 流派二：【真·海豚正飆股】
 WAS_COMPRESSED_LIMIT = 0.04 
 LOOKBACK_WINDOW = 5        
 
-# 📊 【台股模擬交易成本設定】
 FEE_RATE = 0.001425        
 FEE_DISCOUNT = 0.28         
 TAX_RATE = 0.003            
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
-HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" # 👉 25.60 改名為 index.html，GitHub Pages 才能預設直接當作主頁開啟！
+HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" 
 
-# 🎯【LINE Messaging API 設定】
 LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
 TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
 
@@ -58,7 +50,6 @@ URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&c
 URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 
 def run_pre_backtest(api, stock_id):
-    """【25.60版·2年動態自適應 AI 預回測體檢】: 拒絕寫死，直接揉入狀態機與兩年時空窮舉，利潤 > 0 才放行"""
     today = datetime.date.today()
     bt_start = (today - datetime.timedelta(days=730)).strftime("%Y-%m-%d") 
     bt_end = today.strftime("%Y-%m-%d")
@@ -176,7 +167,8 @@ def update_and_print_portfolio(api, today_str):
     html_portfolio_data = [] 
     
     real_today_str = datetime.date.today().strftime("%Y-%m-%d")
-    real_start_str = (datetime.date.today() - datetime.timedelta(days=90)).strftime("%Y-%m-%d")
+    # 🎯 【時空防護優化】將回溯天數從 90 天擴大到 150 天，確保扣除假期後絕對有 50 根 K 線可用
+    real_start_str = (datetime.date.today() - datetime.timedelta(days=150)).strftime("%Y-%m-%d")
     
     for idx, row in df_pf.iterrows():
         sid = row["stock_id"]
@@ -289,14 +281,18 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         .navbar {{ background-color: #1a1f2c; border-bottom: 2px solid #00f2fe; }}
         .card {{ background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }}
         .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }}
-        .table {{ color: #e4e6eb; margin-bottom: 0; }}
-        .table th {{ background-color: #22293a; color: #98a6ad; border-color: #2d3548; font-weight: 600; }}
-        .table td {{ border-color: #2d3548; vertical-align: middle; background-color: #1a1f2c; }}
+        
+        /* 🎯 【25.65 網頁高對比工控覆蓋】 解決灰色文字隱形問題 */
+        .table-custom-dark {{ color: #ffffff !important; }}
+        .table-custom-dark th {{ background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }}
+        .table-custom-dark td {{ background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }}
+        .text-muted-custom {{ color: #a1a5b7 !important; }}
+        
         .text-success {{ color: #2cf3a0 !important; }}
         .text-danger {{ color: #ff5b5b !important; }}
         .badge-breakout {{ background-color: #ff9f43; color: #12141c; font-weight: bold; }}
         .badge-ambush {{ background-color: #00f2fe; color: #12141c; font-weight: bold; }}
-        .badge-radar {{ background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; }}
+        .badge-radar {{ background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }}
         @keyframes blink {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
         .summary-box {{ background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }}
     </style>
@@ -304,27 +300,27 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted">v25.60 完全體</small></span>
-    <span class="text-muted">📅 數據更新時間：{today_str}</span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.65 完工體</small></span>
+    <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 
 <div class="container-fluid p-4">
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="summary-box">
-                <div class="text-muted small">當前持股總成本</div>
+                <div class="text-muted-custom small">當前持股總成本</div>
                 <div class="fs-3 fw-bold text-info">${total_cost:,.0f} 元</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-box" style="border-left-color: #2cf3a0;">
-                <div class="text-muted small">持股現值估算</div>
-                <div class="fs-3 fw-bold">${total_current_value:,.0f} 元</div>
+                <div class="text-muted-custom small">持股現值估算</div>
+                <div class="fs-3 fw-bold text-white">${total_current_value:,.0f} 元</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="summary-box" style="border-left-color: {'#2cf3a0' if total_profit >= 0 else '#ff5b5b'};">
-                <div class="text-muted small">模擬持股當前總淨損益</div>
+                <div class="text-muted-custom small">模擬持股當前總淨損益</div>
                 <div class="fs-3 fw-bold {profit_color_class}">{'+' if total_profit >= 0 else ''}{total_profit:,.0f} 元 ({'+' if total_profit >= 0 else ''}{total_profit_pct:.2f}%)</div>
             </div>
         </div>
@@ -335,7 +331,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
             <div class="card">
                 <div class="card-header fs-5">💼 實戰持股狀態機雙向防線即時雷達</div>
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-custom-dark mb-0">
                         <thead>
                             <tr>
                                 <th>代號/名稱</th>
@@ -353,22 +349,22 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     """
     
     if not portfolio_data:
-        html_content += '<tr><td colspan="9" class="text-center text-muted py-4">目前記帳簿內無任何持股。</td></tr>'
+        html_content += '<tr><td colspan="9" class="text-center text-muted-custom py-4">目前記帳簿內無任何持股。</td></tr>'
     else:
         for p in portfolio_data:
             p_sign = "+" if p['net_profit'] >= 0 else ""
             p_class = "text-success" if p['net_profit'] >= 0 else "text-danger"
-            radar_badge = '<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted small">未開啟</span>'
+            radar_badge = '<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>'
             
             html_content += f"""
                             <tr>
-                                <td class="fw-bold">{p['stock_id']} {p['stock_name']}</td>
-                                <td class="small text-muted">{p['buy_date']}</td>
-                                <td>{p['buy_price']:.2f} <small class="text-muted">({p['buy_shares']}股)</small></td>
+                                <td class="fw-bold text-white">{p['stock_id']} {p['stock_name']}</td>
+                                <td class="small text-muted-custom">{p['buy_date']}</td>
+                                <td class="text-white">{p['buy_price']:.2f} <small class="text-muted-custom">({p['buy_shares']}股)</small></td>
                                 <td class="fw-bold text-warning">{p['current_price']:.2f}</td>
-                                <td>{p['target_tp_price']:.2f}</td>
-                                <td><span class="text-info">{p['dynamic_lock_price']:.2f}</span> <small class="text-muted">({p['max_price']:.2f})</small></td>
-                                <td><span class="text-danger">{p['stop_loss_value']:.2f}</span> <small class="text-muted">({p['target_ma_line']})</small></td>
+                                <td class="text-white">{p['target_tp_price']:.2f}</td>
+                                <td><span class="text-info">{p['dynamic_lock_price']:.2f}</span> <small class="text-muted-custom">({p['max_price']:.2f})</small></td>
+                                <td><span class="text-danger">{p['stop_loss_value']:.2f}</span> <small class="text-muted-custom">({p['target_ma_line']})</small></td>
                                 <td class="fw-bold {p_class}">{p_sign}{p['net_profit']:,}元<br><small>{p_sign}{p['profit_percent']:.2f}%</small></td>
                                 <td>{radar_badge}</td>
                             </tr>
@@ -388,7 +384,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     """
     
     if not breakout_list:
-        html_content += '<li class="list-group-item bg-transparent text-muted small py-3">今日無剛發動的動能飆股。</li>'
+        html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動的動能飆股。</li>'
     else:
         for bo in breakout_list:
             html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
@@ -403,7 +399,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     """
     
     if not ambush_list:
-        html_content += '<li class="list-group-item bg-transparent text-muted small py-3">今日無符合均線糾結壓縮的標的。</li>'
+        html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無符合均線糾結壓縮的標的。</li>'
     else:
         for am in ambush_list:
             html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{am}</li>'
@@ -415,7 +411,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     </div>
 </div>
 
-<footer class="text-center py-4 text-muted small mt-4" style="border-top: 1px solid #2d3548;">
+<footer class="text-center py-4 text-muted-custom small mt-4" style="border-top: 1px solid #2d3548;">
     海豚自動化管線系統 · 每日盤後自動化更新完成
 </footer>
 
@@ -481,7 +477,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 25.60：[Git雲端同步一頁式儀表板完全體] 啟動...")
+    print("🚀 海豚選股 25.65：[時空對齊高對比完全體] 啟動...")
     print("====================================================")
 
     STOCK_POOL = await fetch_union_pyramid_pool()
@@ -667,10 +663,9 @@ async def main():
             df_new.to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
         print(f"\n📝 [模擬記帳] 成功通過體檢並建倉零股：{', '.join([r['stock_name'] for r in new_sim_buys])}")
 
-    # ─── 現場優化器調度攔截 ───
     print("\n⚡ [因果攔截] 今日新股建倉完畢。正在同一資料夾內即時導入優化器外掛...")
     try:
-        import dolphin_portfolio_optimizer_v2_1 as d_opt  # 👉 25.60 確保對齊你更改後的 v2_1 多核心版
+        import dolphin_portfolio_optimizer_v2_1 as d_opt  
         d_opt.main() 
         print("⚡ [因果攔截] 優化器解碼完畢。持股 CSV 參數已全部更新，重回主程式主線。")
     except Exception as opt_err:
@@ -679,7 +674,6 @@ async def main():
     print("----------------------------------------------------")
     print("====================================================")
     
-    # 建立選股清單元件
     final_breakout_list = []
     html_breakout_strings = []
     if raw_breakout_data:
@@ -690,7 +684,7 @@ async def main():
             msg = f"▪️ {row['title']} ({time_label})\n  [均線糾結: {row['spread']*100:.1f}% | 布林: {row['bb']*100:.1f}%]"
             final_breakout_list.append(msg)
             
-            html_msg = f'<span class="badge badge-breakout me-2">{time_label}</span> <strong>{row["title"]}</strong> <br> <span class="text-muted small">現價: {row["close"]} | 均線糾結: {row["spread"]*100:.1f}% | 布林寬度: {row["bb"]*100:.1f}%</span>'
+            html_msg = f'<span class="badge badge-breakout me-2">{time_label}</span> <strong>{row["title"]}</strong> <br> <span class="text-muted-custom small">現價: {row["close"]} | 均線糾結: {row["spread"]*100:.1f}% | 布林寬度: {row["bb"]*100:.1f}%</span>'
             html_breakout_strings.append(html_msg)
 
     final_ambush_list = []
@@ -699,45 +693,35 @@ async def main():
         df_am = pd.DataFrame(raw_ambush_data)
         df_am = df_am.sort_values(by="spread", ascending=True)
         for _, row in df_am.iterrows():
-            msg = f"{row['stars']} {row['title']}\n  [均線: {row['spread']*100:.1f}% | 布林: {row['bb']*100:.1f}% | MACD: {row['macd']}]"
+            msg = f"{row['stars']} {row['title']}\n  [均線: {row['spread']*100:.1f}% | Bro: {row['bb']*100:.1f}% | MACD: {row['macd']}]"
             final_ambush_list.append(msg)
             
-            html_msg = f'<span class="badge badge-ambush me-2">{row["stars"]}潛伏</span> <strong>{row["title"]}</strong> <br> <span class="text-muted small">現價: {row["close"]} | 均線張開度: {row["spread"]*100:.1f}% | MACD: {row["macd"]}</span>'
+            html_msg = f'<span class="badge badge-ambush me-2">{row["stars"]}潛伏</span> <strong>{row["title"]}</strong> <br> <span class="text-muted-custom small">現價: {row["close"]} | 均線張開度: {row["spread"]*100:.1f}% | MACD: {row["macd"]}</span>'
             html_ambush_strings.append(html_msg)
 
-    # 🎯 25.60 調整因果序：在優化器洗牌滅殺之後，再計算大帳與渲染網頁，數據才會絕對精準！
+    # 🎯 結算真實大帳（此時已具備 150 天大數據）
     exit_report_text, portfolio_report_text, html_portfolio_data = update_and_print_portfolio(api, today_str)
 
-    # 🎨 渲染並輸出網頁儀表板
+    # 🎨 渲染並輸出高對比網頁
     generate_one_page_html(today_str, html_breakout_strings, html_ambush_strings, html_portfolio_data)
 
-    # ====================================================
-    # 🌐 【25.60版·因果雲端管線】: 自動推送到 GitHub Pages 哨站
-    # ====================================================
     print("\n🌐 [雲端同步] 正在啟動 Git 引擎，將儀表板推送到雲端監控哨站...")
     try:
         project_dir = os.path.dirname(PORTFOLIO_FILE)
-        
-        # 本地 Git 無聲打包三部曲
         subprocess.run(["git", "add", "."], cwd=project_dir, check=True, stdout=subprocess.DEVNULL)
-        
         commit_msg = f"📋 量化雷達自動更新: {today_str}"
         subprocess.run(["git", "commit", "-m", commit_msg], cwd=project_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
-        # 推送回雲端分支
         subprocess.run(["git", "push", "origin", "main"], cwd=project_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         print("✅ [雲端同步] 成功！數據與 HTML 已秒速同步至 GitHub 倉庫。")
         print("🔗 你的專屬手機網址：https://chunyulaie.github.io/my-dolphin-radar/")
-        
     except Exception as git_err:
-        print(f"⚠️ [雲端同步] 失敗（原因: {git_err}）。可能尚未完成手動首推，但本地 index.html 已生成。")
+        print(f"⚠️ [雲端同步] 失敗（原因: {git_err}）。")
     print("----------------------------------------------------")
     print("====================================================")
 
-    # 發送 LINE 通知
     if final_breakout_list or final_ambush_list or exit_report_text:
         report_chunks = [
-            f"🐬 海豚選股 25.60 [雙向自適應移動鎖利完全體] 🐬",
+            f"🐬 海豚選股 25.65 [雙向自適應移動鎖利完全體] 🐬",
             f"📅 數據日期：{today_str}",
             f"───────────────────"
         ]

@@ -9,14 +9,18 @@
         .navbar { background-color: #1a1f2c; border-bottom: 2px solid #00f2fe; }
         .card { background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }
         .card-header { background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }
-        .table { color: #e4e6eb; margin-bottom: 0; }
-        .table th { background-color: #22293a; color: #98a6ad; border-color: #2d3548; font-weight: 600; }
-        .table td { border-color: #2d3548; vertical-align: middle; background-color: #1a1f2c; }
+        
+        /* 🎯 【25.65 網頁高對比工控覆蓋】 解決灰色文字隱形問題 */
+        .table-custom-dark { color: #ffffff !important; }
+        .table-custom-dark th { background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }
+        .table-custom-dark td { background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }
+        .text-muted-custom { color: #a1a5b7 !important; }
+        
         .text-success { color: #2cf3a0 !important; }
         .text-danger { color: #ff5b5b !important; }
         .badge-breakout { background-color: #ff9f43; color: #12141c; font-weight: bold; }
         .badge-ambush { background-color: #00f2fe; color: #12141c; font-weight: bold; }
-        .badge-radar { background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; }
+        .badge-radar { background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
         @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         .summary-box { background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }
     </style>
@@ -24,27 +28,27 @@
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted">v25.60 完全體</small></span>
-    <span class="text-muted">📅 數據更新時間：2026-06-17</span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.65 完工體</small></span>
+    <span class="text-muted-custom">📅 數據更新時間：2026-06-17</span>
 </nav>
 
 <div class="container-fluid p-4">
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="summary-box">
-                <div class="text-muted small">當前持股總成本</div>
+                <div class="text-muted-custom small">當前持股總成本</div>
                 <div class="fs-3 fw-bold text-info">$89,987 元</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-box" style="border-left-color: #2cf3a0;">
-                <div class="text-muted small">持股現值估算</div>
-                <div class="fs-3 fw-bold">$89,600 元</div>
+                <div class="text-muted-custom small">持股現值估算</div>
+                <div class="fs-3 fw-bold text-white">$89,600 元</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="summary-box" style="border-left-color: #ff5b5b;">
-                <div class="text-muted small">模擬持股當前總淨損益</div>
+                <div class="text-muted-custom small">模擬持股當前總淨損益</div>
                 <div class="fs-3 fw-bold text-danger">-387 元 (-0.43%)</div>
             </div>
         </div>
@@ -55,7 +59,7 @@
             <div class="card">
                 <div class="card-header fs-5">💼 實戰持股狀態機雙向防線即時雷達</div>
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-custom-dark mb-0">
                         <thead>
                             <tr>
                                 <th>代號/名稱</th>
@@ -72,39 +76,39 @@
                         <tbody>
     
                             <tr>
-                                <td class="fw-bold">2867 三商壽</td>
-                                <td class="small text-muted">2026-06-09</td>
-                                <td>7.97 <small class="text-muted">(3764股)</small></td>
+                                <td class="fw-bold text-white">2867 三商壽</td>
+                                <td class="small text-muted-custom">2026-06-09</td>
+                                <td class="text-white">7.97 <small class="text-muted-custom">(3764股)</small></td>
                                 <td class="fw-bold text-warning">7.97</td>
-                                <td>10.20</td>
-                                <td><span class="text-info">8.36</span> <small class="text-muted">(8.53)</small></td>
-                                <td><span class="text-danger">0.00</span> <small class="text-muted">(10WMA)</small></td>
+                                <td class="text-white">10.20</td>
+                                <td><span class="text-info">8.36</span> <small class="text-muted-custom">(8.53)</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
                                 <td class="fw-bold text-danger">-129元<br><small>-0.43%</small></td>
-                                <td><span class="text-muted small">未開啟</span></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
                             <tr>
-                                <td class="fw-bold">4741 泓瀚</td>
-                                <td class="small text-muted">2026-06-09</td>
-                                <td>69.10 <small class="text-muted">(434股)</small></td>
+                                <td class="fw-bold text-white">4741 泓瀚</td>
+                                <td class="small text-muted-custom">2026-06-09</td>
+                                <td class="text-white">69.10 <small class="text-muted-custom">(434股)</small></td>
                                 <td class="fw-bold text-warning">69.10</td>
-                                <td>72.55</td>
-                                <td><span class="text-info">68.51</span> <small class="text-muted">(72.50)</small></td>
-                                <td><span class="text-danger">0.00</span> <small class="text-muted">(10WMA)</small></td>
+                                <td class="text-white">72.55</td>
+                                <td><span class="text-info">68.51</span> <small class="text-muted-custom">(72.50)</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
                                 <td class="fw-bold text-danger">-129元<br><small>-0.43%</small></td>
-                                <td><span class="text-muted small">未開啟</span></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
                             <tr>
-                                <td class="fw-bold">1460 宏遠</td>
-                                <td class="small text-muted">2026-06-16</td>
-                                <td>7.29 <small class="text-muted">(4115股)</small></td>
+                                <td class="fw-bold text-white">1460 宏遠</td>
+                                <td class="small text-muted-custom">2026-06-16</td>
+                                <td class="text-white">7.29 <small class="text-muted-custom">(4115股)</small></td>
                                 <td class="fw-bold text-warning">7.29</td>
-                                <td>7.65</td>
-                                <td><span class="text-info">7.03</span> <small class="text-muted">(7.29)</small></td>
-                                <td><span class="text-danger">0.00</span> <small class="text-muted">(10WMA)</small></td>
+                                <td class="text-white">7.65</td>
+                                <td><span class="text-info">7.03</span> <small class="text-muted-custom">(7.29)</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
                                 <td class="fw-bold text-danger">-129元<br><small>-0.43%</small></td>
-                                <td><span class="text-muted small">未開啟</span></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
                         </tbody>
@@ -117,21 +121,21 @@
             <div class="card">
                 <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
-    <li class="list-group-item bg-transparent text-muted small py-3">今日無剛發動的動能飆股。</li>
+    <li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動的動能飆股。</li>
                 </ul>
             </div>
 
             <div class="card">
                 <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
-    <li class="list-group-item bg-transparent text-muted small py-3">今日無符合均線糾結壓縮的標的。</li>
+    <li class="list-group-item bg-transparent text-muted-custom small py-3">今日無符合均線糾結壓縮的標的。</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
 
-<footer class="text-center py-4 text-muted small mt-4" style="border-top: 1px solid #2d3548;">
+<footer class="text-center py-4 text-muted-custom small mt-4" style="border-top: 1px solid #2d3548;">
     海豚自動化管線系統 · 每日盤後自動化更新完成
 </footer>
 
