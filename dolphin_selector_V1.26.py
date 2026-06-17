@@ -4,6 +4,7 @@ import logging
 import os
 import time
 import requests
+import subprocess  # 👉 25.60 導入外部工控管線模組
 from FinMind.data import DataLoader
 import pandas as pd
 from pyppeteer import launch
@@ -19,7 +20,7 @@ except:
     pass
 
 # ====================================================================
-# 25.50 參數設定區 (HTML 一頁式儀表板 × 2年自適應體檢完全體)
+# 25.60 參數設定區 (HTML 雲端自動同步哨站 × 2年自適應體檢完全體)
 # ====================================================================
 VOLUME_FILTER = 500        
 VOLUME_5MA_FILTER = 400    
@@ -47,7 +48,7 @@ FEE_RATE = 0.001425
 FEE_DISCOUNT = 0.28         
 TAX_RATE = 0.003            
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
-HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_dashboard.html" # 👉 HTML 儀表板輸出路徑
+HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" # 👉 25.60 改名為 index.html，GitHub Pages 才能預設直接當作主頁開啟！
 
 # 🎯【LINE Messaging API 設定】
 LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
@@ -57,9 +58,9 @@ URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&c
 URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 
 def run_pre_backtest(api, stock_id):
-    """【25.50版·2年動態自適應 AI 預回測體檢】: 拒絕寫死，直接揉入狀態機與兩年時空窮舉，利潤利潤 > 0 才放行"""
+    """【25.60版·2年動態自適應 AI 預回測體檢】: 拒絕寫死，直接揉入狀態機與兩年時空窮舉，利潤 > 0 才放行"""
     today = datetime.date.today()
-    bt_start = (today - datetime.timedelta(days=730)).strftime("%Y-%m-%d") # 👉 同步動態回溯兩年
+    bt_start = (today - datetime.timedelta(days=730)).strftime("%Y-%m-%d") 
     bt_end = today.strftime("%Y-%m-%d")
     
     try:
@@ -83,7 +84,6 @@ def run_pre_backtest(api, stock_id):
         df["5WMA"] = df["close"].rolling(window=25).mean()
         df["10WMA"] = df["close"].rolling(window=50).mean()
 
-        # 窮舉篩選最佳利潤
         threshold_range = [t / 100 for t in range(5, 31)]       
         drop_range = [d / 200 for d in range(4, 21)]            
         ma_options = ["5MA", "10MA", "20MA", "5WMA", "10WMA"]
@@ -93,7 +93,6 @@ def run_pre_backtest(api, stock_id):
         for ma_opt in ma_options:
             for th in threshold_range:
                 for dr in drop_range:
-                    # 狀態機內部回測
                     in_pos = False
                     b_price = 0.0
                     b_shares = 0
@@ -147,7 +146,7 @@ def run_pre_backtest(api, stock_id):
                     if grand_profit > max_possible_profit:
                         max_possible_profit = grand_profit
                         
-        return max_possible_profit > 0  # 兩年窮舉完，只要最優解能賺錢就放行！
+        return max_possible_profit > 0  
     except:
         return False
 
@@ -174,7 +173,7 @@ def update_and_print_portfolio(api, today_str):
     survived_rows = []   
     report_p_rows = []   
     exit_p_rows = []     
-    html_portfolio_data = [] # 儲存給 HTML 渲染的結構化字典數據
+    html_portfolio_data = [] 
     
     real_today_str = datetime.date.today().strftime("%Y-%m-%d")
     real_start_str = (datetime.date.today() - datetime.timedelta(days=90)).strftime("%Y-%m-%d")
@@ -232,7 +231,7 @@ def update_and_print_portfolio(api, today_str):
             exit_msg = f"🎉 鎖利通知：{sid} {sname} 曾創波段高點 {max_price} (已過起跑線 {target_tp_price})，今日收 {current_price} 已跌破黃金鎖利線 {dynamic_lock_price} (高點拉回 {tp_dr*100:.1f}%)！目前波段淨利: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)"
             print(exit_msg)
             exit_p_rows.append(exit_msg)
-            continue # 被鎖利踢出的股票，不記入留存
+            continue 
             
         # 2️⃣ 檢查現價是否「跌破自適應波段停損線」
         if active_stop_loss_value > 0.0 and current_price < active_stop_loss_value:
@@ -248,7 +247,6 @@ def update_and_print_portfolio(api, today_str):
         print(p_msg)
         report_p_rows.append(p_msg)
         
-        # 收集 HTML 格式數據
         html_portfolio_data.append({
             "stock_id": sid, "stock_name": sname, "buy_date": b_date, "buy_price": b_price, "buy_shares": shares,
             "current_price": current_price, "target_tp_price": target_tp_price, "max_price": max_price,
@@ -263,7 +261,6 @@ def update_and_print_portfolio(api, today_str):
     if not df_survived.empty:
         df_survived.to_csv(PORTFOLIO_FILE, index=False)
     else:
-        # 如果空了，清空檔案
         pd.DataFrame(columns=df_pf.columns).to_csv(PORTFOLIO_FILE, index=False)
         
     print("====================================================\n")
@@ -275,8 +272,6 @@ def update_and_print_portfolio(api, today_str):
 
 def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data):
     """🎨 生成頂級工控美學的一頁式網頁儀表板"""
-    
-    # 計算持股總資產概況
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
     total_profit = sum([r['net_profit'] for r in portfolio_data])
     total_current_value = total_cost + total_profit
@@ -301,7 +296,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         .text-danger {{ color: #ff5b5b !important; }}
         .badge-breakout {{ background-color: #ff9f43; color: #12141c; font-weight: bold; }}
         .badge-ambush {{ background-color: #00f2fe; color: #12141c; font-weight: bold; }}
-        .badge-radar {{ background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; }}
+        .badge-radar {{ background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; }}
         @keyframes blink {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
         .summary-box {{ background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }}
     </style>
@@ -309,7 +304,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted">v25.50 完全體</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted">v25.60 完全體</small></span>
     <span class="text-muted">📅 數據更新時間：{today_str}</span>
 </nav>
 
@@ -318,19 +313,19 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         <div class="col-md-3">
             <div class="summary-box">
                 <div class="text-muted small">當前持股總成本</div>
-                <div class="fs-3 fw-bold text-info">${{total_cost:,.0f}} 元</div>
+                <div class="fs-3 fw-bold text-info">${total_cost:,.0f} 元</div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="summary-box" style="border-left-color: #2cf3a0;">
                 <div class="text-muted small">持股現值估算</div>
-                <div class="fs-3 fw-bold">${{total_current_value:,.0f}} 元</div>
+                <div class="fs-3 fw-bold">${total_current_value:,.0f} 元</div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="summary-box" style="border-left-color: ${{ '#2cf3a0' if total_profit >= 0 else '#ff5b5b' }};">
+            <div class="summary-box" style="border-left-color: {'#2cf3a0' if total_profit >= 0 else '#ff5b5b'};">
                 <div class="text-muted small">模擬持股當前總淨損益</div>
-                <div class="fs-3 fw-bold {profit_color_class}">{'+' if total_profit >= 0 else ''}${{total_profit:,.0f}} 元 ({'+' if total_profit >= 0 else ''}{{total_profit_pct:.2f}}%)</div>
+                <div class="fs-3 fw-bold {profit_color_class}">{'+' if total_profit >= 0 else ''}{total_profit:,.0f} 元 ({'+' if total_profit >= 0 else ''}{total_profit_pct:.2f}%)</div>
             </div>
         </div>
     </div>
@@ -396,7 +391,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         html_content += '<li class="list-group-item bg-transparent text-muted small py-3">今日無剛發動的動能飆股。</li>'
     else:
         for bo in breakout_list:
-            html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo.replace("▪️ ", "")}</li>'
+            html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
             
     html_content += """
                 </ul>
@@ -427,7 +422,6 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
 </body>
 </html>
 """
-    
     with open(HTML_OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(html_content)
     print(f"🖥️  [儀表板升級] 頂級工控 HTML 儀表板已成功生成於：{HTML_OUTPUT_FILE}")
@@ -487,14 +481,14 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 25.50：[HTML一頁式儀表板完全體] 啟動...")
+    print("🚀 海豚選股 25.60：[Git雲端同步一頁式儀表板完全體] 啟動...")
     print("====================================================")
 
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2Vy_idIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
     
     try:
         df_info = api.taiwan_stock_info()
@@ -612,7 +606,7 @@ async def main():
                                     "stock_id": stock, "stock_name": c_name, 
                                     "buy_price": latest_close, "buy_shares": calc_shares, 
                                     "buy_type": "正飆(0天)", "buy_date": k_line_date,
-                                    "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": latest_close # 先給預設
+                                    "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": latest_close 
                                 })
                                 print(f"✅ [體檢過關] {display_title} 兩年最優期望值為正，核准寫入帳簿！")
                         else:
@@ -650,11 +644,11 @@ async def main():
                                         "stock_id": stock, "stock_name": c_name, 
                                         "buy_price": latest_close, "buy_shares": calc_shares, 
                                         "buy_type": "3星起飆", "buy_date": k_line_date,
-                                        "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": latest_close # 先給預設
+                                        "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": latest_close 
                                     })
                                     print(f"✅ [體檢過關] {display_title} 兩年最優期望值為正，核准寫入帳簿！")
                             else:
-                                print(f"❌ [體檢失敗] {display_title} 兩年歷史最優解依然虧損！直接封殺拒絕建倉！")
+                                print(f"❌ [體檢失敗] {display_title} 兩年歷史最優解依然虧損！直接封殺拒慢建倉！")
                 
         except Exception as e:
             pass
@@ -665,7 +659,6 @@ async def main():
         if not os.path.exists(PORTFOLIO_FILE):
             df_new.to_csv(PORTFOLIO_FILE, index=False)
         else:
-            # 讀取現有欄位順序對齊寫入
             df_existing_cols = pd.read_csv(PORTFOLIO_FILE, nrows=1)
             for col in df_existing_cols.columns:
                 if col not in df_new.columns:
@@ -677,7 +670,7 @@ async def main():
     # ─── 現場優化器調度攔截 ───
     print("\n⚡ [因果攔截] 今日新股建倉完畢。正在同一資料夾內即時導入優化器外掛...")
     try:
-        import dolphin_portfolio_optimizer_v2_2 as d_opt
+        import dolphin_portfolio_optimizer_v2_1 as d_opt  # 👉 25.60 確保對齊你更改後的 v2_1 多核心版
         d_opt.main() 
         print("⚡ [因果攔截] 優化器解碼完畢。持股 CSV 參數已全部更新，重回主程式主線。")
     except Exception as opt_err:
@@ -686,7 +679,7 @@ async def main():
     print("----------------------------------------------------")
     print("====================================================")
     
-    # 建立 LINE 與 HTML 所需的選股清單
+    # 建立選股清單元件
     final_breakout_list = []
     html_breakout_strings = []
     if raw_breakout_data:
@@ -712,16 +705,39 @@ async def main():
             html_msg = f'<span class="badge badge-ambush me-2">{row["stars"]}潛伏</span> <strong>{row["title"]}</strong> <br> <span class="text-muted small">現價: {row["close"]} | 均線張開度: {row["spread"]*100:.1f}% | MACD: {row["macd"]}</span>'
             html_ambush_strings.append(html_msg)
 
-    # 🎯 核心防線：在優化器洗牌滅殺之後，再呼叫一次，拿最新的大帳數據更新
+    # 🎯 25.60 調整因果序：在優化器洗牌滅殺之後，再計算大帳與渲染網頁，數據才會絕對精準！
     exit_report_text, portfolio_report_text, html_portfolio_data = update_and_print_portfolio(api, today_str)
 
     # 🎨 渲染並輸出網頁儀表板
     generate_one_page_html(today_str, html_breakout_strings, html_ambush_strings, html_portfolio_data)
 
+    # ====================================================
+    # 🌐 【25.60版·因果雲端管線】: 自動推送到 GitHub Pages 哨站
+    # ====================================================
+    print("\n🌐 [雲端同步] 正在啟動 Git 引擎，將儀表板推送到雲端監控哨站...")
+    try:
+        project_dir = os.path.dirname(PORTFOLIO_FILE)
+        
+        # 本地 Git 無聲打包三部曲
+        subprocess.run(["git", "add", "."], cwd=project_dir, check=True, stdout=subprocess.DEVNULL)
+        
+        commit_msg = f"📋 量化雷達自動更新: {today_str}"
+        subprocess.run(["git", "commit", "-m", commit_msg], cwd=project_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # 推送回雲端分支
+        subprocess.run(["git", "push", "origin", "main"], cwd=project_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print("✅ [雲端同步] 成功！數據與 HTML 已秒速同步至 GitHub 倉庫。")
+        print("🔗 你的專屬手機網址：https://chunyulaie.github.io/my-dolphin-radar/")
+        
+    except Exception as git_err:
+        print(f"⚠️ [雲端同步] 失敗（原因: {git_err}）。可能尚未完成手動首推，但本地 index.html 已生成。")
+    print("----------------------------------------------------")
+    print("====================================================")
+
     # 發送 LINE 通知
     if final_breakout_list or final_ambush_list or exit_report_text:
         report_chunks = [
-            f"🐬 海豚選股 25.50 [雙向自適應移動鎖利完全體] 🐬",
+            f"🐬 海豚選股 25.60 [雙向自適應移動鎖利完全體] 🐬",
             f"📅 數據日期：{today_str}",
             f"───────────────────"
         ]
@@ -740,7 +756,6 @@ async def main():
         
         report_text = "\n".join([chunk for chunk in report_chunks if chunk.strip()])
         send_line_notify(report_text)
-        
     else:
         print("📭 今日無符合標的。")
 
