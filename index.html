@@ -6,7 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #12141c; color: #e4e6eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar { background-color: #1a1f2c; border-bottom: 2px solid #00f2fe; }
+        .navbar { background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }
         .card { background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }
         .card-header { background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }
         
@@ -15,11 +15,13 @@
         .table-custom-dark td { background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }
         .text-muted-custom { color: #a1a5b7 !important; }
         
-        .text-success { color: #2cf3a0 !important; }
-        .text-danger { color: #ff5b5b !important; }
+        /* 📈 🇹🇼 台股極致視覺流修正：紅賺綠賠 */
+        .text-taiwan-red { color: #ff4a4a !important; font-weight: bold; }     /* 正飆血紅 */
+        .text-taiwan-green { color: #2cf3a0 !important; font-weight: bold; }   /* 螢光慘綠 */
+        
         .badge-breakout { background-color: #ff9f43; color: #12141c; font-weight: bold; }
         .badge-ambush { background-color: #00f2fe; color: #12141c; font-weight: bold; }
-        .badge-radar { background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
+        .badge-radar { background-color: #ff4a4a; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
         @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         .summary-box { background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }
     </style>
@@ -27,7 +29,7 @@
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.75 因果純淨版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.75 紅綠修正版</small></span>
     <span class="text-muted-custom">📅 數據更新時間：2026-06-18</span>
 </nav>
 
@@ -36,19 +38,19 @@
         <div class="col-md-3">
             <div class="summary-box">
                 <div class="text-muted-custom small">當前持股總成本</div>
-                <div class="fs-3 fw-bold text-info">$148,712 元</div>
+                <div class="fs-3 fw-bold text-info">$172,712 元</div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="summary-box" style="border-left-color: #2cf3a0;">
+            <div class="summary-box" style="border-left-color: #ffffff;">
                 <div class="text-muted-custom small">持股現值估算</div>
-                <div class="fs-3 fw-bold text-white">$151,509 元</div>
+                <div class="fs-3 fw-bold text-white">$175,689 元</div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="summary-box" style="border-left-color: #2cf3a0;">
+            <div class="summary-box" style="border-left-color: #ff4a4a;">
                 <div class="text-muted-custom small">模擬持股當前總淨損益</div>
-                <div class="fs-3 fw-bold text-success">+2,797 元 (+1.88%)</div>
+                <div class="fs-3 fw-bold text-taiwan-red">+2,977 元 (+1.72%)</div>
             </div>
         </div>
     </div>
@@ -78,11 +80,11 @@
                                 <td class="fw-bold text-white">4741 泓瀚</td>
                                 <td class="small text-muted-custom">2026-06-09</td>
                                 <td class="text-white">69.10 <small class="text-muted-custom">(434股)</small></td>
-                                <td class="fw-bold text-warning">71.70</td>
+                                <td class="fw-bold text-warning">64.60</td>
                                 <td class="text-white">72.55</td>
                                 <td><span class="text-info">68.51</span> <small class="text-muted-custom">(72.50)</small></td>
-                                <td><span class="text-danger">60.80</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-success">+995元<br><small>+3.32%</small></td>
+                                <td><span class="text-danger">61.18</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-2,077元<br><small>-6.92%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -90,11 +92,11 @@
                                 <td class="fw-bold text-white">2368 金像電</td>
                                 <td class="small text-muted-custom">2026-06-17</td>
                                 <td class="text-white">1370.00 <small class="text-muted-custom">(21股)</small></td>
-                                <td class="fw-bold text-warning">1370.00</td>
+                                <td class="fw-bold text-warning">1355.00</td>
                                 <td class="text-white">1726.20</td>
                                 <td><span class="text-info">1308.35</span> <small class="text-muted-custom">(1370.00)</small></td>
-                                <td><span class="text-danger">1313.56</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-danger">-126元<br><small>-0.44%</small></td>
+                                <td><span class="text-danger">1320.70</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-440元<br><small>-1.53%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -102,11 +104,11 @@
                                 <td class="fw-bold text-white">3704 合勤控</td>
                                 <td class="small text-muted-custom">2026-06-17</td>
                                 <td class="text-white">49.35 <small class="text-muted-custom">(607股)</small></td>
-                                <td class="fw-bold text-warning">49.35</td>
+                                <td class="fw-bold text-warning">48.25</td>
                                 <td class="text-white">57.74</td>
                                 <td><span class="text-info">48.36</span> <small class="text-muted-custom">(49.35)</small></td>
-                                <td><span class="text-danger">47.11</span> <small class="text-muted-custom">(10MA)</small></td>
-                                <td class="fw-bold text-danger">-129元<br><small>-0.43%</small></td>
+                                <td><span class="text-danger">47.16</span> <small class="text-muted-custom">(10MA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-794元<br><small>-2.65%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -114,11 +116,11 @@
                                 <td class="fw-bold text-white">2867 三商壽</td>
                                 <td class="small text-muted-custom">2026-06-09</td>
                                 <td class="text-white">7.97 <small class="text-muted-custom">(3764股)</small></td>
-                                <td class="fw-bold text-warning">8.62</td>
+                                <td class="fw-bold text-warning">8.74</td>
                                 <td class="text-white">10.20</td>
-                                <td><span class="text-info">8.45</span> <small class="text-muted-custom">(8.62)</small></td>
-                                <td><span class="text-danger">7.84</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-success">+2,309元<br><small>+7.69%</small></td>
+                                <td><span class="text-info">8.57</span> <small class="text-muted-custom">(8.74)</small></td>
+                                <td><span class="text-danger">7.86</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-red">+2,760元<br><small>+9.19%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -126,11 +128,23 @@
                                 <td class="fw-bold text-white">1460 宏遠</td>
                                 <td class="small text-muted-custom">2026-06-16</td>
                                 <td class="text-white">7.29 <small class="text-muted-custom">(4115股)</small></td>
-                                <td class="fw-bold text-warning">7.26</td>
+                                <td class="fw-bold text-warning">7.20</td>
                                 <td class="text-white">7.65</td>
                                 <td><span class="text-info">7.03</span> <small class="text-muted-custom">(7.29)</small></td>
                                 <td><span class="text-danger">7.04</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-danger">-252元<br><small>-0.84%</small></td>
+                                <td class="fw-bold text-taiwan-green">-498元<br><small>-1.66%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td class="fw-bold text-white">2409 友達</td>
+                                <td class="small text-muted-custom">2026-06-11</td>
+                                <td class="text-white">24.00 <small class="text-muted-custom">(1000股)</small></td>
+                                <td class="fw-bold text-warning">28.15</td>
+                                <td class="text-white">29.04</td>
+                                <td><span class="text-info">27.59</span> <small class="text-muted-custom">(28.15)</small></td>
+                                <td><span class="text-danger">23.46</span> <small class="text-muted-custom">(5WMA)</small></td>
+                                <td class="fw-bold text-taiwan-red">+4,026元<br><small>+16.76%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -144,7 +158,7 @@
             <div class="card">
                 <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
-    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>1460 宏遠</strong> <br> <span class="text-muted-custom small">現價: 7.26 | 均線糾結: 1.1% | 布林寬度: 10.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>2368 金像電</strong> <br> <span class="text-muted-custom small">現價: 1370.0 | 均線糾結: 1.8% | 布林寬度: 16.1%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>3704 合勤控</strong> <br> <span class="text-muted-custom small">現價: 49.35 | 均線糾結: 1.6% | 布林寬度: 16.8%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>6113 亞矽</strong> <br> <span class="text-muted-custom small">現價: 28.7 | 均線糾結: 2.8% | 布林寬度: 17.0%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>2542 興富發</strong> <br> <span class="text-muted-custom small">現價: 45.45 | 均線糾結: 3.4% | 布林寬度: 10.4%</span></li>
+    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>1460 宏遠</strong> <br> <span class="text-muted-custom small">現價: 7.2 | 均線糾結: 1.1% | 布林寬度: 10.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>3704 合勤控</strong> <br> <span class="text-muted-custom small">現價: 48.25 | 均線糾結: 1.6% | 布林寬度: 16.8%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>6113 亞矽</strong> <br> <span class="text-muted-custom small">現價: 28.4 | 均線糾結: 2.8% | 布林寬度: 17.0%</span></li>
                 </ul>
             </div>
 

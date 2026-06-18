@@ -282,12 +282,14 @@ def update_and_print_portfolio(api, today_str):
     return exit_report, portfolio_report, html_portfolio_data
 
 def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data):
-    """🎨 生成頂級工控美學的一頁式網頁儀表板"""
+    """🎨 生成頂級工控美學的一頁式網頁儀表板 (台股標準紅買綠賣配色版)"""
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
     total_profit = sum([r['net_profit'] for r in portfolio_data])
     total_current_value = total_cost + total_profit
     total_profit_pct = (total_profit / total_cost * 100) if total_cost > 0 else 0.0
-    profit_color_class = "text-success" if total_profit >= 0 else "text-danger"
+    
+    # 🎯 全局總損益顏色：台股標準 (紅賺綠賠)
+    profit_color_class = "text-taiwan-red" if total_profit >= 0 else "text-taiwan-green"
     
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-TW">
@@ -297,7 +299,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {{ background-color: #12141c; color: #e4e6eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
-        .navbar {{ background-color: #1a1f2c; border-bottom: 2px solid #00f2fe; }}
+        .navbar {{ background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }}
         .card {{ background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }}
         .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }}
         
@@ -306,11 +308,13 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         .table-custom-dark td {{ background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }}
         .text-muted-custom {{ color: #a1a5b7 !important; }}
         
-        .text-success {{ color: #2cf3a0 !important; }}
-        .text-danger {{ color: #ff5b5b !important; }}
+        /* 📈 🇹🇼 台股極致視覺流修正：紅賺綠賠 */
+        .text-taiwan-red {{ color: #ff4a4a !important; font-weight: bold; }}     /* 正飆血紅 */
+        .text-taiwan-green {{ color: #2cf3a0 !important; font-weight: bold; }}   /* 螢光慘綠 */
+        
         .badge-breakout {{ background-color: #ff9f43; color: #12141c; font-weight: bold; }}
         .badge-ambush {{ background-color: #00f2fe; color: #12141c; font-weight: bold; }}
-        .badge-radar {{ background-color: #ff5b5b; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }}
+        .badge-radar {{ background-color: #ff4a4a; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }}
         @keyframes blink {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
         .summary-box {{ background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }}
     </style>
@@ -318,7 +322,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.75 因果純淨版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.75 紅綠修正版</small></span>
     <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 
@@ -331,13 +335,13 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
             </div>
         </div>
         <div class="col-md-3">
-            <div class="summary-box" style="border-left-color: #2cf3a0;">
+            <div class="summary-box" style="border-left-color: #ffffff;">
                 <div class="text-muted-custom small">持股現值估算</div>
                 <div class="fs-3 fw-bold text-white">${total_current_value:,.0f} 元</div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="summary-box" style="border-left-color: {'#2cf3a0' if total_profit >= 0 else '#ff5b5b'};">
+            <div class="summary-box" style="border-left-color: {'#ff4a4a' if total_profit >= 0 else '#2cf3a0'};">
                 <div class="text-muted-custom small">模擬持股當前總淨損益</div>
                 <div class="fs-3 fw-bold {profit_color_class}">{'+' if total_profit >= 0 else ''}{total_profit:,.0f} 元 ({'+' if total_profit >= 0 else ''}{total_profit_pct:.2f}%)</div>
             </div>
@@ -371,7 +375,8 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     else:
         for p in portfolio_data:
             p_sign = "+" if p['net_profit'] >= 0 else ""
-            p_class = "text-success" if p['net_profit'] >= 0 else "text-danger"
+            # 🎯 這裡最重要：單檔個股損益顏色攔截
+            p_class = "text-taiwan-red" if p['net_profit'] >= 0 else "text-taiwan-green"
             radar_badge = '<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>'
             
             html_content += f"""
