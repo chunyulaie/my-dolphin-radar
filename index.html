@@ -15,8 +15,9 @@
         .table-custom-dark td { background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }
         .text-muted-custom { color: #a1a5b7 !important; }
         
-        .text-taiwan-red { color: #ff4a4a !important; font-weight: bold; }     
-        .text-taiwan-green { color: #2cf3a0 !important; font-weight: bold; }   
+        /* 📈 🇹🇼 台股極致視覺流修正：紅賺綠賠 */
+        .text-taiwan-red { color: #ff4a4a !important; font-weight: bold; }     /* 正飆血紅 */
+        .text-taiwan-green { color: #2cf3a0 !important; font-weight: bold; }   /* 螢光慘綠 */
         
         .badge-breakout { background-color: #ff9f43; color: #12141c; font-weight: bold; }
         .badge-ambush { background-color: #00f2fe; color: #12141c; font-weight: bold; }
@@ -28,33 +29,30 @@
 <body>
 
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.80 戰績結算版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.75 紅綠修正版</small></span>
     <span class="text-muted-custom">📅 數據更新時間：2026-06-21</span>
 </nav>
 
 <div class="container-fluid p-4">
     <div class="row mb-4">
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="summary-box">
                 <div class="text-muted-custom small">當前持股總成本</div>
-                <div class="fs-4 fw-bold text-info">$232,496 元</div>
+                <div class="fs-3 fw-bold text-info">$232,496 元</div>
             </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <div class="summary-box" style="border-left-color: #ffffff;">
                 <div class="text-muted-custom small">持股現值估算</div>
-                <div class="fs-4 fw-bold text-white">$235,215 元</div>
+                <div class="fs-3 fw-bold text-white">$235,215 元</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="summary-box" style="border-left-color: #ff4a4a;">
-                <div class="text-muted-custom small">在倉持股總淨損益</div>
-                <div class="fs-4 fw-bold text-taiwan-red">+2,719 元 (+1.17%)</div>
+                <div class="text-muted-custom small">模擬持股當前總淨損益</div>
+                <div class="fs-3 fw-bold text-taiwan-red">+2,719 元 (+1.17%)</div>
             </div>
         </div>
-        
-        <div class="col-md-4"><div class="summary-box" style="border-left-color: #a1a5b7;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-muted-custom">尚無歷史出清數據</div></div></div>
-        
     </div>
 
     <div class="row">
