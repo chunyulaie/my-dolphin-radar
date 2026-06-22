@@ -221,7 +221,7 @@ def update_and_print_portfolio(api, today_str):
             df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
             if not df_now.empty and len(df_now) >= 40: 
                 current_price = float(df_now.iloc[-1]["close"])
-                today_high = float(df_now.iloc[-1]["high"])
+                today_high = float(df_now.iloc[-1]["max"])
                 
                 df_now = df_now.copy().reset_index(drop=True)
                 df_now["close"] = df_now["close"].astype(float)
@@ -848,7 +848,7 @@ async def main():
 
     print("\n⚡ [因果攔截] 今日新股建倉完畢。正在同一資料夾內即時導入優化器外掛...")
     try:
-        import dolphin_portfolio_optimizer_v2_11 as d_opt  
+        import dolphin_portfolio_optimizer_v2_12 as d_opt  
         d_opt.main() 
         print("⚡ [因果攔截] 優化器解碼完畢。持股 CSV 參數已全部更新，重回主程式主線。")
     except Exception as opt_err:
