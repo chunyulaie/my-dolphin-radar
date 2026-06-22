@@ -9,16 +9,12 @@
         .navbar { background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }
         .card { background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }
         .card-header { background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }
-        
         .table-custom-dark { color: #ffffff !important; }
         .table-custom-dark th { background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }
         .table-custom-dark td { background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }
         .text-muted-custom { color: #a1a5b7 !important; }
-        
-        /* 📈 🇹🇼 台股極致視覺流修正：紅賺綠賠 */
-        .text-taiwan-red { color: #ff4a4a !important; font-weight: bold; }     /* 正飆血紅 */
-        .text-taiwan-green { color: #2cf3a0 !important; font-weight: bold; }   /* 螢光慘綠 */
-        
+        .text-taiwan-red { color: #ff4a4a !important; font-weight: bold; }     
+        .text-taiwan-green { color: #2cf3a0 !important; font-weight: bold; }   
         .badge-breakout { background-color: #ff9f43; color: #12141c; font-weight: bold; }
         .badge-ambush { background-color: #00f2fe; color: #12141c; font-weight: bold; }
         .badge-radar { background-color: #ff4a4a; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
@@ -27,34 +23,34 @@
     </style>
 </head>
 <body>
-
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.75 紅綠修正版</small></span>
-    <span class="text-muted-custom">📅 數據更新時間：2026-06-21</span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.85 資金池優化版</small></span>
+    <span class="text-muted-custom">📅 數據更新時間：2026-06-22</span>
 </nav>
-
 <div class="container-fluid p-4">
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="summary-box">
                 <div class="text-muted-custom small">當前持股總成本</div>
-                <div class="fs-3 fw-bold text-info">$232,496 元</div>
+                <div class="fs-4 fw-bold text-info">$232,496 元</div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="summary-box" style="border-left-color: #ffffff;">
                 <div class="text-muted-custom small">持股現值估算</div>
-                <div class="fs-3 fw-bold text-white">$235,215 元</div>
+                <div class="fs-4 fw-bold text-white">$235,215 元</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="summary-box" style="border-left-color: #ff4a4a;">
-                <div class="text-muted-custom small">模擬持股當前總淨損益</div>
-                <div class="fs-3 fw-bold text-taiwan-red">+2,719 元 (+1.17%)</div>
+                <div class="text-muted-custom small">在倉持股總淨損益</div>
+                <div class="fs-4 fw-bold text-taiwan-red">+2,719 元 (+1.17%)</div>
             </div>
         </div>
+        
+        <div class="col-md-4"><div class="summary-box" style="border-left-color: #a1a5b7;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-muted-custom">尚無歷史出清數據</div></div></div>
+        
     </div>
-
     <div class="row">
         <div class="col-12 col-xl-8">
             <div class="card">
@@ -177,7 +173,6 @@
                 </div>
             </div>
         </div>
-
         <div class="col-12 col-xl-4">
             <div class="card">
                 <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
@@ -185,7 +180,6 @@
     <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>6435 大中</strong> <br> <span class="text-muted-custom small">現價: 317.5 | 均線糾結: 3.3% | 布林寬度: 25.3%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>6620 漢達</strong> <br> <span class="text-muted-custom small">現價: 81.8 | 均線糾結: 2.2% | 布林寬度: 15.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>1460 宏遠</strong> <br> <span class="text-muted-custom small">現價: 7.2 | 均線糾結: 1.1% | 布林寬度: 10.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>3704 合勤控</strong> <br> <span class="text-muted-custom small">現價: 48.25 | 均線糾結: 1.6% | 布林寬度: 16.8%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>5302 太欣</strong> <br> <span class="text-muted-custom small">現價: 12.55 | 均線糾結: 4.9% | 布林寬度: 25.1%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>6113 亞矽</strong> <br> <span class="text-muted-custom small">現價: 28.4 | 均線糾結: 2.8% | 布林寬度: 17.0%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">4天前發動</span> <strong>2618 長榮航</strong> <br> <span class="text-muted-custom small">現價: 42.55 | 均線糾結: 3.2% | 布林寬度: 15.1%</span></li>
                 </ul>
             </div>
-
             <div class="card">
                 <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
@@ -195,10 +189,8 @@
         </div>
     </div>
 </div>
-
 <footer class="text-center py-4 text-muted-custom small mt-4" style="border-top: 1px solid #2d3548;">
     海豚自動化管線系統 · 每日盤後自動化更新完成
 </footer>
-
 </body>
 </html>
