@@ -10,23 +10,17 @@ logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 # 📊 【海豚量化自適應「雙向防線」最佳化設定】
 # ==========================================
 TODAY = datetime.date.today()
-START_DATE = (TODAY - datetime.timedelta(days=730)).strftime("%Y-%m-%d") # 👉 自動動態回溯兩年
-END_DATE = TODAY.strftime("%Y-%m-%d")                                    # 👉 永遠對齊今天最新數據
+START_DATE = (TODAY - datetime.timedelta(days=730)).strftime("%Y-%m-%d") 
+END_DATE = TODAY.strftime("%Y-%m-%d")                                    
 
 SIM_BUDGET = 30000         
 FEE_RATE = 0.001425         
 FEE_DISCOUNT = 0.28         
 TAX_RATE = 0.003            
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
-
-# 🎯 【25.95 新增：優化器演算回測明細的記錄檔路徑】
 OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optimizer_details.csv"
 
 def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=False):
-    """【修復版核心運算 + 明細追蹤模組】
-    return_records=False 時：純回傳總利潤數字（用來快速暴力尋優）
-    return_records=True 時：回傳該最優解下，過去兩年每一筆波段交易的詳細明細清單
-    """
     in_position = False
     buy_price = 0.0
     buy_shares = 0
@@ -35,7 +29,7 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
     
     tp_radar_activated = False 
     
-    trade_records = []  # 🎯 用來存放每筆交易明細的容器
+    trade_records = []  
     temp_buy_record = {}
 
     for i in range(50, len(df)): 
@@ -43,7 +37,9 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
         yesterday_k = df.iloc[i-1]
         pre_yesterday_k = df.iloc[i-2]
         current_close = today_k['close']
-        k_date = str(df.index[i])[:10] if hasattr(df, 'index') else today_k.get('date', '')
+        
+        # 🎯 核心修正：精確提取 DataFrame 索引上的 YYYY-MM-DD 標準日期字串
+        k_date = str(df.index[i])[:10]
 
         if in_position:
             if current_close > max_price_after_buy:
@@ -65,7 +61,6 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
             net_profit = int(total_sell_get - total_buy_spent)
             profit_percent = (net_profit / total_buy_spent) * 100
             
-            # 🔔 觸發 1：移動鎖利出場
             if tp_radar_activated and current_close <= (max_price_after_buy * (1 - tp_trailing_drop)):
                 grand_net_profit += net_profit
                 in_position = False 
@@ -79,7 +74,6 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
                     })
                     trade_records.append(temp_buy_record)
                 
-            # 🔔 觸發 2：均線停損破線出場
             elif today_k[ma_field] > 0 and current_close < today_k[ma_field]:
                 grand_net_profit += net_profit
                 in_position = False 
@@ -125,7 +119,6 @@ def main():
     print(f"📅 演算歷史區間：{START_DATE} ~ {END_DATE}")
     print("====================================================")
     
-    # 🎯 ⚖️ 【因果清空】優化器開頭，秒殺昨天的舊明細紀錄檔，避免歷史明細無限疊加膨脹
     if os.path.exists(OPTIMIZER_DETAILS_FILE):
         try:
             os.remove(OPTIMIZER_DETAILS_FILE)
@@ -152,14 +145,14 @@ def main():
         df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=START_DATE, end_date=END_DATE)
         if df_raw.empty or len(df_raw) < 50: continue
             
-        df = pd.DataFrame()
+        # 🎯 核心修正：將 FinMind 原始日期序列設為 DataFrame Index，防止索引丟失變成流水號
+        df_raw["date"] = pd.to_datetime(df_raw["date"])
+        df_raw = df_raw.set_index("date")
+            
+        df = pd.DataFrame(index=df_raw.index)
         df["close"] = df_raw["close"].astype(float)
         df["open"] = df_raw["open"].astype(float)
         df["volume"] = df_raw["Trading_Volume"].astype(float) / 1000 
-        
-        # 精確注入日期欄位以便追蹤進出場時空點
-        if "date" in df_raw.columns:
-            df["date"] = df_raw["date"].astype(str)
         
         df["5MA"] = df["close"].rolling(window=5).mean()
         df["10MA"] = df["close"].rolling(window=10).mean()
@@ -177,7 +170,6 @@ def main():
         best_profit = -999999
         best_th, best_dr, best_ma = 0.15, 0.03, "20MA"
         
-        # 3層暴力網格搜尋最佳化參數
         for ma_opt in ma_options:
             for th in threshold_range:
                 for dr in drop_range:
@@ -197,7 +189,6 @@ def main():
             "best_profit": best_profit
         }
 
-        # 🎯🎯🎯 【25.95 重磅升級：針對奪冠的冠軍參數，重新播映歷史並導出明細紀錄】
         if best_profit > 0:
             best_records = optimize_core(df, best_th, best_dr, best_ma, return_records=True)
             if best_records:
