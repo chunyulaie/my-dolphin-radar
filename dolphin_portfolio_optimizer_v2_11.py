@@ -2,6 +2,14 @@ import datetime
 import logging
 import os
 import pandas as pd
+import multiprocessing
+import concurrent.futures
+import warnings
+
+# 🎯 終極暴力靜音法 1：從作業系統環境變數下達封口令，確保所有新誕生的 8 個分身一出生就閉嘴
+os.environ["PYTHONWARNINGS"] = "ignore::RuntimeWarning"
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 from FinMind.data import DataLoader
 
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
@@ -26,20 +34,29 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
     buy_shares = 0
     max_price_after_buy = 0.0
     grand_net_profit = 0
-    
     tp_radar_activated = False 
-    
     trade_records = []  
     temp_buy_record = {}
 
-    for i in range(50, len(df)): 
-        today_k = df.iloc[i]
-        yesterday_k = df.iloc[i-1]
-        pre_yesterday_k = df.iloc[i-2]
-        current_close = today_k['close']
-        
-        # 🎯 核心修正：精確提取 DataFrame 索引上的 YYYY-MM-DD 標準日期字串
-        k_date = str(df.index[i])[:10]
+    closes = df['close'].values
+    opens = df['open'].values
+    vols = df['volume'].values
+    vol5mas = df['5MA_Vol'].values
+    ma5s = df['5MA'].values
+    ma10s = df['10MA'].values
+    ma20s = df['20MA'].values
+    ma_targets = df[ma_field].values
+    bb_widths = df['BB_Width'].values
+    macds = df['MACD'].values
+    
+    if hasattr(df, 'index') and not isinstance(df.index, pd.RangeIndex):
+        dates = df.index.astype(str).str[:10].values
+    else:
+        dates = df['date'].astype(str).values
+
+    for i in range(50, len(closes)): 
+        current_close = closes[i]
+        k_date = dates[i]
 
         if in_position:
             if current_close > max_price_after_buy:
@@ -74,7 +91,7 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
                     })
                     trade_records.append(temp_buy_record)
                 
-            elif today_k[ma_field] > 0 and current_close < today_k[ma_field]:
+            elif ma_targets[i] > 0 and current_close < ma_targets[i]:
                 grand_net_profit += net_profit
                 in_position = False 
                 tp_radar_activated = False
@@ -87,15 +104,26 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
                     })
                     trade_records.append(temp_buy_record)
         else:
-            if today_k["volume"] < 500 or today_k["5MA_Vol"] < 400: continue
-            y_ma = [pre_yesterday_k["5MA"], pre_yesterday_k["10MA"], pre_yesterday_k["20MA"]]
-            y_spread = (max(y_ma) - min(y_ma)) / pre_yesterday_k["close"] if pre_yesterday_k["close"] > 0 else 99
-            is_breakout = (y_spread <= 0.04 and yesterday_k["close"] > yesterday_k["open"] and yesterday_k["close"] > max(yesterday_k["5MA"], yesterday_k["10MA"], yesterday_k["20MA"]) and current_close >= max(today_k["5MA"], today_k["10MA"], today_k["20MA"]))
+            if vols[i] < 500 or vol5mas[i] < 400: continue
+            
+            y_ma_max = max(ma5s[i-2], ma10s[i-2], ma20s[i-2])
+            y_ma_min = min(ma5s[i-2], ma10s[i-2], ma20s[i-2])
+            py_close = closes[i-2]
+            y_spread = (y_ma_max - y_ma_min) / py_close if py_close > 0 else 99
+            
+            y_close = closes[i-1]
+            y_open = opens[i-1]
+            y1_ma_max = max(ma5s[i-1], ma10s[i-1], ma20s[i-1])
+            
+            is_breakout = (y_spread <= 0.04 and y_close > y_open and y_close > y1_ma_max and current_close >= max(ma5s[i], ma10s[i], ma20s[i]))
             
             is_ambush = False
-            if not is_breakout and today_k["5MA"] >= today_k["10MA"] >= today_k["20MA"]:
-                t_spread = (max([today_k["5MA"], today_k["10MA"], today_k["20MA"]]) - min([today_k["5MA"], today_k["10MA"], today_k["20MA"]])) / today_k["20MA"]
-                if t_spread <= 0.035 and today_k["BB_Width"] <= 0.18 and today_k["MACD"] > 0: is_ambush = True
+            if not is_breakout and ma5s[i] >= ma10s[i] >= ma20s[i]:
+                t_ma_max = max(ma5s[i], ma10s[i], ma20s[i])
+                t_ma_min = min(ma5s[i], ma10s[i], ma20s[i])
+                t_spread = (t_ma_max - t_ma_min) / ma20s[i]
+                if t_spread <= 0.035 and bb_widths[i] <= 0.18 and macds[i] > 0: 
+                    is_ambush = True
             
             if is_breakout or is_ambush:
                 in_position = True
@@ -113,9 +141,26 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
         return trade_records
     return grand_net_profit
 
+def process_chunk(chunk, df):
+    """平行運算的子任務：負責跑完分配到的一小批參數"""
+    # 🎯 終極暴力靜音法 2：在每個分身的肚子裡再貼一次膠布，確保萬無一失！
+    import warnings
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
+    
+    local_best_profit = -999999
+    local_best_th, local_best_dr, local_best_ma = 0.15, 0.03, "20MA"
+    for th, dr, ma in chunk:
+        profit = optimize_core(df, th, dr, ma, return_records=False)
+        if profit > local_best_profit:
+            local_best_profit = profit
+            local_best_th = th
+            local_best_dr = dr
+            local_best_ma = ma
+    return local_best_profit, local_best_th, local_best_dr, local_best_ma
+
 def main():
     print("====================================================")
-    print(f"🐬 海豚雙向 AI 優化器：[動態 2 年時空回測滅殺完全體]")
+    print(f"🐬 海豚雙向 AI 優化器：[Numpy陣列 × 核心多工狂暴靜音版]")
     print(f"📅 演算歷史區間：{START_DATE} ~ {END_DATE}")
     print("====================================================")
     
@@ -138,14 +183,18 @@ def main():
     drop_range = [d / 200 for d in range(4, 21)]            
     ma_options = ["5MA", "10MA", "20MA", "5WMA", "10WMA"]   
     
+    all_combinations = [(th, dr, ma_opt) for ma_opt in ma_options for th in threshold_range for dr in drop_range]
+    num_cores = multiprocessing.cpu_count() 
+    chunk_size = max(1, len(all_combinations) // num_cores)
+    chunks = [all_combinations[i:i + chunk_size] for i in range(0, len(all_combinations), chunk_size)]
+    
     best_params_dict = {}
     
     for stock_id in unique_stocks:
-        print(f"🔍 正在精密演算 {stock_id} 過去兩年的波段抗震基因...")
+        print(f"🔍 正在啟動 8 核心精密演算 {stock_id} 過去兩年的波段抗震基因...")
         df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=START_DATE, end_date=END_DATE)
         if df_raw.empty or len(df_raw) < 50: continue
             
-        # 🎯 核心修正：將 FinMind 原始日期序列設為 DataFrame Index，防止索引丟失變成流水號
         df_raw["date"] = pd.to_datetime(df_raw["date"])
         df_raw = df_raw.set_index("date")
             
@@ -163,24 +212,23 @@ def main():
         df['EMA12'] = df['close'].ewm(span=12, adjust=False).mean()
         df['EMA26'] = df['close'].ewm(span=26, adjust=False).mean()
         df['MACD'] = df['EMA12'] - df['EMA26']
-        
         df["5WMA"] = df["close"].rolling(window=25).mean()
         df["10WMA"] = df["close"].rolling(window=50).mean()
 
         best_profit = -999999
         best_th, best_dr, best_ma = 0.15, 0.03, "20MA"
         
-        for ma_opt in ma_options:
-            for th in threshold_range:
-                for dr in drop_range:
-                    profit = optimize_core(df, th, dr, ma_opt, return_records=False)
-                    if profit > best_profit:
-                        best_profit = profit
-                        best_th = th
-                        best_dr = dr
-                        best_ma = ma_opt
+        with concurrent.futures.ProcessPoolExecutor(max_workers=num_cores) as executor:
+            futures = [executor.submit(process_chunk, chunk, df) for chunk in chunks]
+            for future in concurrent.futures.as_completed(futures):
+                res_profit, res_th, res_dr, res_ma = future.result()
+                if res_profit > best_profit:
+                    best_profit = res_profit
+                    best_th = res_th
+                    best_dr = res_dr
+                    best_ma = res_ma
                         
-        print(f"🏆 {stock_id} 最佳中長線解：守【{best_ma}】，且獲利 {best_th*100:.1f}% 達標自高點拉回 {best_dr*100:.1f}% 通報 | 歷史總利潤: {best_profit} 元")
+        print(f"🏆 {stock_id} 最佳解：守【{best_ma}】| 獲利 {best_th*100:.1f}% 拉回 {best_dr*100:.1f}% 鎖利 | 歷史總利潤: {best_profit} 元")
         
         best_params_dict[stock_id] = {
             "best_tp": best_th, 
@@ -238,4 +286,5 @@ def main():
     print("====================================================\n")
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     main()
