@@ -20,7 +20,7 @@ except:
     pass
 
 # ====================================================================
-# 25.95 參數設定區 (歷史明細聯網對齊版)
+# 25.96 參數設定區 (LINE完全體復原 × 歷史明細聯網對齊版)
 # ====================================================================
 VOLUME_FILTER = 500        
 VOLUME_5MA_FILTER = 400    
@@ -45,9 +45,6 @@ TAX_RATE = 0.003
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
 HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" 
 HISTORY_LEDGER_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_history_ledger.csv" 
-
-# 🎯 【新增：優化器演算回測明細的記錄檔路徑】
-# 請確保你的 dolphin_portfolio_optimizer_v2_1.py 內，也將每筆回測明細以 append 模式寫入此路徑
 OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optimizer_details.csv"
 
 LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
@@ -122,24 +119,28 @@ def run_pre_backtest(api, stock_id):
                         today_k = df.iloc[i]
                         yesterday_k = df.iloc[i-1]
                         pre_yesterday_k = df.iloc[i-2]
-                        c_close = today_k['close']
+                        current_close = today_k['close']
 
                         if in_pos:
-                            if c_close > m_price: m_price = c_close
+                            if current_close > m_price: m_price = current_close
                             if ((m_price - b_price) / b_price) >= th: tp_radar_activated = True
                             
                             b_fee = int(b_price * b_shares * FEE_RATE * FEE_DISCOUNT)
                             if b_fee < 20: b_fee = 20
-                            s_fee = int(c_close * b_shares * FEE_RATE * FEE_DISCOUNT)
-                            if s_fee < 20: s_fee = 20
-                            s_tax = int(c_close * b_shares * TAX_RATE)
-                            net_p = int((c_close * b_shares - s_fee - s_tax) - (b_price * b_shares + b_fee))
+                            total_buy_spent = (b_price * b_shares) + b_fee
                             
-                            if tp_radar_activated and c_close <= (m_price * (1 - dr)):
+                            s_fee = int(current_close * b_shares * FEE_RATE * FEE_DISCOUNT)
+                            if s_fee < 20: s_fee = 20
+                            s_tax = int(current_close * b_shares * TAX_RATE)
+                            total_sell_get = (current_close * b_shares) - s_fee - s_tax
+                            
+                            net_p = int(total_sell_get - total_buy_spent)
+                            
+                            if tp_radar_activated and current_close <= (m_price * (1 - dr)):
                                 grand_profit += net_p
                                 in_pos = False
                                 tp_radar_activated = False
-                            elif today_k[ma_opt] > 0 and c_close < today_k[ma_opt]:
+                            elif today_k[ma_opt] > 0 and current_close < today_k[ma_opt]:
                                 grand_profit += net_p
                                 in_pos = False
                                 tp_radar_activated = False
@@ -147,7 +148,7 @@ def run_pre_backtest(api, stock_id):
                             if today_k["volume"] < 500 or today_k["5MA_Vol"] < 400: continue
                             y_ma = [pre_yesterday_k["5MA"], pre_yesterday_k["10MA"], pre_yesterday_k["20MA"]]
                             y_spread = (max(y_ma) - min(y_ma)) / pre_yesterday_k["close"] if pre_yesterday_k["close"] > 0 else 99
-                            is_bo = (y_spread <= 0.04 and yesterday_k["close"] > yesterday_k["open"] and yesterday_k["close"] > max(yesterday_k["5MA"], yesterday_k["10MA"], yesterday_k["20MA"]) and c_close >= max(today_k["5MA"], today_k["10MA"], today_k["20MA"]))
+                            is_bo = (y_spread <= 0.04 and yesterday_k["close"] > yesterday_k["open"] and yesterday_k["close"] > max(yesterday_k["5MA"], yesterday_k["10MA"], yesterday_k["20MA"]) and current_close >= max(today_k["5MA"], today_k["10MA"], today_k["20MA"]))
                             
                             is_amb = False
                             if not is_bo and today_k["5MA"] >= today_k["10MA"] >= today_k["20MA"]:
@@ -156,9 +157,9 @@ def run_pre_backtest(api, stock_id):
                             
                             if is_bo or is_amb:
                                 in_pos = True
-                                b_price = c_close
-                                b_shares = int(SIM_BASE // c_close)
-                                m_price = c_close
+                                b_price = current_close
+                                b_shares = int(SIM_BASE // current_close)
+                                m_price = current_close
                                 tp_radar_activated = False
                                 
                     if grand_profit > max_possible_profit:
@@ -305,7 +306,6 @@ def update_and_print_portfolio(api, today_str):
     return exit_report, portfolio_report, html_portfolio_data
 
 def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data):
-    """🎨 25.95 升級版：導入 Bootstrap Accordion 摺疊明細功能，渲染優化器歷史單明細"""
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
     total_profit = sum([r['net_profit'] for r in portfolio_data])
     total_current_value = total_cost + total_profit
@@ -313,7 +313,6 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
     
     profit_color_class = "text-taiwan-red" if total_profit >= 0 else "text-taiwan-green"
     
-    # 讀取結算戰績總帳
     history_summary_html = ""
     if os.path.exists(HISTORY_LEDGER_FILE):
         try:
@@ -346,12 +345,10 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         <div class="col-md-4"><div class="summary-box" style="border-left-color: #a1a5b7;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-muted-custom">尚無歷史出清數據</div></div></div>
         """
         
-    # 🎯 【25.95 核心：預先加載優化器的詳細回測歷史明細 CSV】
     opt_details_dict = {}
     if os.path.exists(OPTIMIZER_DETAILS_FILE):
         try:
             df_opt_det = pd.read_csv(OPTIMIZER_DETAILS_FILE, dtype={"stock_id": str})
-            # 依代號分組方便查詢
             for sid, sub_df in df_opt_det.groupby("stock_id"):
                 opt_details_dict[str(sid).strip()] = sub_df.to_dict(orient="records")
         except:
@@ -387,7 +384,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
 </head>
 <body>
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.95 遺傳基因明細版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.96 遺傳基因明細版</small></span>
     <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 <div class="container-fluid p-4">
@@ -467,7 +464,6 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
                     <div class="accordion" id="optimizerAccordion">
     """
     
-    # 動態渲染每個持股的優化器每筆交易明細
     if not portfolio_data:
         html_content += '<div class="text-muted-custom p-3 small">目前無在庫持股，無回測基因可供解析。</div>'
     else:
@@ -502,7 +498,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
                                 <tbody>
             """
             if not records:
-                html_content += f'<tr><td colspan="8" class="text-muted-custom py-3">⚠️ 未在此代號下偵測到明細資料，請檢查優化器外掛是否已將明細輸出至 {OPTIMIZER_DETAILS_FILE}。</td></tr>'
+                html_content += f'<tr><td colspan="8" class="text-muted-custom py-3">⚠️ 未在此代號下偵測到明細資料，請檢查優化器外掛是否已運作。</td></tr>'
             else:
                 for r_idx, r in enumerate(records):
                     r_prof = float(r.get("net_profit", 0))
@@ -629,14 +625,14 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 25.95：[基因回測明細整合版] 啟動...")
+    print("🚀 海豚選股 25.96：[LINE完全體回歸版] 啟動...")
     print("====================================================")
 
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
     
     try:
         df_info = api.taiwan_stock_info()
@@ -813,7 +809,6 @@ async def main():
             pass
         time.sleep(0.03)
 
-    # 動能期望值動態權重配股模組
     new_sim_buys = []
     if candidate_buys and available_cash > MIN_STOCK_BUDGET:
         total_score = sum([c["score"] for c in candidate_buys])
@@ -851,9 +846,6 @@ async def main():
             df_new.to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
         print(f"\n📝 [模擬記帳] 成功分配建倉：{', '.join([r['stock_name'] for r in new_sim_buys])}")
 
-    # ====================================================================
-    # ⚡ 導入外部優化器
-    # ====================================================================
     print("\n⚡ [因果攔截] 今日新股建倉完畢。正在同一資料夾內即時導入優化器外掛...")
     try:
         import dolphin_portfolio_optimizer_v2_11 as d_opt  
@@ -888,12 +880,13 @@ async def main():
             html_msg = f'<span class="badge badge-ambush me-2">{row["stars"]}潛伏</span> <strong>{row["title"]}</strong> <br> <span class="text-muted-custom small">現價: {row["close"]} | 均線張開度: {row["spread"]*100:.1f}% | MACD: {row["macd"]}</span>'
             html_ambush_strings.append(html_msg)
 
+    # 執行持股結算
     exit_report_text, portfolio_report_text, html_portfolio_data = update_and_print_portfolio(api, today_str)
 
-    # 渲染包含歷史摺疊明細的網頁
+    # 渲染網頁
     generate_one_page_html(today_str, html_breakout_strings, html_ambush_strings, html_portfolio_data)
 
-    print("\n🌐 [雲端同步] 正在啟動 Git 引擎，將儀表板推送到雲端監控哨站...")
+    print("\n🌐 [雲端同步] 正在啟動 Git 引擎，將儀表板推送到雲端監跨哨站...")
     try:
         project_dir = os.path.dirname(PORTFOLIO_FILE)
         subprocess.run(["git", "add", "."], cwd=project_dir, check=True, stdout=subprocess.DEVNULL)
@@ -904,13 +897,29 @@ async def main():
     except Exception as git_err:
         print(f"⚠️ [雲端同步] 失敗（原因: {git_err}）。")
 
+    # 🎯 ====================================================================
+    # 📲 【LINE 終極攔截發送防線完全體修復】
+    # ====================================================================
     if final_breakout_list or final_ambush_list or exit_report_text or portfolio_report_text.strip():
         report_chunks = [
-            f"🐬 海豚選股 25.95 [基因明細整合版] 🐬", 
-            f"📅 數據日期：{today_str}"
+            f"🐬 海豚選股 25.96 [基因明細整合版] 🐬", 
+            f"📅 數據日期：{today_str}",
+            f"───────────────────"
         ]
+        if exit_report_text.strip():
+            report_chunks.extend([exit_report_text.strip(), f"───────────────────"])
+        if final_breakout_list:
+            report_chunks.extend([f"🚀【真·正飆股 · 動能突破擊潰區】", "\n".join(final_breakout_list), f"───────────────────"])
+        if final_ambush_list:
+            report_chunks.extend([f"🎯【準·起飆股 · 鱷魚潛伏地底區】", "\n".join(final_ambush_list), f"───────────────────"])
+        if portfolio_report_text.strip():
+            # 🎯 核心修復點：把結算出來的在倉個股資產回報完整塞進 LINE 訊息容器中
+            report_chunks.append(portfolio_report_text.strip())
+        
         report_text = "\n".join([chunk for chunk in report_chunks if chunk.strip()])
         send_line_notify(report_text)
+    else:
+        print("📭 今日無符合標的。")
 
     os._exit(0)
 
