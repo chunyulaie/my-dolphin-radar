@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>海豚量化自適應指揮官儀表板</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body { background-color: #12141c; color: #e4e6eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .navbar { background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }
@@ -20,11 +21,14 @@
         .badge-radar { background-color: #ff4a4a; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
         @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         .summary-box { background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }
+        .accordion-button { background-color: #22293a !important; color: #00f2fe !important; border: 1px solid #2d3548; }
+        .accordion-button:not(.collapsed) { background-color: #ff4a4a !important; color: white !important; }
+        .accordion-body { background-color: #151b29; border: 1px solid #2d3548; color: #ffffff; }
     </style>
 </head>
 <body>
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.85 資金池優化版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v25.95 遺傳基因明細版</small></span>
     <span class="text-muted-custom">📅 數據更新時間：2026-06-22</span>
 </nav>
 <div class="container-fluid p-4">
@@ -38,19 +42,20 @@
         <div class="col-md-2">
             <div class="summary-box" style="border-left-color: #ffffff;">
                 <div class="text-muted-custom small">持股現值估算</div>
-                <div class="fs-4 fw-bold text-white">$235,215 元</div>
+                <div class="fs-4 fw-bold text-white">$231,484 元</div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="summary-box" style="border-left-color: #ff4a4a;">
+            <div class="summary-box" style="border-left-color: #2cf3a0;">
                 <div class="text-muted-custom small">在倉持股總淨損益</div>
-                <div class="fs-4 fw-bold text-taiwan-red">+2,719 元 (+1.17%)</div>
+                <div class="fs-4 fw-bold text-taiwan-green">-1,012 元 (-0.44%)</div>
             </div>
         </div>
         
         <div class="col-md-4"><div class="summary-box" style="border-left-color: #a1a5b7;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-muted-custom">尚無歷史出清數據</div></div></div>
         
     </div>
+    
     <div class="row">
         <div class="col-12 col-xl-8">
             <div class="card">
@@ -76,11 +81,11 @@
                                 <td class="fw-bold text-white">4741 泓瀚</td>
                                 <td class="small text-muted-custom">2026-06-09</td>
                                 <td class="text-white">69.10 <small class="text-muted-custom">(434股)</small></td>
-                                <td class="fw-bold text-warning">64.60</td>
+                                <td class="fw-bold text-warning">69.10</td>
                                 <td class="text-white">72.55</td>
                                 <td><span class="text-info">68.51</span> <small class="text-muted-custom">(72.50)</small></td>
-                                <td><span class="text-danger">61.18</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-taiwan-green">-2,077元<br><small>-6.92%</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -88,11 +93,11 @@
                                 <td class="fw-bold text-white">2368 金像電</td>
                                 <td class="small text-muted-custom">2026-06-17</td>
                                 <td class="text-white">1370.00 <small class="text-muted-custom">(21股)</small></td>
-                                <td class="fw-bold text-warning">1355.00</td>
+                                <td class="fw-bold text-warning">1370.00</td>
                                 <td class="text-white">1726.20</td>
                                 <td><span class="text-info">1308.35</span> <small class="text-muted-custom">(1370.00)</small></td>
-                                <td><span class="text-danger">1320.70</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-taiwan-green">-440元<br><small>-1.53%</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-126元<br><small>-0.44%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -100,11 +105,11 @@
                                 <td class="fw-bold text-white">3704 合勤控</td>
                                 <td class="small text-muted-custom">2026-06-17</td>
                                 <td class="text-white">49.35 <small class="text-muted-custom">(607股)</small></td>
-                                <td class="fw-bold text-warning">48.25</td>
+                                <td class="fw-bold text-warning">49.35</td>
                                 <td class="text-white">57.74</td>
                                 <td><span class="text-info">48.36</span> <small class="text-muted-custom">(49.35)</small></td>
-                                <td><span class="text-danger">47.17</span> <small class="text-muted-custom">(10MA)</small></td>
-                                <td class="fw-bold text-taiwan-green">-794元<br><small>-2.65%</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10MA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -112,11 +117,11 @@
                                 <td class="fw-bold text-white">2867 三商壽</td>
                                 <td class="small text-muted-custom">2026-06-09</td>
                                 <td class="text-white">7.97 <small class="text-muted-custom">(3764股)</small></td>
-                                <td class="fw-bold text-warning">8.74</td>
+                                <td class="fw-bold text-warning">7.97</td>
                                 <td class="text-white">10.20</td>
                                 <td><span class="text-info">8.57</span> <small class="text-muted-custom">(8.74)</small></td>
-                                <td><span class="text-danger">7.86</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-taiwan-red">+2,760元<br><small>+9.19%</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -124,11 +129,11 @@
                                 <td class="fw-bold text-white">1460 宏遠</td>
                                 <td class="small text-muted-custom">2026-06-16</td>
                                 <td class="text-white">7.29 <small class="text-muted-custom">(4115股)</small></td>
-                                <td class="fw-bold text-warning">7.20</td>
+                                <td class="fw-bold text-warning">7.29</td>
                                 <td class="text-white">7.65</td>
                                 <td><span class="text-info">7.03</span> <small class="text-muted-custom">(7.29)</small></td>
-                                <td><span class="text-danger">7.04</span> <small class="text-muted-custom">(10WMA)</small></td>
-                                <td class="fw-bold text-taiwan-green">-498元<br><small>-1.66%</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -136,11 +141,11 @@
                                 <td class="fw-bold text-white">2409 友達</td>
                                 <td class="small text-muted-custom">2026-06-11</td>
                                 <td class="text-white">24.00 <small class="text-muted-custom">(1000股)</small></td>
-                                <td class="fw-bold text-warning">28.15</td>
+                                <td class="fw-bold text-warning">24.00</td>
                                 <td class="text-white">29.04</td>
                                 <td><span class="text-info">27.59</span> <small class="text-muted-custom">(28.15)</small></td>
-                                <td><span class="text-danger">23.46</span> <small class="text-muted-custom">(5WMA)</small></td>
-                                <td class="fw-bold text-taiwan-red">+4,026元<br><small>+16.76%</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(5WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-112元<br><small>-0.47%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
             
@@ -151,7 +156,7 @@
                                 <td class="fw-bold text-warning">317.50</td>
                                 <td class="text-white">336.55</td>
                                 <td><span class="text-info">293.69</span> <small class="text-muted-custom">(317.50)</small></td>
-                                <td><span class="text-danger">230.80</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(10WMA)</small></td>
                                 <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
@@ -163,7 +168,7 @@
                                 <td class="fw-bold text-warning">81.80</td>
                                 <td class="text-white">88.34</td>
                                 <td><span class="text-info">80.16</span> <small class="text-muted-custom">(81.80)</small></td>
-                                <td><span class="text-danger">72.43</span> <small class="text-muted-custom">(5WMA)</small></td>
+                                <td><span class="text-danger">0.00</span> <small class="text-muted-custom">(5WMA)</small></td>
                                 <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
                                 <td><span class="text-muted-custom small">未開啟</span></td>
                             </tr>
@@ -172,18 +177,1243 @@
                     </table>
                 </div>
             </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 text-warning">🔍 AI 優化器：2年時空基因回測明細紀錄</div>
+                <div class="card-body p-3">
+                    <div class="accordion" id="optimizerAccordion">
+    
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_4741">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_4741" aria-expanded="false" aria-controls="collapse_4741">
+                        📊 4741 泓瀚 — 2年最佳化策略回測歷史明細紀錄 (共 4 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_4741" class="accordion-collapse collapse" aria-labelledby="heading_4741" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>328</td>
+                                        <td>26.5</td>
+                                        <td>334</td>
+                                        <td>22.5</td>
+                                        <td class="text-taiwan-green fw-bold">-4,644元</td>
+                                        <td class="text-taiwan-green fw-bold">-15.47%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>375</td>
+                                        <td>23.25</td>
+                                        <td>394</td>
+                                        <td>21.25</td>
+                                        <td class="text-taiwan-green fw-bold">-2,702元</td>
+                                        <td class="text-taiwan-green fw-bold">-9.00%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>418</td>
+                                        <td>26.95</td>
+                                        <td>443</td>
+                                        <td>55.4</td>
+                                        <td class="text-taiwan-red fw-bold">+31,436元</td>
+                                        <td class="text-taiwan-red fw-bold">+104.73%</td>
+                                        <td class="text-muted-custom">移動鎖利(5.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>451</td>
+                                        <td>62.4</td>
+                                        <td>478</td>
+                                        <td>74.5</td>
+                                        <td class="text-taiwan-red fw-bold">+5,661元</td>
+                                        <td class="text-taiwan-red fw-bold">+18.89%</td>
+                                        <td class="text-muted-custom">移動鎖利(5.5%)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2368">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2368" aria-expanded="false" aria-controls="collapse_2368">
+                        📊 2368 金像電 — 2年最佳化策略回測歷史明細紀錄 (共 13 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_2368" class="accordion-collapse collapse" aria-labelledby="heading_2368" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>50</td>
+                                        <td>210.5</td>
+                                        <td>51</td>
+                                        <td>206.0</td>
+                                        <td class="text-taiwan-green fw-bold">-766元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.56%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>80</td>
+                                        <td>203.0</td>
+                                        <td>81</td>
+                                        <td>200.5</td>
+                                        <td class="text-taiwan-green fw-bold">-495元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.66%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>104</td>
+                                        <td>191.0</td>
+                                        <td>105</td>
+                                        <td>186.5</td>
+                                        <td class="text-taiwan-green fw-bold">-833元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.78%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>109</td>
+                                        <td>192.0</td>
+                                        <td>135</td>
+                                        <td>231.5</td>
+                                        <td class="text-taiwan-red fw-bold">+6,014元</td>
+                                        <td class="text-taiwan-red fw-bold">+20.07%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>150</td>
+                                        <td>222.0</td>
+                                        <td>160</td>
+                                        <td>223.5</td>
+                                        <td class="text-taiwan-red fw-bold">+72元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.24%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>161</td>
+                                        <td>216.5</td>
+                                        <td>162</td>
+                                        <td>222.0</td>
+                                        <td class="text-taiwan-red fw-bold">+628元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.10%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td>
+                                        <td>168</td>
+                                        <td>228.0</td>
+                                        <td>169</td>
+                                        <td>220.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,174元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.93%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td>
+                                        <td>242</td>
+                                        <td>272.0</td>
+                                        <td>282</td>
+                                        <td>443.5</td>
+                                        <td class="text-taiwan-red fw-bold">+18,679元</td>
+                                        <td class="text-taiwan-red fw-bold">+62.39%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td>
+                                        <td>298</td>
+                                        <td>493.5</td>
+                                        <td>309</td>
+                                        <td>412.5</td>
+                                        <td class="text-taiwan-green fw-bold">-4,974元</td>
+                                        <td class="text-taiwan-green fw-bold">-16.79%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td>
+                                        <td>330</td>
+                                        <td>465.5</td>
+                                        <td>352</td>
+                                        <td>600.0</td>
+                                        <td class="text-taiwan-red fw-bold">+8,453元</td>
+                                        <td class="text-taiwan-red fw-bold">+28.35%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td>
+                                        <td>363</td>
+                                        <td>586.0</td>
+                                        <td>386</td>
+                                        <td>596.0</td>
+                                        <td class="text-taiwan-red fw-bold">+379元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.27%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td>
+                                        <td>391</td>
+                                        <td>720.0</td>
+                                        <td>422</td>
+                                        <td>888.0</td>
+                                        <td class="text-taiwan-red fw-bold">+6,739元</td>
+                                        <td class="text-taiwan-red fw-bold">+22.81%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td>
+                                        <td>432</td>
+                                        <td>1095.0</td>
+                                        <td>452</td>
+                                        <td>1330.0</td>
+                                        <td class="text-taiwan-red fw-bold">+6,198元</td>
+                                        <td class="text-taiwan-red fw-bold">+20.95%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_3704">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_3704" aria-expanded="false" aria-controls="collapse_3704">
+                        📊 3704 合勤控 — 2年最佳化策略回測歷史明細紀錄 (共 20 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_3704" class="accordion-collapse collapse" aria-labelledby="heading_3704" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>53</td>
+                                        <td>37.3</td>
+                                        <td>54</td>
+                                        <td>36.8</td>
+                                        <td class="text-taiwan-green fw-bold">-530元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.77%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>59</td>
+                                        <td>37.05</td>
+                                        <td>66</td>
+                                        <td>37.5</td>
+                                        <td class="text-taiwan-red fw-bold">+233元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.78%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>82</td>
+                                        <td>38.6</td>
+                                        <td>92</td>
+                                        <td>40.35</td>
+                                        <td class="text-taiwan-red fw-bold">+1,225元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.08%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>109</td>
+                                        <td>41.6</td>
+                                        <td>115</td>
+                                        <td>39.75</td>
+                                        <td class="text-taiwan-green fw-bold">-1,458元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.86%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>144</td>
+                                        <td>38.45</td>
+                                        <td>158</td>
+                                        <td>40.75</td>
+                                        <td class="text-taiwan-red fw-bold">+1,658元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.52%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>212</td>
+                                        <td>29.8</td>
+                                        <td>216</td>
+                                        <td>29.9</td>
+                                        <td class="text-taiwan-green fw-bold">-29元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.10%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td>
+                                        <td>255</td>
+                                        <td>27.45</td>
+                                        <td>257</td>
+                                        <td>26.45</td>
+                                        <td class="text-taiwan-green fw-bold">-1,218元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.06%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td>
+                                        <td>263</td>
+                                        <td>27.45</td>
+                                        <td>273</td>
+                                        <td>28.0</td>
+                                        <td class="text-taiwan-red fw-bold">+469元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.56%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td>
+                                        <td>274</td>
+                                        <td>27.3</td>
+                                        <td>275</td>
+                                        <td>26.95</td>
+                                        <td class="text-taiwan-green fw-bold">-512元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.71%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td>
+                                        <td>280</td>
+                                        <td>28.1</td>
+                                        <td>282</td>
+                                        <td>27.05</td>
+                                        <td class="text-taiwan-green fw-bold">-1,246元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.15%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td>
+                                        <td>286</td>
+                                        <td>29.05</td>
+                                        <td>297</td>
+                                        <td>38.4</td>
+                                        <td class="text-taiwan-red fw-bold">+9,491元</td>
+                                        <td class="text-taiwan-red fw-bold">+31.64%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td>
+                                        <td>327</td>
+                                        <td>34.4</td>
+                                        <td>331</td>
+                                        <td>35.1</td>
+                                        <td class="text-taiwan-red fw-bold">+479元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.60%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td>
+                                        <td>333</td>
+                                        <td>36.5</td>
+                                        <td>337</td>
+                                        <td>34.55</td>
+                                        <td class="text-taiwan-green fw-bold">-1,725元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.75%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td>
+                                        <td>338</td>
+                                        <td>35.4</td>
+                                        <td>340</td>
+                                        <td>35.2</td>
+                                        <td class="text-taiwan-green fw-bold">-298元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.99%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td>
+                                        <td>349</td>
+                                        <td>35.45</td>
+                                        <td>355</td>
+                                        <td>35.35</td>
+                                        <td class="text-taiwan-green fw-bold">-213元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.71%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td>
+                                        <td>377</td>
+                                        <td>32.95</td>
+                                        <td>378</td>
+                                        <td>32.5</td>
+                                        <td class="text-taiwan-green fw-bold">-537元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.79%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td>
+                                        <td>385</td>
+                                        <td>36.05</td>
+                                        <td>393</td>
+                                        <td>36.45</td>
+                                        <td class="text-taiwan-red fw-bold">+202元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.67%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>18</td>
+                                        <td>418</td>
+                                        <td>34.6</td>
+                                        <td>421</td>
+                                        <td>32.25</td>
+                                        <td class="text-taiwan-green fw-bold">-2,160元</td>
+                                        <td class="text-taiwan-green fw-bold">-7.20%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>19</td>
+                                        <td>432</td>
+                                        <td>34.35</td>
+                                        <td>442</td>
+                                        <td>35.75</td>
+                                        <td class="text-taiwan-red fw-bold">+1,089元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.63%</td>
+                                        <td class="text-muted-custom">跌破均線(10MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>20</td>
+                                        <td>455</td>
+                                        <td>36.55</td>
+                                        <td>471</td>
+                                        <td>47.7</td>
+                                        <td class="text-taiwan-red fw-bold">+8,986元</td>
+                                        <td class="text-taiwan-red fw-bold">+29.96%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2867">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2867" aria-expanded="false" aria-controls="collapse_2867">
+                        📊 2867 三商壽 — 2年最佳化策略回測歷史明細紀錄 (共 13 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_2867" class="accordion-collapse collapse" aria-labelledby="heading_2867" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>61</td>
+                                        <td>7.89</td>
+                                        <td>62</td>
+                                        <td>7.74</td>
+                                        <td class="text-taiwan-green fw-bold">-698元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.33%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>100</td>
+                                        <td>7.01</td>
+                                        <td>101</td>
+                                        <td>6.98</td>
+                                        <td class="text-taiwan-green fw-bold">-257元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.86%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>142</td>
+                                        <td>6.47</td>
+                                        <td>143</td>
+                                        <td>6.49</td>
+                                        <td class="text-taiwan-green fw-bold">-37元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.12%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>144</td>
+                                        <td>6.5</td>
+                                        <td>172</td>
+                                        <td>6.64</td>
+                                        <td class="text-taiwan-red fw-bold">+515元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.72%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>223</td>
+                                        <td>5.31</td>
+                                        <td>224</td>
+                                        <td>5.26</td>
+                                        <td class="text-taiwan-green fw-bold">-411元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.37%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>255</td>
+                                        <td>5.0</td>
+                                        <td>256</td>
+                                        <td>4.99</td>
+                                        <td class="text-taiwan-green fw-bold">-189元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.63%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td>
+                                        <td>259</td>
+                                        <td>5.05</td>
+                                        <td>260</td>
+                                        <td>5.02</td>
+                                        <td class="text-taiwan-green fw-bold">-307元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.02%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td>
+                                        <td>265</td>
+                                        <td>5.05</td>
+                                        <td>327</td>
+                                        <td>7.17</td>
+                                        <td class="text-taiwan-red fw-bold">+12,425元</td>
+                                        <td class="text-taiwan-red fw-bold">+41.39%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td>
+                                        <td>353</td>
+                                        <td>7.29</td>
+                                        <td>411</td>
+                                        <td>7.88</td>
+                                        <td class="text-taiwan-red fw-bold">+2,290元</td>
+                                        <td class="text-taiwan-red fw-bold">+7.63%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td>
+                                        <td>431</td>
+                                        <td>7.76</td>
+                                        <td>432</td>
+                                        <td>7.8</td>
+                                        <td class="text-taiwan-red fw-bold">+24元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.08%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td>
+                                        <td>436</td>
+                                        <td>7.91</td>
+                                        <td>442</td>
+                                        <td>7.78</td>
+                                        <td class="text-taiwan-green fw-bold">-620元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.07%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td>
+                                        <td>443</td>
+                                        <td>7.82</td>
+                                        <td>444</td>
+                                        <td>7.85</td>
+                                        <td class="text-taiwan-green fw-bold">-14元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.05%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td>
+                                        <td>452</td>
+                                        <td>7.83</td>
+                                        <td>454</td>
+                                        <td>7.7</td>
+                                        <td class="text-taiwan-green fw-bold">-626元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.09%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_1460">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_1460" aria-expanded="false" aria-controls="collapse_1460">
+                        📊 1460 宏遠 — 2年最佳化策略回測歷史明細紀錄 (共 11 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_1460" class="accordion-collapse collapse" aria-labelledby="heading_1460" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>102</td>
+                                        <td>7.28</td>
+                                        <td>105</td>
+                                        <td>7.14</td>
+                                        <td class="text-taiwan-green fw-bold">-704元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.35%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>113</td>
+                                        <td>7.08</td>
+                                        <td>114</td>
+                                        <td>7.06</td>
+                                        <td class="text-taiwan-green fw-bold">-213元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.71%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>129</td>
+                                        <td>7.2</td>
+                                        <td>135</td>
+                                        <td>7.08</td>
+                                        <td class="text-taiwan-green fw-bold">-627元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.09%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>156</td>
+                                        <td>7.19</td>
+                                        <td>184</td>
+                                        <td>7.4</td>
+                                        <td class="text-taiwan-red fw-bold">+744元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.48%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>213</td>
+                                        <td>6.83</td>
+                                        <td>214</td>
+                                        <td>6.88</td>
+                                        <td class="text-taiwan-red fw-bold">+89元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.30%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>215</td>
+                                        <td>6.88</td>
+                                        <td>216</td>
+                                        <td>6.9</td>
+                                        <td class="text-taiwan-green fw-bold">-42元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.14%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td>
+                                        <td>217</td>
+                                        <td>6.98</td>
+                                        <td>225</td>
+                                        <td>7.04</td>
+                                        <td class="text-taiwan-red fw-bold">+127元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.42%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td>
+                                        <td>353</td>
+                                        <td>6.14</td>
+                                        <td>408</td>
+                                        <td>6.81</td>
+                                        <td class="text-taiwan-red fw-bold">+3,133元</td>
+                                        <td class="text-taiwan-red fw-bold">+10.44%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td>
+                                        <td>409</td>
+                                        <td>6.68</td>
+                                        <td>437</td>
+                                        <td>6.96</td>
+                                        <td class="text-taiwan-red fw-bold">+1,124元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.74%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td>
+                                        <td>449</td>
+                                        <td>7.01</td>
+                                        <td>458</td>
+                                        <td>6.98</td>
+                                        <td class="text-taiwan-green fw-bold">-257元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.86%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td>
+                                        <td>470</td>
+                                        <td>7.48</td>
+                                        <td>473</td>
+                                        <td>7.04</td>
+                                        <td class="text-taiwan-green fw-bold">-1,888元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.29%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2409">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2409" aria-expanded="false" aria-controls="collapse_2409">
+                        📊 2409 友達 — 2年最佳化策略回測歷史明細紀錄 (共 14 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_2409" class="accordion-collapse collapse" aria-labelledby="heading_2409" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>59</td>
+                                        <td>16.65</td>
+                                        <td>85</td>
+                                        <td>16.8</td>
+                                        <td class="text-taiwan-red fw-bold">+140元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.47%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>116</td>
+                                        <td>16.05</td>
+                                        <td>117</td>
+                                        <td>15.75</td>
+                                        <td class="text-taiwan-green fw-bold">-688元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.29%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>154</td>
+                                        <td>14.35</td>
+                                        <td>180</td>
+                                        <td>14.7</td>
+                                        <td class="text-taiwan-red fw-bold">+599元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.00%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>206</td>
+                                        <td>13.25</td>
+                                        <td>223</td>
+                                        <td>13.2</td>
+                                        <td class="text-taiwan-green fw-bold">-242元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.81%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>249</td>
+                                        <td>12.6</td>
+                                        <td>250</td>
+                                        <td>12.5</td>
+                                        <td class="text-taiwan-green fw-bold">-367元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.22%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>266</td>
+                                        <td>12.45</td>
+                                        <td>268</td>
+                                        <td>12.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,210元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.03%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td>
+                                        <td>279</td>
+                                        <td>12.4</td>
+                                        <td>291</td>
+                                        <td>12.3</td>
+                                        <td class="text-taiwan-green fw-bold">-370元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.23%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td>
+                                        <td>302</td>
+                                        <td>13.5</td>
+                                        <td>318</td>
+                                        <td>13.2</td>
+                                        <td class="text-taiwan-green fw-bold">-793元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.64%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td>
+                                        <td>354</td>
+                                        <td>11.85</td>
+                                        <td>357</td>
+                                        <td>11.3</td>
+                                        <td class="text-taiwan-green fw-bold">-1,517元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.05%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td>
+                                        <td>371</td>
+                                        <td>12.05</td>
+                                        <td>377</td>
+                                        <td>15.65</td>
+                                        <td class="text-taiwan-red fw-bold">+8,804元</td>
+                                        <td class="text-taiwan-red fw-bold">+29.33%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td>
+                                        <td>404</td>
+                                        <td>16.1</td>
+                                        <td>408</td>
+                                        <td>14.95</td>
+                                        <td class="text-taiwan-green fw-bold">-2,265元</td>
+                                        <td class="text-taiwan-green fw-bold">-7.55%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td>
+                                        <td>414</td>
+                                        <td>17.25</td>
+                                        <td>419</td>
+                                        <td>15.75</td>
+                                        <td class="text-taiwan-green fw-bold">-2,730元</td>
+                                        <td class="text-taiwan-green fw-bold">-9.09%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td>
+                                        <td>432</td>
+                                        <td>18.75</td>
+                                        <td>445</td>
+                                        <td>17.2</td>
+                                        <td class="text-taiwan-green fw-bold">-2,602元</td>
+                                        <td class="text-taiwan-green fw-bold">-8.67%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td>
+                                        <td>455</td>
+                                        <td>20.2</td>
+                                        <td>472</td>
+                                        <td>27.1</td>
+                                        <td class="text-taiwan-red fw-bold">+10,086元</td>
+                                        <td class="text-taiwan-red fw-bold">+33.60%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_6435">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_6435" aria-expanded="false" aria-controls="collapse_6435">
+                        📊 6435 大中 — 2年最佳化策略回測歷史明細紀錄 (共 6 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_6435" class="accordion-collapse collapse" aria-labelledby="heading_6435" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>172</td>
+                                        <td>116.5</td>
+                                        <td>184</td>
+                                        <td>106.5</td>
+                                        <td class="text-taiwan-green fw-bold">-2,692元</td>
+                                        <td class="text-taiwan-green fw-bold">-8.99%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>300</td>
+                                        <td>102.0</td>
+                                        <td>329</td>
+                                        <td>104.5</td>
+                                        <td class="text-taiwan-red fw-bold">+603元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.01%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>341</td>
+                                        <td>117.0</td>
+                                        <td>370</td>
+                                        <td>110.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,916元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.39%</td>
+                                        <td class="text-muted-custom">跌破均線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>385</td>
+                                        <td>139.0</td>
+                                        <td>391</td>
+                                        <td>147.5</td>
+                                        <td class="text-taiwan-red fw-bold">+1,692元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.66%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>407</td>
+                                        <td>147.0</td>
+                                        <td>425</td>
+                                        <td>157.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,904元</td>
+                                        <td class="text-taiwan-red fw-bold">+6.34%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>435</td>
+                                        <td>162.5</td>
+                                        <td>457</td>
+                                        <td>228.0</td>
+                                        <td class="text-taiwan-red fw-bold">+11,887元</td>
+                                        <td class="text-taiwan-red fw-bold">+39.73%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.5%)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_6620">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_6620" aria-expanded="false" aria-controls="collapse_6620">
+                        📊 6620 漢達 — 2年最佳化策略回測歷史明細紀錄 (共 7 筆回撤單交易)
+                    </button>
+                </h2>
+                <div id="collapse_6620" class="accordion-collapse collapse" aria-labelledby="heading_6620" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th>
+                                        <th>買入日期</th>
+                                        <th>買入價格</th>
+                                        <th>賣出日期</th>
+                                        <th>賣出價格</th>
+                                        <th>回測淨損益</th>
+                                        <th>報酬率 (%)</th>
+                                        <th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td>
+                                        <td>123</td>
+                                        <td>60.6</td>
+                                        <td>127</td>
+                                        <td>73.7</td>
+                                        <td class="text-taiwan-red fw-bold">+6,335元</td>
+                                        <td class="text-taiwan-red fw-bold">+21.10%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td>
+                                        <td>142</td>
+                                        <td>78.0</td>
+                                        <td>168</td>
+                                        <td>90.2</td>
+                                        <td class="text-taiwan-red fw-bold">+4,541元</td>
+                                        <td class="text-taiwan-red fw-bold">+15.15%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td>
+                                        <td>176</td>
+                                        <td>89.9</td>
+                                        <td>178</td>
+                                        <td>86.1</td>
+                                        <td class="text-taiwan-green fw-bold">-1,391元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.64%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td>
+                                        <td>213</td>
+                                        <td>79.8</td>
+                                        <td>234</td>
+                                        <td>86.0</td>
+                                        <td class="text-taiwan-red fw-bold">+2,189元</td>
+                                        <td class="text-taiwan-red fw-bold">+7.31%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td>
+                                        <td>297</td>
+                                        <td>107.0</td>
+                                        <td>315</td>
+                                        <td>143.0</td>
+                                        <td class="text-taiwan-red fw-bold">+9,920元</td>
+                                        <td class="text-taiwan-red fw-bold">+33.09%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td>
+                                        <td>384</td>
+                                        <td>89.5</td>
+                                        <td>385</td>
+                                        <td>87.7</td>
+                                        <td class="text-taiwan-green fw-bold">-731元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.44%</td>
+                                        <td class="text-muted-custom">跌破均線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td>
+                                        <td>437</td>
+                                        <td>73.4</td>
+                                        <td>439</td>
+                                        <td>79.0</td>
+                                        <td class="text-taiwan-red fw-bold">+2,148元</td>
+                                        <td class="text-taiwan-red fw-bold">+7.17%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-12 col-xl-4">
             <div class="card">
                 <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
-    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>6435 大中</strong> <br> <span class="text-muted-custom small">現價: 317.5 | 均線糾結: 3.3% | 布林寬度: 25.3%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>6620 漢達</strong> <br> <span class="text-muted-custom small">現價: 81.8 | 均線糾結: 2.2% | 布林寬度: 15.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>1460 宏遠</strong> <br> <span class="text-muted-custom small">現價: 7.2 | 均線糾結: 1.1% | 布林寬度: 10.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">1天前發動</span> <strong>3704 合勤控</strong> <br> <span class="text-muted-custom small">現價: 48.25 | 均線糾結: 1.6% | 布林寬度: 16.8%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>5302 太欣</strong> <br> <span class="text-muted-custom small">現價: 12.55 | 均線糾結: 4.9% | 布林寬度: 25.1%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>6113 亞矽</strong> <br> <span class="text-muted-custom small">現價: 28.4 | 均線糾結: 2.8% | 布林寬度: 17.0%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">4天前發動</span> <strong>2618 長榮航</strong> <br> <span class="text-muted-custom small">現價: 42.55 | 均線糾結: 3.2% | 布林寬度: 15.1%</span></li>
+    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>2107 厚生</strong> <br> <span class="text-muted-custom small">現價: 25.75 | 均線糾結: 1.0% | 布林寬度: 7.2%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>2368 金像電</strong> <br> <span class="text-muted-custom small">現價: 1395.0 | 均線糾結: 1.1% | 布林寬度: 15.3%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>6435 大中</strong> <br> <span class="text-muted-custom small">現價: 317.5 | 均線糾結: 3.3% | 布林寬度: 25.3%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">今天剛發動</span> <strong>6620 漢達</strong> <br> <span class="text-muted-custom small">現價: 81.8 | 均線糾結: 2.2% | 布林寬度: 15.7%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>3704 合勤控</strong> <br> <span class="text-muted-custom small">現價: 48.5 | 均線糾結: 1.6% | 布林寬度: 16.8%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>5302 太欣</strong> <br> <span class="text-muted-custom small">現價: 12.55 | 均線糾結: 4.9% | 布林寬度: 25.1%</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-breakout me-2">2天前發動</span> <strong>6113 亞矽</strong> <br> <span class="text-muted-custom small">現價: 28.4 | 均線糾結: 2.8% | 布林寬度: 17.0%</span></li>
                 </ul>
             </div>
             <div class="card">
                 <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
-    <li class="list-group-item bg-transparent text-muted-custom small py-3">今日無符合均線糾結壓縮的標的。</li>
+    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-ambush me-2">⭐⭐⭐潛伏</span> <strong>1460 宏遠</strong> <br> <span class="text-muted-custom small">現價: 7.15 | 均線張開度: 1.2% | MACD: 水上</span></li><li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge badge-ambush me-2">⭐⭐⭐潛伏</span> <strong>2542 興富發</strong> <br> <span class="text-muted-custom small">現價: 42.7 | 均線張開度: 2.7% | MACD: 水上</span></li>
                 </ul>
             </div>
         </div>
