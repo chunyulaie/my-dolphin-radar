@@ -4,7 +4,11 @@ import os
 import pandas as pd
 import multiprocessing
 import concurrent.futures
+import warnings  # 👈 新增：導入警告控制模組
 from FinMind.data import DataLoader
+
+# 👈 新增：暴力貼上膠布，讓所有無害的 RuntimeWarning 閉嘴
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
