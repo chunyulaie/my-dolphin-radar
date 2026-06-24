@@ -239,7 +239,7 @@ async def main():
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2Vy_idIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
     try:
         df_info = api.taiwan_stock_info()
         dynamic_name_dict = dict(zip(df_info["stock_id"], df_info["stock_name"]))
