@@ -8,7 +8,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.02 參數設定區 (官方 API 校正 × 零除防禦 × 換血引擎完全體)
+# 26.02 參數設定區 (零除防禦 × 換血引擎 × 戰績檢討完全體)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400; REMOVE_LIST = [] 
 INIT_POOL_BUDGET = 250000; MIN_STOCK_BUDGET = 15000     
@@ -50,8 +50,7 @@ def log_to_history_ledger(row, current_price, net_profit, profit_percent, exit_r
 
 def run_pre_backtest(api, stock_id):
     today = datetime.date.today()
-    # 🎯 精准對齊官方 SDK 指令：taiwan_stock_daily_adaptive
-    df_raw = api.taiwan_stock_daily_adaptive(stock_id=stock_id, start_date=(today - datetime.timedelta(days=730)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"))
+    df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=(today - datetime.timedelta(days=730)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"))
     if df_raw.empty or len(df_raw) < 50: return 0  
     df = pd.DataFrame()
     df["close"] = df_raw["close"].astype(float); df["open"] = df_raw["open"].astype(float)
@@ -102,20 +101,14 @@ def update_and_print_portfolio(api, today_str):
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
         
         try:
-            # 🎯 精准對齊官方 SDK 指令：taiwan_stock_daily_adaptive
-            df_now = api.taiwan_stock_daily_adaptive(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
-            if df_now.empty or len(df_now) < 5:
-                print(f"🛑 [API 警告] {sid} 回傳數據為空，跳過防線體檢。")
-                survived_rows.append(row); continue
-                
+            df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
             current_price = float(df_now.iloc[-1]["close"]); today_high = float(df_now.iloc[-1]["max"])
             df_now = df_now.copy().reset_index(drop=True); df_now["close"] = df_now["close"].astype(float)
             df_now["5MA"] = df_now["close"].rolling(5).mean(); df_now["10MA"] = df_now["close"].rolling(10).mean(); df_now["20MA"] = df_now["close"].rolling(20).mean()
             df_now["5WMA"] = df_now["close"].rolling(25).mean(); df_now["10WMA"] = df_now["close"].rolling(50).mean()
             active_stop_loss_value = float(df_now.iloc[-1][target_ma_line])
-        except Exception as e:
-            print(f"🛑 [API 崩潰] {sid} 撈取失敗（錯誤: {e}），強制鎖定在倉狀態防禦誤殺。")
-            survived_rows.append(row); continue
+        except:
+            current_price = b_price; today_high = b_price; active_stop_loss_value = 0.0
             
         buy_spent = (b_price * shares) + max(20, int(b_price * shares * FEE_RATE * FEE_DISCOUNT))
         sell_get = (current_price * shares) - max(20, int(current_price * shares * FEE_RATE * FEE_DISCOUNT)) - int(current_price * shares * TAX_RATE)
@@ -169,6 +162,7 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
             hist_wr = (hist_win / hist_count * 100) if hist_count > 0 else 0.0
             hist_summary_html = f'<div class="col-md-2"><div class="summary-box" style="border-left-color: #ff9f43;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-taiwan-red">{hist_prof:,.0f} 元</div></div></div><div class="col-md-2"><div class="summary-box" style="border-left-color: #00f2fe;"><div class="text-muted-custom small">歷史勝率/單數</div><div class="fs-4 fw-bold text-white">{hist_wr:.1f}% ({hist_count}單)</div></div></div>'
             for _, h_row in df_h.iloc[::-1].iterrows():
+                # 🎯 核心修正：拋棄歷史上的拉跨 LaTeX $ \rightarrow $，直接原地回歸純淨箭頭 「→」
                 ledger_rows_html += f"<tr><td>{h_row['stock_id']} {h_row['stock_name']}</td><td>{h_row['buy_date']} ~ {h_row['sell_date']}</td><td>{h_row['buy_price']:.2f} → {h_row['sell_price']:.2f}</td><td>{int(h_row['buy_shares'])} 股</td><td class='text-taiwan-red'>{h_row['net_profit']:,}元 ({h_row['profit_percent']:.1f}%)</td><td>{h_row['exit_reason']}</td></tr>"
         except: pass
     if not hist_summary_html: hist_summary_html = '<div class="col-md-4"><div class="summary-box"><div class="fs-4 text-muted-custom">尚無歷史數據</div></div></div>'
@@ -245,7 +239,7 @@ async def main():
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2Vy_idIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
     try:
         df_info = api.taiwan_stock_info()
         dynamic_name_dict = dict(zip(df_info["stock_id"], df_info["stock_name"]))
@@ -278,8 +272,7 @@ async def main():
             if "*" in c_name or stock in sim_purchased_stocks: 
                 continue
                 
-            # 🎯 精准對齊官方 SDK 指令：taiwan_stock_daily_adaptive
-            df_raw = api.taiwan_stock_daily_adaptive(stock_id=stock, start_date=start_str, end_date=today_str)
+            df_raw = api.taiwan_stock_daily(stock_id=stock, start_date=start_str, end_date=today_str)
             if df_raw.empty or len(df_raw) < 35: 
                 continue
             
@@ -348,7 +341,7 @@ async def main():
         wl_sid = str(wl_r["stock_id"]).strip(); wl_days = int(wl_r["已觀測天數"]) + 1
         if wl_sid in sim_purchased_stocks or wl_days > 3: continue
         try:
-            d_w = api.taiwan_stock_daily_adaptive(stock_id=wl_sid, start_date=start_str, end_date=today_str)
+            d_w = api.taiwan_stock_daily(stock_id=wl_sid, start_date=start_str, end_date=today_str)
             c_p = float(d_w.iloc[-1]["close"])
             if ((c_p - float(wl_r["當初潛伏價格"])) / float(wl_r["當初潛伏價格"])) * 100 <= -5.0: continue
             wl_updated.append({"stock_id": wl_sid, "stock_name": wl_r["stock_name"], "初次評選日": wl_r["初次評選日"], "當初潛伏價格": float(wl_r["當初潛伏價格"]), "目前最新收盤": c_p, "已觀測天數": wl_days})
@@ -420,9 +413,18 @@ async def main():
         print("⚡ [因果攔截] 優化器解碼更新完畢。")
     except Exception as e: print(f"⚠️ 優化器外掛調度失敗: {e}")
 
-# 結算部位並生成網頁（🎯 參數精準對齊官方定義的 breakout_list 與 ambush_list）
     exit_text, port_text, html_p_data = update_and_print_portfolio(api, today_str)
-    generate_one_page_html(today_str, raw_breakout_data, raw_ambush_data, html_p_data)
+    
+    f_bo_list = []; h_bo_str = []
+    for r in raw_breakout_data:
+        lbl = "今天發動" if r["days_ago"]==0 else f"{r['days_ago']}天前"
+        f_bo_list.append(f"▪️ {r['title']} ({lbl})"); h_bo_str.append(f'<span class="badge badge-breakout me-2">{lbl}</span> <strong>{r["title"]}</strong>')
+        
+    f_am_list = []; h_am_str = []
+    for r in raw_ambush_data:
+        f_am_list.append(f"{r['stars']} {r['title']}"); h_am_str.append(f'<span class="badge badge-ambush me-2">{r["stars"]}潛伏</span> <strong>{r["title"]}</strong>')
+
+    generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data)
 
     try:
         p_dir = os.path.dirname(PORTFOLIO_FILE)
@@ -432,50 +434,22 @@ async def main():
         print("✅ [雲端同步] 成功！")
     except: pass
 
-    # ====================================================================
-    # 📲 🎯 【26.03 指揮官專屬 · 實戰極簡精美 LINE 戰報引擎完全體】
-    # ====================================================================
-    line_report_chunks = []
-
-    # 1️⃣ 明日建倉新秀 (只抓體檢過關、今晚剛發配預算的新飆股)
-    if new_sim_buys:
-        line_report_chunks.append("🚀【明日開盤預備建倉新秀】")
-        for nb in new_sim_buys:
-            line_report_chunks.append(f"▪️ {nb['stock_id']} {nb['stock_name']}\n  ➔ 設定價格：{nb['buy_price']:.2f} 元 買入建倉")
-        line_report_chunks.append("───────────────────")
-
-    # 2️⃣ 在倉老兵離場 (🎯 徹底清空垃圾迴圈，精準拆解實打實砍單的因果字串)
-    if exit_text.strip():
-        exit_rows = []
-        for line in exit_text.split('\n'):
-            line_clean = line.strip()
-            # 唯有真正觸發「鎖利通知」或「停損出場」的老兵，才准破壞今晚的清靜
-            if line_clean and ("鎖利通知" in line_clean or "停損出場" in line_clean):
-                exit_rows.append(line_clean)
-                
-        if exit_rows:
-            line_report_chunks.append("💀【在倉老兵即時清倉離場】")
-            for er in exit_rows:
-                line_report_chunks.append(f"▪️ {er}")
-            line_report_chunks.append("───────────────────")
-
-    # 3️⃣ 靈魂審查：有買賣變動才發送，其餘老兵穩穩續抱則「絕對封鎖雜訊」
-    if line_report_chunks:
-        # 彈性剔除最末尾多餘的分隔線
-        if line_report_chunks[-1] == "───────────────────":
-            line_report_chunks.pop()
-            
-        header = [
-            f"🐬 海豚選股 v26.03 決戰指標 🐬",
-            f"📅 戰略日期：{today_str}",
+    if f_bo_list or f_am_list or exit_text or port_text.strip():
+        report = [
+            f"🐬 海豚選股 26.01 完全體 🐬", 
+            f"📅 數據日期：{today_str}",
             f"───────────────────"
         ]
-        final_report_text = "\n".join(header + line_report_chunks)
-        send_line_notify(final_report_text)
-    else:
-        print("📭 [實戰監控] 在倉股票安穩續抱中，且無新秀觸發，自動封鎖 LINE 雜訊不打擾。")
-
-    os._exit(0)
+        if exit_text.strip(): 
+            report.extend([exit_text.strip(), f"───────────────────"])
+        if f_bo_list: 
+            report.extend([f"🚀【真·正飆股 · 動能突破擊潰區】", "\n".join(f_bo_list), f"───────────────────"])
+        if f_am_list: 
+            report.extend([f"🎯【準·起飆股 · 鱷魚潛伏地底區】", "\n".join(f_am_list), f"───────────────────"])
+        if port_text.strip(): 
+            report.append(port_text.strip())
+        
+        send_line_notify("\n".join(report))
 
 if __name__ == "__main__":
     import nest_asyncio; nest_asyncio.apply()
