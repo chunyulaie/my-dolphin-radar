@@ -239,7 +239,7 @@ async def main():
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2Vy_idIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
     try:
         df_info = api.taiwan_stock_info()
         dynamic_name_dict = dict(zip(df_info["stock_id"], df_info["stock_name"]))
@@ -413,18 +413,9 @@ async def main():
         print("⚡ [因果攔截] 優化器解碼更新完畢。")
     except Exception as e: print(f"⚠️ 優化器外掛調度失敗: {e}")
 
+# 結算部位並生成網頁（🎯 參數精準對齊官方定義的 breakout_list 與 ambush_list）
     exit_text, port_text, html_p_data = update_and_print_portfolio(api, today_str)
-    
-    f_bo_list = []; h_bo_str = []
-    for r in raw_breakout_data:
-        lbl = "今天發動" if r["days_ago"]==0 else f"{r['days_ago']}天前"
-        f_bo_list.append(f"▪️ {r['title']} ({lbl})"); h_bo_str.append(f'<span class="badge badge-breakout me-2">{lbl}</span> <strong>{r["title"]}</strong>')
-        
-    f_am_list = []; h_am_str = []
-    for r in raw_ambush_data:
-        f_am_list.append(f"{r['stars']} {r['title']}"); h_am_str.append(f'<span class="badge badge-ambush me-2">{r["stars"]}潛伏</span> <strong>{r["title"]}</strong>')
-
-    generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data)
+    generate_one_page_html(today_str, raw_breakout_data, raw_ambush_data, html_p_data)
 
     try:
         p_dir = os.path.dirname(PORTFOLIO_FILE)
@@ -434,22 +425,50 @@ async def main():
         print("✅ [雲端同步] 成功！")
     except: pass
 
-    if f_bo_list or f_am_list or exit_text or port_text.strip():
-        report = [
-            f"🐬 海豚選股 26.01 完全體 🐬", 
-            f"📅 數據日期：{today_str}",
+    # ====================================================================
+    # 📲 🎯 【26.03 指揮官專屬 · 實戰極簡精美 LINE 戰報引擎完全體】
+    # ====================================================================
+    line_report_chunks = []
+
+    # 1️⃣ 明日建倉新秀 (只抓體檢過關、今晚剛發配預算的新飆股)
+    if new_sim_buys:
+        line_report_chunks.append("🚀【明日開盤預備建倉新秀】")
+        for nb in new_sim_buys:
+            line_report_chunks.append(f"▪️ {nb['stock_id']} {nb['stock_name']}\n  ➔ 設定價格：{nb['buy_price']:.2f} 元 買入建倉")
+        line_report_chunks.append("───────────────────")
+
+    # 2️⃣ 在倉老兵離場 (🎯 徹底清空垃圾迴圈，精準拆解實打實砍單的因果字串)
+    if exit_text.strip():
+        exit_rows = []
+        for line in exit_text.split('\n'):
+            line_clean = line.strip()
+            # 唯有真正觸發「鎖利通知」或「停損出場」的老兵，才准破壞今晚的清靜
+            if line_clean and ("鎖利通知" in line_clean or "停損出場" in line_clean):
+                exit_rows.append(line_clean)
+                
+        if exit_rows:
+            line_report_chunks.append("💀【在倉老兵即時清倉離場】")
+            for er in exit_rows:
+                line_report_chunks.append(f"▪️ {er}")
+            line_report_chunks.append("───────────────────")
+
+    # 3️⃣ 靈魂審查：有買賣變動才發送，其餘老兵穩穩續抱則「絕對封鎖雜訊」
+    if line_report_chunks:
+        # 彈性剔除最末尾多餘的分隔線
+        if line_report_chunks[-1] == "───────────────────":
+            line_report_chunks.pop()
+            
+        header = [
+            f"🐬 海豚選股 v26.03 決戰指標 🐬",
+            f"📅 戰略日期：{today_str}",
             f"───────────────────"
         ]
-        if exit_text.strip(): 
-            report.extend([exit_text.strip(), f"───────────────────"])
-        if f_bo_list: 
-            report.extend([f"🚀【真·正飆股 · 動能突破擊潰區】", "\n".join(f_bo_list), f"───────────────────"])
-        if f_am_list: 
-            report.extend([f"🎯【準·起飆股 · 鱷魚潛伏地底區】", "\n".join(f_am_list), f"───────────────────"])
-        if port_text.strip(): 
-            report.append(port_text.strip())
-        
-        send_line_notify("\n".join(report))
+        final_report_text = "\n".join(header + line_report_chunks)
+        send_line_notify(final_report_text)
+    else:
+        print("📭 [實戰監控] 在倉股票安穩續抱中，且無新秀觸發，自動封鎖 LINE 雜訊不打擾。")
+
+    os._exit(0)
 
 if __name__ == "__main__":
     import nest_asyncio; nest_asyncio.apply()
