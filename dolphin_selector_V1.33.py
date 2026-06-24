@@ -162,7 +162,8 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
             hist_wr = (hist_win / hist_count * 100) if hist_count > 0 else 0.0
             hist_summary_html = f'<div class="col-md-2"><div class="summary-box" style="border-left-color: #ff9f43;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-taiwan-red">{hist_prof:,.0f} 元</div></div></div><div class="col-md-2"><div class="summary-box" style="border-left-color: #00f2fe;"><div class="text-muted-custom small">歷史勝率/單數</div><div class="fs-4 fw-bold text-white">{hist_wr:.1f}% ({hist_count}單)</div></div></div>'
             for _, h_row in df_h.iloc[::-1].iterrows():
-                ledger_rows_html += f"<tr><td>{h_row['stock_id']} {h_row['stock_name']}</td><td>{h_row['buy_date']} ~ {h_row['sell_date']}</td><td>{h_row['buy_price']:.2f} $\\rightarrow$ {h_row['sell_price']:.2f}</td><td>{int(h_row['buy_shares'])} 股</td><td class='text-taiwan-red'>{h_row['net_profit']:,}元 ({h_row['profit_percent']:.1f}%)</td><td>{h_row['exit_reason']}</td></tr>"
+                # 🎯 核心修正：拋棄歷史上的拉跨 LaTeX $ \rightarrow $，直接原地回歸純淨箭頭 「→」
+                ledger_rows_html += f"<tr><td>{h_row['stock_id']} {h_row['stock_name']}</td><td>{h_row['buy_date']} ~ {h_row['sell_date']}</td><td>{h_row['buy_price']:.2f} → {h_row['sell_price']:.2f}</td><td>{int(h_row['buy_shares'])} 股</td><td class='text-taiwan-red'>{h_row['net_profit']:,}元 ({h_row['profit_percent']:.1f}%)</td><td>{h_row['exit_reason']}</td></tr>"
         except: pass
     if not hist_summary_html: hist_summary_html = '<div class="col-md-4"><div class="summary-box"><div class="fs-4 text-muted-custom">尚無歷史數據</div></div></div>'
     if not ledger_rows_html: ledger_rows_html = '<tr><td colspan="6" class="text-center text-muted-custom py-3">暫無已清算戰績。</td></tr>'
@@ -183,14 +184,13 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         r_tag = '<span class="badge bg-warning text-dark">⏳ 留校察看</span>' if p['break_days'] == 1 else ('<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>')
         portfolio_tbody += f"<tr><td><strong>{p['stock_id']} {p['stock_name']}</strong><br><small class='text-muted-custom'>(比重: {w_pct:.1f}%)</small></td><td>{p['buy_date']}</td><td>{p['buy_price']:.2f} ({p['buy_shares']}股)</td><td class='text-warning fw-bold'>{p['current_price']:.2f}</td><td>{p['target_tp_price']:.2f}</td><td>{p['dynamic_lock_price']:.2f} ({p['max_price']:.2f})</td><td class='text-danger'>{p['stop_loss_value']:.2f} ({p['target_ma_line']})</td><td class='fw-bold {p_class}'>{p['net_profit']:,}元<br><small>{p['profit_percent']:.2f}%</small></td><td>{r_tag}</td></tr>"
 
-    # 🎯 核心拼字修正：將歷史戰績區的變數改為與上方定義一致的 {hist_summary_html}，全面排除 NameError
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-TW"><head><meta charset="UTF-8"><title>海豚自適應指揮官儀表板</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><style>body {{ background-color: #12141c; color: #e4e6eb; font-family: sans-serif; }} .navbar {{ background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }} .card {{ background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }} .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }} .table-custom-dark th {{ background-color: #22293a !important; color: #00f2fe !important; }} .table-custom-dark td {{ background-color: #1a1f2c !important; color: #fff !important; border-color: #2d3548 !important; }} .text-taiwan-red {{ color: #ff4a4a !important; font-weight: bold; }} .text-taiwan-green {{ color: #2cf3a0 !important; font-weight: bold; }} .text-muted-custom {{ color: #a1a5b7 !important; }} .summary-box {{ background: #1e2638; border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }} .badge-radar {{ background-color: #ff4a4a; animation: blink 1.5s infinite; }} @keyframes blink {{ 0%, 100% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} }}</style></head>
 <body><nav class="navbar navbar-dark px-4 py-3"><span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v26.02 智能完全體版</small></span><span class="text-muted-custom">📅 更新時間：{today_str}</span></nav>
 <div class="container-fluid p-4"><div class="row mb-4"><div class="col-md-2"><div class="summary-box"><div class="text-muted-custom small">當前持股成本</div><div class="fs-4 fw-bold text-info">${total_cost:,.0f} 元</div></div></div><div class="col-md-2"><div class="summary-box" style="border-left-color: #fff;"><div class="text-muted-custom small">持股現值估算</div><div class="fs-4 fw-bold text-white">${total_current:,.0f} 元</div></div></div><div class="col-md-4"><div class="summary-box" style="border-left-color: #ff4a4a;"><div class="text-muted-custom small">在倉持股總淨損益</div><div class="fs-4 fw-bold {profit_color_class}">{total_profit:,.0f} 元 ({total_pct:.2f}%)</div></div></div>{hist_summary_html}</div>
 <div class="row"><div class="col-12 col-xl-8"><div class="card"><div class="card-header fs-5">💼 實戰持股狀態機雙向防線即時雷達</div><div class="table-responsive"><table class="table table-custom-dark mb-0"><thead><tr><th>代號/名稱</th><th>買入日期</th><th>成本價</th><th>目前價</th><th>起跑門檻</th><th>鎖利線(最高)</th><th>生命均線(停損)</th><th>當前損益</th><th>雷達狀態</th></tr></thead><tbody>{portfolio_tbody}</tbody></table></div></div>
 <div class="card mt-4"><div class="card-header fs-5 text-info">🔍 歷史評選 · ⭐⭐⭐ 3星滿星新秀留校察看觀測哨站</div><div class="table-responsive"><table class="table table-custom-dark mb-0 text-center small"><thead><tr><th>代號/名稱</th><th>評等</th><th>捕獲日</th><th>當初潛伏價</th><th>目前最新價</th><th>生命流狀態</th></tr></thead><tbody>{wl_rows}</tbody></table></div></div>
-<div class="card mt-4"><div class="card-header fs-5 bg-dark"><button class="btn btn-link text-decoration-none fw-bold fs-5 w-100 text-start p-0 text-info" type="button" data-bs-toggle="collapse" data-bs-target="#ledgerCollapse">📋 📂 [點擊展開] 📊 歷史戰績移動清算回顧與策略檢討本本</button></div><div class="collapse" id="ledgerCollapse"><div class="table-responsive"><table class="table table-custom-dark mb-0 text-center small"><thead><tr style="color: #ff9f43;"><th>代號/名稱</th><th>實戰交易時空區間</th><th>進場 $\rightarrow$ 出場價</th><th>結算股數</th><th>實打實淨損益</th><th>💀 戰略離場檢討原因</th></tr></thead><tbody>{ledger_rows_html}</tbody></table></div></div></div></div>
+<div class="card mt-4"><div class="card-header fs-5 bg-dark"><button class="btn btn-link text-decoration-none fw-bold fs-5 w-100 text-start p-0 text-info" type="button" data-bs-toggle="collapse" data-bs-target="#ledgerCollapse">📋 📂 [點擊展開] 📊 歷史戰績移動清算回顧與策略檢討本本</button></div><div class="collapse" id="ledgerCollapse"><div class="table-responsive"><table class="table table-custom-dark mb-0 text-center small"><thead><tr style="color: #ff9f43;"><th>代號/名稱</th><th>實戰交易時空區間</th><th>進場 → 出場價</th><th>結算股數</th><th>實打實淨損益</th><th>💀 戰略離場檢討原因</th></tr></thead><tbody>{ledger_rows_html}</tbody></table></div></div></div></div>
 <div class="col-12 col-xl-4"><div class="card"><div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div><ul class="list-group list-group-flush">"""
     for bo in breakout_list if breakout_list else ['<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動標的。</li>']:
         html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
@@ -239,7 +239,7 @@ async def main():
     if not STOCK_POOL: return
 
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2Vy_idIjoicGNoaW9uNzcxMjA4MTIwOEBnbWFpbC5jb20iLCJlbWFpbCI6InBjaGlvbjc3MTIwODEyMDhAZ21haWwuY29tIiwidG9rZW5fdmVyc2lvbiI6MH0.Zw1f1denl7Uif0QAEpqYoIYSAPwP_vJTwSwckbdchKQ")
     try:
         df_info = api.taiwan_stock_info()
         dynamic_name_dict = dict(zip(df_info["stock_id"], df_info["stock_name"]))
@@ -349,7 +349,7 @@ async def main():
     for ne in current_3star_new:
         if ne["stock_id"] not in [r["stock_id"] for r in wl_updated]: wl_updated.append({"stock_id": ne["stock_id"], "stock_name": ne["stock_name"], "初次評選日": today_str, "當初潛伏價格": ne["close"], "currently_price": ne["close"], "已觀測天數": 1})
     df_wl_f = pd.DataFrame(wl_updated)
-    if not df_wl_f.empty: df_wl_f.columns = ["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "currently_price", "已觀測天數"]; df_wl_f.to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
+    if not df_wl_f.empty: df_wl_f.columns = ["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "目前最新收盤", "已觀測天數"]; df_wl_f.to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
     else: pd.DataFrame(columns=["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "currently_price", "已觀測天數"]).to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
 
     new_sim_buys = []
@@ -401,18 +401,15 @@ async def main():
 
     if new_sim_buys:
         df_new = pd.DataFrame(new_sim_buys)
-        if not os.path.exists(PORTFOLIO_FILE) or pd.read_csv(PORTFOLIO_FILE).empty: 
-            df_new.to_csv(PORTFOLIO_FILE, index=False)
+        if not os.path.exists(PORTFOLIO_FILE) or pd.read_csv(PORTFOLIO_FILE).empty: df_new.to_csv(PORTFOLIO_FILE, index=False)
         else:
-            # 🎯 變數名稱嚴格鎖死為 df_exist_cols，徹底消滅 NameError 
             df_exist_cols = pd.read_csv(PORTFOLIO_FILE, nrows=1)
             for col in df_exist_cols.columns:
-                if col not in df_new.columns: 
-                    df_new[col] = 0 if col == "break_days_count" else None
+                if col not in df_new.columns: df_new[col] = 0 if col == "break_days_count" else None
             df_new[df_exist_cols.columns].to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
 
     try:
-        import dolphin_portfolio_optimizer_v2_12 as d_opt; d_opt.main()
+        import dolphin_portfolio_optimizer_v2_13 as d_opt; d_opt.main()
         print("⚡ [因果攔截] 優化器解碼更新完畢。")
     except Exception as e: print(f"⚠️ 優化器外掛調度失敗: {e}")
 

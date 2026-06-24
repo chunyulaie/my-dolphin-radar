@@ -4,12 +4,18 @@ import os
 import pandas as pd
 import multiprocessing
 import concurrent.futures
-import warnings
-from FinMind.data import DataLoader  # 👈 幹！就是漏了這一行，快把它貼到最頂端！
+import warnings  
 
+# 🎯 終極攔截：在 Trio 包載入前，硬性把所有 RuntimeWarning 丟進黑洞抹殺
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
-logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
+# 👉 新增：徹底阻斷環境變數中的 Python 警告與 Pytrio 雜訊
+os.environ["PYTHONWARNINGS"] = "ignore"
+
+from FinMind.data import DataLoader
+
+# 徹底抑制 FinMind 的 INFO 下載提示，讓終端機保持極致純淨
+logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 # ==========================================
 # 📊 【海豚量化自適應「雙向防線」最佳化設定】
 # ==========================================
