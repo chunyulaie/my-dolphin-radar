@@ -413,9 +413,22 @@ async def main():
         print("⚡ [因果攔截] 優化器解碼更新完畢。")
     except Exception as e: print(f"⚠️ 優化器外掛調度失敗: {e}")
 
-# 結算部位並生成網頁（🎯 參數精準對齊官方定義的 breakout_list 與 ambush_list）
+# 結算部位並取得各項參數
     exit_text, port_text, html_p_data = update_and_print_portfolio(api, today_str)
-    generate_one_page_html(today_str, raw_breakout_data, raw_ambush_data, html_p_data)
+    
+    # 🎯 26.04 視覺修復：把底層的 Dict 陣列，渲染回精美的 HTML 標籤
+    h_bo_str = []
+    for r in raw_breakout_data:
+        lbl = "今天發動" if r["days_ago"]==0 else f"{r['days_ago']}天前"
+        # 順便把壓縮比與布林通道數值美化放上去，增加指揮官判讀數據
+        h_bo_str.append(f'<span class="badge bg-danger me-2">{lbl}</span> <strong>{r["title"]}</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: {r["spread"]*100:.1f}% | 布林帶寬: {r["bb"]:.2f}</span>')
+        
+    h_am_str = []
+    for r in raw_ambush_data:
+        h_am_str.append(f'<span class="badge bg-success me-2">{r["stars"]} 潛伏</span> <strong>{r["title"]}</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: {r["spread"]*100:.1f}% | 布林帶寬: {r["bb"]:.2f}</span>')
+
+    # 將渲染好的字串陣列送進去生成網頁
+    generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data)
 
     try:
         p_dir = os.path.dirname(PORTFOLIO_FILE)
