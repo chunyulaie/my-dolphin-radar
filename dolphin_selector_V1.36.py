@@ -594,7 +594,10 @@ async def main():
             
             today_change_pct = ((today_k["close"] - yesterday_k["close"]) / yesterday_k["close"]) * 100
             if today_change_pct >= 9.8 and today_k["close"] == today_k["max"]:
-                print(f"🚫 [漲停攔截] {display_title} 鎖死漲停，實戰買不到，跳過！"); continue
+                print(f"⚠️ [漲停標記] {display_title} 鎖死漲停，保留回測數據供網頁顯示！")
+                # 給名稱掛上專屬標籤，讓它在網頁手風琴和 LINE 通知裡超顯眼
+                display_title = f"{display_title} (漲停鎖死)"
+                # 這裡原本的 continue 已經被拔除了，系統會繼續往下執行 AI 體檢！
 
             df["5MA"] = df["close"].rolling(5).mean(); df["10MA"] = df["close"].rolling(10).mean(); df["20MA"] = df["close"].rolling(20).mean()
             df["5MA_Vol"] = df["volume"].rolling(5).mean(); df['20STD'] = df['close'].rolling(20).std(ddof=0)
