@@ -50,7 +50,8 @@ def log_to_history_ledger(row, current_price, net_profit, profit_percent, exit_r
 
 def run_pre_backtest(api, stock_id):
     today = datetime.date.today()
-    df_raw = api.taiwan_stock_daily_adaptive(stock_id=stock_id, start_date=(today - datetime.timedelta(days=730)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"))
+    # 🎯 徹底洗淨 _adaptive 病毒，回歸官方正統指令
+    df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=(today - datetime.timedelta(days=730)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"))
     if df_raw.empty or len(df_raw) < 50: return 0  
     df = pd.DataFrame()
     df["close"] = df_raw["close"].astype(float); df["open"] = df_raw["open"].astype(float)
@@ -93,7 +94,6 @@ def update_and_print_portfolio(api, today_str):
     real_today_str = datetime.date.today().strftime("%Y-%m-%d") if datetime.datetime.now().time() >= datetime.time(15, 0, 0) else (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     real_start_str = (datetime.datetime.strptime(real_today_str, "%Y-%m-%d").date() - datetime.timedelta(days=150)).strftime("%Y-%m-%d")
     
-    # 用於儲存今日因為方案2觸發「留校察看第1天」的老兵名單
     v134_落難老兵名單 = []
 
     for idx, row in df_pf.iterrows():
@@ -104,7 +104,8 @@ def update_and_print_portfolio(api, today_str):
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
         
         try:
-            df_now = api.taiwan_stock_daily_adaptive(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
+            # 🎯 回歸正統 API 指令
+            df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
             if df_now.empty or len(df_now) < 5:
                 print(f"🛑 [API 警告] {sid} 回傳數據為空，跳過防線體檢。")
                 survived_rows.append(row); continue
@@ -136,7 +137,6 @@ def update_and_print_portfolio(api, today_str):
                 log_to_history_ledger(row, current_price, net_profit, profit_percent, f"跌破均線({target_ma_line}·2日確認)"); continue
             else:
                 exit_p_rows.append(f"⏳ [防線警戒] {sid} {sname} 今日收盤跌破 {target_ma_line}，進入留校察看第 1 天！")
-                # 🎯 方案2：實打實捕獲跌破均線的老兵，準備送進觀察名單
                 v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
         else:
             break_days = 0
@@ -154,8 +154,6 @@ def update_and_print_portfolio(api, today_str):
         row["max_price"] = max_price; row["break_days_count"] = break_days; survived_rows.append(row)
         
     pd.DataFrame(survived_rows).to_csv(PORTFOLIO_FILE, index=False)
-    
-    # 將今日撈到的落難老兵名單，透過全域環境存取，等一下跟 3星新秀一起進行觀察名單的大對齊與去重
     global GLOBAL_V134_落難老兵; GLOBAL_V134_落難老兵 = v134_落難老兵名單
     
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
@@ -186,7 +184,6 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         try:
             df_w = pd.read_csv(WATCHLIST_FILE, dtype={"stock_id": str})
             for _, w_r in df_w.iterrows():
-                # 網頁 UI 特殊標記：如果是落難老兵，顯示為均線警戒，如果是新秀顯示為滿星新秀
                 lbl_tag = "⚠️ 均線警戒" if "均線警戒" in str(w_r['評等']) else "⭐⭐⭐ 新秀"
                 wl_rows += f"<tr><td class='text-info fw-bold'>{w_r['stock_id']} {w_r['stock_name']}</td><td>{lbl_tag}</td><td>{w_r['初次評選日']}</td><td>{w_r['當初潛伏價格']:.2f}</td><td class='text-warning fw-bold'>{w_r['目前最新收盤']:.2f}</td><td>觀測 {int(w_r['已觀測天數'])} 天</td></tr>"
         except: pass
@@ -287,7 +284,8 @@ async def main():
             if "*" in c_name or stock in sim_purchased_stocks: 
                 continue
                 
-            df_raw = api.taiwan_stock_daily_adaptive(stock_id=stock, start_date=start_str, end_date=today_str)
+            # 🎯 洗淨 _adaptive，回歸正統指令
+            df_raw = api.taiwan_stock_daily(stock_id=stock, start_date=start_str, end_date=today_str)
             if df_raw.empty or len(df_raw) < 35: 
                 continue
             
@@ -407,6 +405,7 @@ async def main():
             df_new[df_exist_cols.columns].to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
 
     try:
+        # 🎯 呼叫最新版的 v2_13 優化器
         import dolphin_portfolio_optimizer_v2_13 as d_opt; d_opt.main()
         print("⚡ [因果攔截] 優化器解碼更新完畢。")
     except Exception as e: print(f"⚠️ 優化器外掛調度失敗: {e}")
@@ -415,23 +414,21 @@ async def main():
     exit_text, port_text, html_p_data = update_and_print_portfolio(api, today_str)
     
     # ====================================================================
-    # 🎯 方案2：核心與新秀動態對齊與 CSV 觀察哨站更新邏輯 (焊入完全體)
+    # 🎯 方案2：核心與新秀動態對齊與 CSV 觀察哨站更新邏輯
     # ====================================================================
     df_wl_old = pd.read_csv(WATCHLIST_FILE, dtype={"stock_id": str}) if os.path.exists(WATCHLIST_FILE) else pd.DataFrame(columns=["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "目前最新收盤", "已觀測天數", "評等"])
     
-    # 讀取剛剛 update_and_print_portfolio 透過全域環境抓回來的落難老兵名單
     v134_落難老兵 = globals().get("GLOBAL_V134_落難老兵", [])
     
     wl_updated = []
     # A. 優先滾動處理「昨日留下來的舊名單」
     for _, wl_r in df_wl_old.iterrows():
         wl_sid = str(wl_r["stock_id"]).strip(); wl_days = int(wl_r["已觀測天數"]) + 1
-        # 如果已經買入上車，或者觀測天數超過 3 天，直接功成身退剔除
         if wl_sid in sim_purchased_stocks or wl_days > 3: continue
         try:
-            d_w = api.taiwan_stock_daily_adaptive(stock_id=wl_sid, start_date=start_str, end_date=today_str)
+            # 🎯 洗淨 _adaptive，回歸正統指令
+            d_w = api.taiwan_stock_daily(stock_id=wl_sid, start_date=start_str, end_date=today_str)
             c_p = float(d_w.iloc[-1]["close"])
-            # 跌幅保護防線：自入榜日起跌幅超過 -5%，無情破壞機制，剔除
             if ((c_p - float(wl_r["當初潛伏價格"])) / float(wl_r["當初潛伏價格"])) * 100 <= -5.0: continue
             
             wl_updated.append({

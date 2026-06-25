@@ -8,7 +8,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.02 參數設定區 (方案2落難老兵入榜 × 官方API校正完全體)
+# 26.05 參數設定區 (V25.98視覺裝甲 × 方案2落難老兵 × 官方API校正)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400; REMOVE_LIST = [] 
 INIT_POOL_BUDGET = 250000; MIN_STOCK_BUDGET = 15000     
@@ -50,7 +50,6 @@ def log_to_history_ledger(row, current_price, net_profit, profit_percent, exit_r
 
 def run_pre_backtest(api, stock_id):
     today = datetime.date.today()
-    # 🎯 徹底洗淨 _adaptive 病毒，回歸官方正統指令
     df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=(today - datetime.timedelta(days=730)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"))
     if df_raw.empty or len(df_raw) < 50: return 0  
     df = pd.DataFrame()
@@ -93,7 +92,6 @@ def update_and_print_portfolio(api, today_str):
     survived_rows = []; report_p_rows = []; exit_p_rows = []; html_portfolio_data = []
     real_today_str = datetime.date.today().strftime("%Y-%m-%d") if datetime.datetime.now().time() >= datetime.time(15, 0, 0) else (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     real_start_str = (datetime.datetime.strptime(real_today_str, "%Y-%m-%d").date() - datetime.timedelta(days=150)).strftime("%Y-%m-%d")
-    
     v134_落難老兵名單 = []
 
     for idx, row in df_pf.iterrows():
@@ -104,7 +102,6 @@ def update_and_print_portfolio(api, today_str):
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
         
         try:
-            # 🎯 回歸正統 API 指令
             df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
             if df_now.empty or len(df_now) < 5:
                 print(f"🛑 [API 警告] {sid} 回傳數據為空，跳過防線體檢。")
@@ -155,30 +152,53 @@ def update_and_print_portfolio(api, today_str):
         
     pd.DataFrame(survived_rows).to_csv(PORTFOLIO_FILE, index=False)
     global GLOBAL_V134_落難老兵; GLOBAL_V134_落難老兵 = v134_落難老兵名單
-    
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
 
+# ====================================================================
+# 🎯 網頁渲染引擎：V25.98 漸層儀表板 + 手風琴明細 + V1.34 觀測哨站 完美結合
+# ====================================================================
 def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data):
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
     total_profit = sum([r['net_profit'] for r in portfolio_data])
-    total_current = total_cost + total_profit
-    total_pct = (total_profit / total_cost * 100) if total_cost > 0 else 0.0
-    
+    total_current_value = total_cost + total_profit
+    total_profit_pct = (total_profit / total_cost * 100) if total_cost > 0 else 0.0
     profit_color_class = "text-taiwan-red" if total_profit >= 0 else "text-taiwan-green"
-    hist_summary_html = ""; ledger_rows_html = ""
+    
+    # 1. 歷史戰績大帳本
+    history_summary_html = ""
+    ledger_rows_html = ""
     if os.path.exists(HISTORY_LEDGER_FILE):
         try:
-            df_h = pd.read_csv(HISTORY_LEDGER_FILE)
-            hist_prof = df_h["net_profit"].sum(); hist_count = len(df_h)
-            hist_win = len(df_h[df_h["net_profit"] > 0])
-            hist_wr = (hist_win / hist_count * 100) if hist_count > 0 else 0.0
-            hist_summary_html = f'<div class="col-md-2"><div class="summary-box" style="border-left-color: #ff9f43;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-taiwan-red">{hist_prof:,.0f} 元</div></div></div><div class="col-md-2"><div class="summary-box" style="border-left-color: #00f2fe;"><div class="text-muted-custom small">歷史勝率/單數</div><div class="fs-4 fw-bold text-white">{hist_wr:.1f}% ({hist_count}單)</div></div></div>'
-            for _, h_row in df_h.iloc[::-1].iterrows():
+            df_hist = pd.read_csv(HISTORY_LEDGER_FILE)
+            hist_total_profit = df_hist["net_profit"].sum()
+            hist_trades_count = len(df_hist)
+            hist_win_count = len(df_hist[df_hist["net_profit"] > 0])
+            hist_win_rate = (hist_win_count / hist_trades_count * 100) if hist_trades_count > 0 else 0.0
+            hist_color = "text-taiwan-red" if hist_total_profit >= 0 else "text-taiwan-green"
+            
+            history_summary_html = f"""
+            <div class="col-md-2">
+                <div class="summary-box" style="border-left-color: #ff9f43;">
+                    <div class="text-muted-custom small">歷史已結算戰績</div>
+                    <div class="fs-4 fw-bold {hist_color}">{'+' if hist_total_profit>=0 else ''}{hist_total_profit:,.0f} 元</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="summary-box" style="border-left-color: #00f2fe;">
+                    <div class="text-muted-custom small">歷史勝率 / 總單數</div>
+                    <div class="fs-4 fw-bold text-white">{hist_win_rate:.1f}% <small class="text-muted-custom">({hist_trades_count}單)</small></div>
+                </div>
+            </div>
+            """
+            for _, h_row in df_hist.iloc[::-1].iterrows():
                 ledger_rows_html += f"<tr><td>{h_row['stock_id']} {h_row['stock_name']}</td><td>{h_row['buy_date']} ~ {h_row['sell_date']}</td><td>{h_row['buy_price']:.2f} → {h_row['sell_price']:.2f}</td><td>{int(h_row['buy_shares'])} 股</td><td class='text-taiwan-red'>{h_row['net_profit']:,}元 ({h_row['profit_percent']:.1f}%)</td><td>{h_row['exit_reason']}</td></tr>"
         except: pass
-    if not hist_summary_html: hist_summary_html = '<div class="col-md-4"><div class="summary-box"><div class="fs-4 text-muted-custom">尚無歷史數據</div></div></div>'
+            
+    if not history_summary_html:
+        history_summary_html = '<div class="col-md-4"><div class="summary-box" style="border-left-color: #a1a5b7;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-muted-custom">尚無歷史出清數據</div></div></div>'
     if not ledger_rows_html: ledger_rows_html = '<tr><td colspan="6" class="text-center text-muted-custom py-3">暫無已清算戰績。</td></tr>'
 
+    # 2. 方案2 留校察看與新秀哨站 (來自 V1.34)
     wl_rows = ""
     if os.path.exists(WATCHLIST_FILE):
         try:
@@ -189,28 +209,271 @@ def generate_one_page_html(today_str, breakout_list, ambush_list, portfolio_data
         except: pass
     if not wl_rows: wl_rows = '<tr><td colspan="6" class="text-center text-muted-custom py-2 small">觀測哨站目前空棚。</td></tr>'
 
-    portfolio_tbody = ""
-    for p in portfolio_data:
-        p_class = "text-taiwan-red" if p['net_profit'] >= 0 else "text-taiwan-green"
-        w_pct = ((p['buy_price'] * p['buy_shares']) / 250000) * 100
-        r_tag = '<span class="badge bg-warning text-dark">⏳ 留校察看</span>' if p['break_days'] == 1 else ('<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>')
-        portfolio_tbody += f"<tr><td><strong>{p['stock_id']} {p['stock_name']}</strong><br><small class='text-muted-custom'>(比重: {w_pct:.1f}%)</small></td><td>{p['buy_date']}</td><td>{p['buy_price']:.2f} ({p['buy_shares']}股)</td><td class='text-warning fw-bold'>{p['current_price']:.2f}</td><td>{p['target_tp_price']:.2f}</td><td>{p['dynamic_lock_price']:.2f} ({p['max_price']:.2f})</td><td class='text-danger'>{p['stop_loss_value']:.2f} ({p['target_ma_line']})</td><td class='fw-bold {p_class}'>{p['net_profit']:,}元<br><small>{p['profit_percent']:.2f}%</small></td><td>{r_tag}</td></tr>"
-
-    html_content = f"""<!DOCTYPE html>
-<html lang="zh-TW"><head><meta charset="UTF-8"><title>海豚自適應指揮官儀表板</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><style>body {{ background-color: #12141c; color: #e4e6eb; font-family: sans-serif; }} .navbar {{ background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }} .card {{ background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }} .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }} .table-custom-dark th {{ background-color: #22293a !important; color: #00f2fe !important; }} .table-custom-dark td {{ background-color: #1a1f2c !important; color: #fff !important; border-color: #2d3548 !important; }} .text-taiwan-red {{ color: #ff4a4a !important; font-weight: bold; }} .text-taiwan-green {{ color: #2cf3a0 !important; font-weight: bold; }} .text-muted-custom {{ color: #a1a5b7 !important; }} .summary-box {{ background: #1e2638; border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }} .badge-radar {{ background-color: #ff4a4a; animation: blink 1.5s infinite; }} @keyframes blink {{ 0%, 100% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} }}</style></head>
-<body><nav class="navbar navbar-dark px-4 py-3"><span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v26.02 智能完全體版</small></span><span class="text-muted-custom">📅 更新時間：{today_str}</span></nav>
-<div class="container-fluid p-4"><div class="row mb-4"><div class="col-md-2"><div class="summary-box"><div class="text-muted-custom small">當前持股成本</div><div class="fs-4 fw-bold text-info">${total_cost:,.0f} 元</div></div></div><div class="col-md-2"><div class="summary-box" style="border-left-color: #fff;"><div class="text-muted-custom small">持股現值估算</div><div class="fs-4 fw-bold text-white">${total_current:,.0f} 元</div></div></div><div class="col-md-4"><div class="summary-box" style="border-left-color: #ff4a4a;"><div class="text-muted-custom small">在倉持股總淨損益</div><div class="fs-4 fw-bold {profit_color_class}">{total_profit:,.0f} 元 ({total_pct:.2f}%)</div></div></div>{hist_summary_html}</div>
-<div class="row"><div class="col-12 col-xl-8"><div class="card"><div class="card-header fs-5">💼 實戰持股狀態機雙向防線即時雷達</div><div class="table-responsive"><table class="table table-custom-dark mb-0"><thead><tr><th>代號/名稱</th><th>買入日期</th><th>成本價</th><th>目前價</th><th>起跑門檻</th><th>鎖利線(最高)</th><th>生命均線(停損)</th><th>當前損益</th><th>雷達狀態</th></tr></thead><tbody>{portfolio_tbody}</tbody></table></div></div>
-<div class="card mt-4"><div class="card-header fs-5 text-info">🔍 📂 歷史評選 · 3星新秀與方案2落難老兵動態留校察看哨站</div><div class="table-responsive"><table class="table table-custom-dark mb-0 text-center small"><thead><tr><th>代號/名稱</th><th>狀態屬性</th><th>捕獲/警戒日</th><th>當初潛伏/防線價</th><th>目前最新收盤</th><th>生命流狀態</th></tr></thead><tbody>{wl_rows}</tbody></table></div></div>
-<div class="card mt-4"><div class="card-header fs-5 bg-dark"><button class="btn btn-link text-decoration-none fw-bold fs-5 w-100 text-start p-0 text-info" type="button" data-bs-toggle="collapse" data-bs-target="#ledgerCollapse">📋 📂 [點擊展開] 📊 歷史戰績移動清算回顧與策略檢討本本</button></div><div class="collapse" id="ledgerCollapse"><div class="table-responsive"><table class="table table-custom-dark mb-0 text-center small"><thead><tr style="color: #ff9f43;"><th>代號/名稱</th><th>實戰交易時空區間</th><th>進場 → 出場價</th><th>結算股數</th><th>實打實淨損益</th><th>💀 戰略離場檢討原因</th></tr></thead><tbody>{ledger_rows_html}</tbody></table></div></div></div></div>
-<div class="col-12 col-xl-4"><div class="card"><div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div><ul class="list-group list-group-flush">"""
-    for bo in breakout_list if breakout_list else ['<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動標的。</li>']:
-        html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
-    html_content += """</ul></div><div class="card"><div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div><ul class="list-group list-group-flush">"""
-    for am in ambush_list if ambush_list else ['<li class="list-group-item bg-transparent text-white border-secondary py-3">今日無糾結壓縮標的。</li>']:
-        html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{am}</li>'
-    html_content += """</ul></div></div></div></div><footer class="text-center py-4 text-muted-custom small mt-4" style="border-top: 1px solid #2d3548;">海豚自動化管線系統 · 每日盤後自動化更新完成</footer></body></html>"""
+    # 3. 優化器歷史明細讀取與處理 (來自 V25.98)
+    opt_details_dict = {}
+    if os.path.exists(OPTIMIZER_DETAILS_FILE):
+        try:
+            df_opt_det = pd.read_csv(OPTIMIZER_DETAILS_FILE, dtype={"stock_id": str})
+            for sid, sub_df in df_opt_det.groupby("stock_id"):
+                opt_details_dict[str(sid).strip()] = sub_df.to_dict(orient="records")
+        except: pass
     
+    html_content = f"""<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>海豚量化自適應指揮官儀表板</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {{ background-color: #12141c; color: #e4e6eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
+        .navbar {{ background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }}
+        .card {{ background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }}
+        .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }}
+        .table-custom-dark {{ color: #ffffff !important; }}
+        .table-custom-dark th {{ background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }}
+        .table-custom-dark td {{ background-color: #1a1f2c !important; color: #ffffff !important; border-color: #2d3548 !important; }}
+        .text-muted-custom {{ color: #a1a5b7 !important; }}
+        .text-taiwan-red {{ color: #ff4a4a !important; font-weight: bold; }}     
+        .text-taiwan-green {{ color: #2cf3a0 !important; font-weight: bold; }}   
+        .badge-breakout {{ background-color: #ff9f43; color: #12141c; font-weight: bold; }}
+        .badge-ambush {{ background-color: #00f2fe; color: #12141c; font-weight: bold; }}
+        .badge-radar {{ background-color: #ff4a4a; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }}
+        @keyframes blink {{ 0% {{ opacity: 0.4; }} 50% {{ opacity: 1; }} 100% {{ opacity: 0.4; }} }}
+        .summary-box {{ background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }}
+        .accordion-button {{ background-color: #22293a !important; color: #00f2fe !important; border: 1px solid #2d3548; }}
+        .accordion-button:not(.collapsed) {{ background-color: #ff4a4a !important; color: white !important; }}
+        .accordion-body {{ background-color: #151b29; border: 1px solid #2d3548; color: #ffffff; }}
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark px-4 py-3">
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v26.05 資金周轉透視 × 方案2完全體</small></span>
+    <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
+</nav>
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="summary-box">
+                <div class="text-muted-custom small">當前持股總成本</div>
+                <div class="fs-4 fw-bold text-info">${total_cost:,.0f} 元</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="summary-box" style="border-left-color: #ffffff;">
+                <div class="text-muted-custom small">持股現值估算</div>
+                <div class="fs-4 fw-bold text-white">${total_current_value:,.0f} 元</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-box" style="border-left-color: {'#ff4a4a' if total_profit >= 0 else '#2cf3a0'};">
+                <div class="text-muted-custom small">在倉持股總淨損益</div>
+                <div class="fs-4 fw-bold {profit_color_class}">{'+' if total_profit >= 0 else ''}{total_profit:,.0f} 元 ({'+' if total_profit >= 0 else ''}{total_profit_pct:.2f}%)</div>
+            </div>
+        </div>
+        {history_summary_html}
+    </div>
+    
+    <div class="row">
+        <div class="col-12 col-xl-8">
+            <div class="card">
+                <div class="card-header fs-5">💼 實戰持股狀態機雙向防線即時雷達</div>
+                <div class="table-responsive">
+                    <table class="table table-custom-dark mb-0">
+                        <thead>
+                            <tr>
+                                <th>代號/名稱</th>
+                                <th>買入日期</th>
+                                <th>成本價</th>
+                                <th>目前價</th>
+                                <th>起跑門檻</th>
+                                <th>鎖利線(最高)</th>
+                                <th>生命均線(停損價)</th>
+                                <th>當前損益</th>
+                                <th>雷達狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    """
+    if not portfolio_data:
+        html_content += '<tr><td colspan="9" class="text-center text-muted-custom py-4">目前記帳簿內無任何持股。</td></tr>'
+    else:
+        for p in portfolio_data:
+            p_sign = "+" if p['net_profit'] >= 0 else ""
+            p_class = "text-taiwan-red" if p['net_profit'] >= 0 else "text-taiwan-green"
+            w_pct = ((p['buy_price'] * p['buy_shares']) / 250000) * 100
+            radar_badge = '<span class="badge bg-warning text-dark">⏳ 留校察看</span>' if p['break_days'] == 1 else ('<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>')
+            
+            html_content += f"""
+                            <tr>
+                                <td>
+                                    <strong class="text-white">{p['stock_id']} {p['stock_name']}</strong><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: {w_pct:.1f}%)</small>
+                                </td>
+                                <td class="small text-muted-custom">{p['buy_date']}</td>
+                                <td class="text-white">{p['buy_price']:.2f} <small class="text-muted-custom">({p['buy_shares']}股)</small></td>
+                                <td class="fw-bold text-warning">{p['current_price']:.2f}</td>
+                                <td class="text-white">{p['target_tp_price']:.2f}</td>
+                                <td><span class="text-info">{p['dynamic_lock_price']:.2f}</span> <small class="text-muted-custom">({p['max_price']:.2f})</small></td>
+                                <td><span class="text-danger">{p['stop_loss_value']:.2f}</span> <small class="text-muted-custom">({p['target_ma_line']})</small></td>
+                                <td class="fw-bold {p_class}">{p_sign}{p['net_profit']:,}元<br><small>{p_sign}{p['profit_percent']:.2f}%</small></td>
+                                <td>{radar_badge}</td>
+                            </tr>
+            """
+    html_content += """
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 text-info">🔍 📂 歷史評選 · 3星新秀與方案2落難老兵動態留校察看哨站</div>
+                <div class="table-responsive">
+                    <table class="table table-custom-dark mb-0 text-center small">
+                        <thead><tr><th>代號/名稱</th><th>狀態屬性</th><th>捕獲/警戒日</th><th>當初潛伏/防線價</th><th>目前最新收盤</th><th>生命流狀態</th></tr></thead>
+                        <tbody>{wl_rows}</tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 text-warning">🔍 AI 優化器：2年時空基因回測明細紀錄 (持股戰績展開)</div>
+                <div class="card-body p-3">
+                    <div class="accordion" id="optimizerAccordion">
+    """
+    
+    if not portfolio_data:
+        html_content += '<div class="text-muted-custom p-3 small">目前無在庫持股，無回測基因可供解析。</div>'
+    else:
+        for idx, p in enumerate(portfolio_data):
+            sid = str(p['stock_id']).strip()
+            sname = p['stock_name']
+            records = opt_details_dict.get(sid, [])
+            
+            total_rec_profit = sum([float(r.get("net_profit", 0)) for r in records])
+            win_count = sum([1 for r in records if float(r.get("net_profit", 0)) > 0])
+            win_rate = (win_count / len(records) * 100) if len(records) > 0 else 0
+            
+            r_sign = "+" if total_rec_profit >= 0 else ""
+            r_color = "#ff4a4a" if total_rec_profit >= 0 else "#2cf3a0"
+            
+            html_content += f"""
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_{sid}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_{sid}" aria-expanded="false" aria-controls="collapse_{sid}">
+                        📊 {sid} {sname} — 2年最佳化策略回測歷史明細紀錄 (共 {len(records)} 筆)
+                        <span style="margin-left: 20px; color: {r_color}; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: {r_sign}{total_rec_profit:,.0f} 元 | 勝率: {win_rate:.0f}% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_{sid}" class="accordion-collapse collapse" aria-labelledby="heading_{sid}" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            """
+            if not records:
+                html_content += f'<tr><td colspan="9" class="text-muted-custom py-3">⚠️ 未在此代號下偵測到明細資料，請檢查優化器外掛是否已運作。</td></tr>'
+            else:
+                for r_idx, r in enumerate(records):
+                    r_prof = float(r.get("net_profit", 0))
+                    r_pct = float(r.get("profit_percent", 0))
+                    r_sign_td = "+" if r_prof >= 0 else ""
+                    r_class_td = "text-taiwan-red" if r_prof >= 0 else "text-taiwan-green"
+                    
+                    buy_date_str = r.get("buy_date", "無")
+                    sell_date_str = r.get("sell_date", "無")
+                    holding_days = 0
+                    if buy_date_str != "無" and sell_date_str != "無":
+                        try:
+                            b_date_obj = datetime.datetime.strptime(buy_date_str, "%Y-%m-%d")
+                            s_date_obj = datetime.datetime.strptime(sell_date_str, "%Y-%m-%d")
+                            holding_days = (s_date_obj - b_date_obj).days
+                        except: pass
+                    holding_days_str = f"{holding_days} 天" if holding_days > 0 else "-"
+                    
+                    html_content += f"""
+                                    <tr>
+                                        <td>{r_idx + 1}</td><td>{buy_date_str}</td><td>{r.get("buy_price", 0)}</td>
+                                        <td>{sell_date_str}</td><td class="text-warning">{holding_days_str}</td> <td>{r.get("sell_price", 0)}</td>
+                                        <td class="{r_class_td} fw-bold">{r_sign_td}{r_prof:,.0f}元</td>
+                                        <td class="{r_class_td} fw-bold">{r_sign_td}{r_pct:.2f}%</td>
+                                        <td class="text-muted-custom">{r.get("exit_reason", "未知")}</td>
+                                    </tr>
+                    """
+            html_content += """
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """
+            
+    html_content += f"""
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 bg-dark">
+                    <button class="btn btn-link text-decoration-none fw-bold fs-5 w-100 text-start p-0 text-info" 
+                            type="button" data-bs-toggle="collapse" data-bs-target="#ledgerCollapse" 
+                            onclick="document.getElementById('ledgerCollapse').classList.toggle('show')">
+                        📋 📂 [點擊展開] 📊 大帳本：歷史戰績移動清算回顧與策略檢討
+                    </button>
+                </div>
+                <div class="collapse" id="ledgerCollapse">
+                    <div class="table-responsive">
+                        <table class="table table-custom-dark mb-0 text-center small">
+                            <thead><tr style="color: #ff9f43;"><th>代號/名稱</th><th>實戰交易時空區間</th><th>進場 → 出場價</th><th>結算股數</th><th>實打實淨損益</th><th>💀 戰略離場檢討原因</th></tr></thead>
+                            <tbody>{ledger_rows_html}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="card">
+                <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
+                <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
+    """
+    if not breakout_list:
+        html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動標的。</li>'
+    else:
+        for bo in breakout_list:
+            html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
+    html_content += """
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
+                <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
+    """
+    if not ambush_list:
+        html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無糾結壓縮標的。</li>'
+    else:
+        for am in ambush_list:
+            html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{am}</li>'
+    html_content += f"""
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="text-center py-4 text-muted-custom small mt-4" style="border-top: 1px solid #2d3548;">
+    海豚自動化管線系統 · 每日盤後自動化更新完成
+</footer>
+</body>
+</html>
+"""
     with open(HTML_OUTPUT_FILE, "w", encoding="utf-8") as f: f.write(html_content)
 
 async def parse_page_codes(page, url, label):
@@ -245,7 +508,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 26.01：[方案2落難老兵自動入榜完全體] 啟動...")
+    print("🚀 海豚選股 26.05：[V25.98視覺裝甲 × 方案2落難老兵完全體] 啟動...")
     print("====================================================")
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
@@ -281,13 +544,10 @@ async def main():
     for stock in STOCK_POOL:
         try:
             c_name = dynamic_name_dict.get(stock, "")
-            if "*" in c_name or stock in sim_purchased_stocks: 
-                continue
+            if "*" in c_name or stock in sim_purchased_stocks: continue
                 
-            # 🎯 洗淨 _adaptive，回歸正統指令
             df_raw = api.taiwan_stock_daily(stock_id=stock, start_date=start_str, end_date=today_str)
-            if df_raw.empty or len(df_raw) < 35: 
-                continue
+            if df_raw.empty or len(df_raw) < 35: continue
             
             display_title = f"{stock} {c_name}".strip()
             df = pd.DataFrame()
@@ -352,7 +612,6 @@ async def main():
     if candidate_buys:
         total_score = sum([c["score"] for c in candidate_buys])
         df_portfolio_mod = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str}) if os.path.exists(PORTFOLIO_FILE) else pd.DataFrame()
-        
         win_dict = {}
         if os.path.exists(OPTIMIZER_DETAILS_FILE):
             try:
@@ -405,28 +664,21 @@ async def main():
             df_new[df_exist_cols.columns].to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
 
     try:
-        # 🎯 呼叫最新版的 v2_13 優化器
         import dolphin_portfolio_optimizer_v2_13 as d_opt; d_opt.main()
         print("⚡ [因果攔截] 優化器解碼更新完畢。")
     except Exception as e: print(f"⚠️ 優化器外掛調度失敗: {e}")
 
-    # 執行部位與雷達狀態機更新
     exit_text, port_text, html_p_data = update_and_print_portfolio(api, today_str)
     
-    # ====================================================================
     # 🎯 方案2：核心與新秀動態對齊與 CSV 觀察哨站更新邏輯
-    # ====================================================================
     df_wl_old = pd.read_csv(WATCHLIST_FILE, dtype={"stock_id": str}) if os.path.exists(WATCHLIST_FILE) else pd.DataFrame(columns=["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "目前最新收盤", "已觀測天數", "評等"])
-    
     v134_落難老兵 = globals().get("GLOBAL_V134_落難老兵", [])
     
     wl_updated = []
-    # A. 優先滾動處理「昨日留下來的舊名單」
     for _, wl_r in df_wl_old.iterrows():
         wl_sid = str(wl_r["stock_id"]).strip(); wl_days = int(wl_r["已觀測天數"]) + 1
         if wl_sid in sim_purchased_stocks or wl_days > 3: continue
         try:
-            # 🎯 洗淨 _adaptive，回歸正統指令
             d_w = api.taiwan_stock_daily(stock_id=wl_sid, start_date=start_str, end_date=today_str)
             c_p = float(d_w.iloc[-1]["close"])
             if ((c_p - float(wl_r["當初潛伏價格"])) / float(wl_r["當初潛伏價格"])) * 100 <= -5.0: continue
@@ -437,7 +689,6 @@ async def main():
             })
         except: pass
         
-    # B. 方案2注入：將今日「跌破均線留校察看第1天」的落難老兵塞入名單
     for old_soldier in v134_落難老兵:
         if old_soldier["stock_id"] not in [r["stock_id"] for r in wl_updated]:
             wl_updated.append({
@@ -446,7 +697,6 @@ async def main():
                 "已觀測天數": 1, "評等": "⚠️ 均線警戒老兵"
             })
             
-    # C. 新秀注入：將今日型態選中的「3星滿星起飆新秀」塞入名單
     for ne in current_3star_new:
         if ne["stock_id"] not in [r["stock_id"] for r in wl_updated]:
             wl_updated.append({
@@ -463,7 +713,6 @@ async def main():
     else:
         pd.DataFrame(columns=["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "目前最新收盤", "已觀測天數", "評等"]).to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
 
-    # 🎯 26.04 視覺修復：把底層的 Dict 陣列，渲染回精美的 HTML 標籤
     h_bo_str = []
     for r in raw_breakout_data:
         lbl = "今天發動" if r["days_ago"]==0 else f"{r['days_ago']}天前"
@@ -483,11 +732,7 @@ async def main():
         print("✅ [雲端同步] 成功！")
     except: pass
 
-    # ====================================================================
-    # 📲 🎯 【26.03 指揮官專屬 · 實戰極簡精美 LINE 戰報引擎完全體】
-    # ====================================================================
     line_report_chunks = []
-
     if new_sim_buys:
         line_report_chunks.append("🚀【明日開盤預備建倉新秀】")
         for nb in new_sim_buys:
@@ -512,7 +757,7 @@ async def main():
             line_report_chunks.pop()
             
         header = [
-            f"🐬 海豚選股 v26.03 決戰指標 🐬",
+            f"🐬 海豚選股 v26.05 決戰指標 🐬",
             f"📅 戰略日期：{today_str}",
             f"───────────────────"
         ]
