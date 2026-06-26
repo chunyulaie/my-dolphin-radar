@@ -151,15 +151,27 @@ def update_and_print_portfolio(api, today_str):
             log_to_history_ledger(row, current_price, net_profit, profit_percent, f"移動鎖利({tp_dr*100:.1f}%)"); continue 
             
         if active_stop_loss_value > 0.0 and current_price < active_stop_loss_value:
-            break_days += 1
-            if break_days >= 2:
-                exit_p_rows.append(f"⚠️ 停損出場：{sid} {sname} 連續2天收盤跌破 {target_ma_line} 防線，最終損益: {sign}{net_profit}元")
-                log_to_history_ledger(row, current_price, net_profit, profit_percent, f"跌破均線({target_ma_line}·2日確認)"); continue
+            # 🕒 判斷目前執行時間是否在「真正的實戰考核窗口」（下午 14:00 到 晚上 23:30 之間）
+            current_time = datetime.datetime.now().time()
+            is_real_battle_window = (datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 30, 0))
+            
+            if is_real_battle_window:
+                # 只有在這個黃金時間段，才真正累積跌破天數並觸發出場
+                break_days += 1
+                if break_days >= 2:
+                    exit_p_rows.append(f"⚠️ 停損出場：{sid} {sname} 連續2天收盤跌破 {target_ma_line} 防線，最終損益: {sign}{net_profit}元")
+                    log_to_history_ledger(row, current_price, net_profit, profit_percent, f"跌破均線({target_ma_line}·2日確認)"); continue
+                else:
+                    exit_p_rows.append(f"⏳ [防線警戒] {sid} {sname} 今日收盤跌破 {target_ma_line}，進入留校察看第 1 天！")
+                    v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
             else:
-                exit_p_rows.append(f"⏳ [防線警戒] {sid} {sname} 今日收盤跌破 {target_ma_line}，進入留校察看第 1 天！")
-                v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
+                # 🔍 非實戰視窗（例如白天、清晨、深夜），處於測試沙盒模式
+                exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉狀態防禦誤殺。")
         else:
-            break_days = 0
+            # 只有在實戰窗口內且「確認回升站上防線」時，才把留校察看天數歸零
+            current_time = datetime.datetime.now().time()
+            if datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 30, 0):
+                break_days = 0
             
         tp_tag = " 🔥(監控中)" if max_price >= target_tp_price else ""
         if break_days == 1: tp_tag += " ⏳(警戒)"
