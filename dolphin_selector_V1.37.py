@@ -153,7 +153,7 @@ def update_and_print_portfolio(api, today_str):
         if active_stop_loss_value > 0.0 and current_price < active_stop_loss_value:
             # 🕒 判斷目前執行時間是否在「真正的實戰考核窗口」（下午 14:00 到 晚上 23:30 之間）
             current_time = datetime.datetime.now().time()
-            is_real_battle_window = (datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 30, 0))
+            is_real_battle_window = (datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0))
             
             if is_real_battle_window:
                 # 只有在這個黃金時間段，才真正累積跌破天數並觸發出場
@@ -170,7 +170,7 @@ def update_and_print_portfolio(api, today_str):
         else:
             # 只有在實戰窗口內且「確認回升站上防線」時，才把留校察看天數歸零
             current_time = datetime.datetime.now().time()
-            if datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 30, 0):
+            if datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0):
                 break_days = 0
             
         tp_tag = " 🔥(監控中)" if max_price >= target_tp_price else ""
