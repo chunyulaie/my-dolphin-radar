@@ -151,12 +151,10 @@ def update_and_print_portfolio(api, today_str):
             log_to_history_ledger(row, current_price, net_profit, profit_percent, f"移動鎖利({tp_dr*100:.1f}%)"); continue 
             
         if active_stop_loss_value > 0.0 and current_price < active_stop_loss_value:
-            # 🕒 判斷目前執行時間是否在「真正的實戰考核窗口」（下午 14:00 到 晚上 23:30 之間）
             current_time = datetime.datetime.now().time()
             is_real_battle_window = (datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0))
             
             if is_real_battle_window:
-                # 只有在這個黃金時間段，才真正累積跌破天數並觸發出場
                 break_days += 1
                 if break_days >= 2:
                     exit_p_rows.append(f"⚠️ 停損出場：{sid} {sname} 連續2天收盤跌破 {target_ma_line} 防線，最終損益: {sign}{net_profit}元")
@@ -165,10 +163,8 @@ def update_and_print_portfolio(api, today_str):
                     exit_p_rows.append(f"⏳ [防線警戒] {sid} {sname} 今日收盤跌破 {target_ma_line}，進入留校察看第 1 天！")
                     v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
             else:
-                # 🔍 非實戰視窗（例如白天、清晨、深夜），處於測試沙盒模式
                 exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉狀態防禦誤殺。")
         else:
-            # 只有在實戰窗口內且「確認回升站上防線」時，才把留校察看天數歸零
             current_time = datetime.datetime.now().time()
             if datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0):
                 break_days = 0
@@ -190,16 +186,15 @@ def update_and_print_portfolio(api, today_str):
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
 
 # ====================================================================
-# 🎯 網頁渲染引擎：色彩精準校正 × 雷達明細手風琴全開
+# 🎯 網頁渲染引擎：色彩精準校正 × 雷達明細手風琴全開 × 漲停強制收錄
 # ====================================================================
-def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_breakout_data, raw_ambush_data):
+def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data):
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
     total_profit = sum([r['net_profit'] for r in portfolio_data])
     total_current_value = total_cost + total_profit
     total_profit_pct = (total_profit / total_cost * 100) if total_cost > 0 else 0.0
     profit_color_class = "text-taiwan-red" if total_profit >= 0 else "text-taiwan-green"
     
-    # --- 1. 歷史大帳本 ---
     history_summary_html = ""; ledger_rows_html = ""
     if os.path.exists(HISTORY_LEDGER_FILE):
         try:
@@ -226,7 +221,6 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
             """
             for _, h_row in df_hist.iloc[::-1].iterrows():
                 h_prof = float(h_row['net_profit'])
-                # 🎯 這裡補上動態紅綠色，讓歷史戰績的獲利跟虧損一目了然
                 h_class_td = "text-taiwan-red" if h_prof >= 0 else "text-taiwan-green"
                 h_sign = "+" if h_prof >= 0 else ""
                 ledger_rows_html += f"<tr><td>{h_row['stock_id']} {h_row['stock_name']}</td><td>{h_row['buy_date']} ~ {h_row['sell_date']}</td><td>{h_row['buy_price']:.2f} → {h_row['sell_price']:.2f}</td><td>{int(h_row['buy_shares'])} 股</td><td class='{h_class_td} fw-bold'>{h_sign}{h_prof:,.0f}元 ({h_sign}{h_row['profit_percent']:.1f}%)</td><td>{h_row['exit_reason']}</td></tr>"
@@ -235,7 +229,6 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         history_summary_html = '<div class="col-md-4"><div class="summary-box" style="border-left-color: #a1a5b7;"><div class="text-muted-custom small">歷史已結算戰績</div><div class="fs-4 fw-bold text-muted-custom">尚無歷史出清數據</div></div></div>'
     if not ledger_rows_html: ledger_rows_html = '<tr><td colspan="6" class="text-center text-muted-custom py-3">暫無已清算戰績。</td></tr>'
 
-    # --- 2. 留校察看名單 ---
     wl_rows = ""
     if os.path.exists(WATCHLIST_FILE):
         try:
@@ -246,10 +239,8 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         except: pass
     if not wl_rows: wl_rows = '<tr><td colspan="6" class="text-center text-muted-custom py-2 small">觀測哨站目前空棚。</td></tr>'
 
-    # --- 3. 手風琴大串聯：持股與雷達標的全部納入解析 ---
     accordion_items = {}
-    for p in portfolio_data:
-        accordion_items[str(p['stock_id']).strip()] = {"name": p['stock_name'], "tag": "💼 實戰持股"}
+    for p in portfolio_data: accordion_items[str(p['stock_id']).strip()] = {"name": p['stock_name'], "tag": "💼 實戰持股"}
     for r in raw_breakout_data:
         sid = str(r['stock_id']).strip()
         if sid not in accordion_items: accordion_items[sid] = {"name": r['stock_name'], "tag": "🚀 雷達發動標的"}
@@ -261,10 +252,17 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
     if os.path.exists(OPTIMIZER_DETAILS_FILE):
         try:
             df_opt_det = pd.read_csv(OPTIMIZER_DETAILS_FILE, dtype={"stock_id": str})
-            for sid, sub_df in df_opt_det.groupby("stock_id"):
-                opt_details_dict[str(sid).strip()] = sub_df.to_dict(orient="records")
+            for sid, sub_df in df_opt_det.groupby("stock_id"): opt_details_dict[str(sid).strip()] = sub_df.to_dict(orient="records")
         except: pass
-    
+
+    # 準備漲停板的 HTML
+    limit_up_html = ""
+    if not raw_limit_up_data:
+        limit_up_html = '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無漲停鎖死標的。</li>'
+    else:
+        for lu in raw_limit_up_data:
+            limit_up_html += f'<li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge bg-danger me-2">🔥 漲停鎖死</span> <strong>{lu["title"]}</strong></li>'
+
     html_content = f"""<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -279,10 +277,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         .card-header {{ background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }}
         .table-custom-dark {{ color: #ffffff !important; }}
         .table-custom-dark th {{ background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }}
-        
-        /* 🎯 核彈拆除區：拿掉 color: #ffffff 的 !important，讓紅綠燈、黃色警告字體能順利覆蓋上去！ */
         .table-custom-dark td {{ background-color: #1a1f2c !important; color: #ffffff; border-color: #2d3548 !important; }}
-        
         .text-muted-custom {{ color: #a1a5b7 !important; }}
         .text-taiwan-red {{ color: #ff4a4a !important; font-weight: bold; }}     
         .text-taiwan-green {{ color: #2cf3a0 !important; font-weight: bold; }}   
@@ -298,7 +293,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
 </head>
 <body>
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v26.08 資金周轉透視 × 雷達明細全開 × 視覺色彩校正</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v26.08 資金周轉透視 × 雷達明細全開</small></span>
     <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 <div class="container-fluid p-4">
@@ -338,8 +333,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
                         </thead>
                         <tbody>
     """
-    if not portfolio_data:
-        html_content += '<tr><td colspan="9" class="text-center text-muted-custom py-4">目前記帳簿內無任何持股。</td></tr>'
+    if not portfolio_data: html_content += '<tr><td colspan="9" class="text-center text-muted-custom py-4">目前記帳簿內無任何持股。</td></tr>'
     else:
         for p in portfolio_data:
             p_sign = "+" if p['net_profit'] >= 0 else ""
@@ -364,7 +358,6 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
                             </tr>
             """
             
-    # 🎯 補回漏掉的 f 前綴！這樣 {wl_rows} 才能真正塞進去，不會再印出亂碼
     html_content += f"""
                         </tbody>
                     </table>
@@ -387,20 +380,14 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
                     <div class="accordion" id="optimizerAccordion">
     """
     
-    if not accordion_items:
-        html_content += '<div class="text-muted-custom p-3 small">目前無在庫持股或雷達標的，無回測基因可供解析。</div>'
+    if not accordion_items: html_content += '<div class="text-muted-custom p-3 small">目前無在庫持股或雷達標的，無回測基因可供解析。</div>'
     else:
         for sid, info in accordion_items.items():
-            sname = info["name"]
-            tag = info["tag"]
-            records = opt_details_dict.get(sid, [])
-            
+            sname = info["name"]; tag = info["tag"]; records = opt_details_dict.get(sid, [])
             total_rec_profit = sum([float(r.get("net_profit", 0)) for r in records])
             win_count = sum([1 for r in records if float(r.get("net_profit", 0)) > 0])
             win_rate = (win_count / len(records) * 100) if len(records) > 0 else 0
-            
-            r_sign = "+" if total_rec_profit >= 0 else ""
-            r_color = "#ff4a4a" if total_rec_profit >= 0 else "#2cf3a0"
+            r_sign = "+" if total_rec_profit >= 0 else ""; r_color = "#ff4a4a" if total_rec_profit >= 0 else "#2cf3a0"
             
             html_content += f"""
             <div class="accordion-item bg-transparent border-secondary">
@@ -424,23 +411,15 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
                                 </thead>
                                 <tbody>
             """
-            if not records:
-                html_content += f'<tr><td colspan="9" class="text-muted-custom py-3">⚠️ 未偵測到明細資料，請確認 API 狀態或回測引擎是否順利完成。</td></tr>'
+            if not records: html_content += f'<tr><td colspan="9" class="text-muted-custom py-3">⚠️ 未偵測到明細資料，請確認 API 狀態或回測引擎是否順利完成。</td></tr>'
             else:
                 for r_idx, r in enumerate(records):
-                    r_prof = float(r.get("net_profit", 0))
-                    r_pct = float(r.get("profit_percent", 0))
-                    r_sign_td = "+" if r_prof >= 0 else ""
-                    r_class_td = "text-taiwan-red" if r_prof >= 0 else "text-taiwan-green"
-                    
-                    buy_date_str = str(r.get("buy_date", "無"))
-                    sell_date_str = str(r.get("sell_date", "無"))
-                    holding_days = 0
+                    r_prof = float(r.get("net_profit", 0)); r_pct = float(r.get("profit_percent", 0))
+                    r_sign_td = "+" if r_prof >= 0 else ""; r_class_td = "text-taiwan-red" if r_prof >= 0 else "text-taiwan-green"
+                    buy_date_str = str(r.get("buy_date", "無")); sell_date_str = str(r.get("sell_date", "無")); holding_days = 0
                     if buy_date_str != "無" and sell_date_str != "無":
                         try:
-                            b_date_obj = datetime.datetime.strptime(buy_date_str, "%Y-%m-%d")
-                            s_date_obj = datetime.datetime.strptime(sell_date_str, "%Y-%m-%d")
-                            holding_days = (s_date_obj - b_date_obj).days
+                            holding_days = (datetime.datetime.strptime(sell_date_str, "%Y-%m-%d") - datetime.datetime.strptime(buy_date_str, "%Y-%m-%d")).days
                         except: pass
                     holding_days_str = f"{holding_days} 天" if holding_days > 0 else "-"
                     
@@ -487,14 +466,18 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         </div>
         <div class="col-12 col-xl-4">
             <div class="card">
+                <div class="card-header fs-5" style="color: #ff4a4a;">🔥【極端動能 · 鎖死漲停觀測區】</div>
+                <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
+                    {limit_up_html}
+                </ul>
+            </div>
+            <div class="card">
                 <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
     """
-    if not h_bo_str:
-        html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動標的。</li>'
+    if not h_bo_str: html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動標的。</li>'
     else:
-        for bo in h_bo_str:
-            html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
+        for bo in h_bo_str: html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{bo}</li>'
     html_content += """
                 </ul>
             </div>
@@ -502,11 +485,9 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
                 <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
     """
-    if not h_am_str:
-        html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無糾結壓縮標的。</li>'
+    if not h_am_str: html_content += '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無糾結壓縮標的。</li>'
     else:
-        for am in h_am_str:
-            html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{am}</li>'
+        for am in h_am_str: html_content += f'<li class="list-group-item bg-transparent text-white border-secondary py-3">{am}</li>'
     html_content += f"""
                 </ul>
             </div>
@@ -584,7 +565,7 @@ async def main():
 
     available_cash = max(0, DYNAMIC_POOL_BUDGET - current_occupied_cash)
     print(f"💰 [複利總資產池] 當前總水位: {DYNAMIC_POOL_BUDGET:,.0f} 元 | 剩餘可用現金: {available_cash:,.0f} 元")
-    raw_ambush_data = []; raw_breakout_data = []; candidate_buys = []; current_3star_new = []
+    raw_ambush_data = []; raw_breakout_data = []; candidate_buys = []; current_3star_new = []; raw_limit_up_data = [] 
     
     GLOBAL_RADAR_RECORDS = []
 
@@ -606,10 +587,9 @@ async def main():
             
             today_change_pct = ((today_k["close"] - yesterday_k["close"]) / yesterday_k["close"]) * 100
             if today_change_pct >= 9.8 and today_k["close"] == today_k["max"]:
-                print(f"⚠️ [漲停標記] {display_title} 鎖死漲停，保留回測數據供網頁顯示！")
-                # 給名稱掛上專屬標籤，讓它在網頁手風琴和 LINE 通知裡超顯眼
+                print(f"⚠️ [漲停標記] {display_title} 鎖死漲停，強制收錄至網頁觀測區！")
                 display_title = f"{display_title} (漲停鎖死)"
-                # 這裡原本的 continue 已經被拔除了，系統會繼續往下執行 AI 體檢！
+                raw_limit_up_data.append({"stock_id": stock, "stock_name": c_name, "title": display_title})
 
             df["5MA"] = df["close"].rolling(5).mean(); df["10MA"] = df["close"].rolling(10).mean(); df["20MA"] = df["close"].rolling(20).mean()
             df["5MA_Vol"] = df["volume"].rolling(5).mean(); df['20STD'] = df['close'].rolling(20).std(ddof=0)
@@ -638,17 +618,12 @@ async def main():
                 hist_p, b_recs = run_pre_backtest(api, stock)
                 if b_recs:
                     for r in b_recs:
-                        r["stock_id"] = str(stock).strip()
-                        GLOBAL_RADAR_RECORDS.append(r)
+                        r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
                 
                 if triggered_days_ago == 0:
                     print(f"🔬 偵測到今日發動標的：{display_title}，納入實戰建倉評估...")
-                    safe_score = hist_p if hist_p > 0 else 1  # 賦予保底分數，避免後續資金分配出錯
+                    safe_score = hist_p if hist_p > 0 else 1  
                     candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "正飆(0天)", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score})
-                    if hist_p > 0:
-                        print(f"✅ [體檢過關] {display_title} 歷史利潤：{hist_p} 元，正常配置！")
-                    else: 
-                        print(f"⚠️ [籌碼放行] {display_title} 歷史洗盤(利潤 {hist_p} 元)，但大戶籌碼在，放行微量試單！")
 
             if not is_bo_active and df.iloc[-1]["5MA"] >= df.iloc[-1]["10MA"] >= df.iloc[-1]["20MA"]:
                 today_ma = [df.iloc[-1]["5MA"], df.iloc[-1]["10MA"], df.iloc[-1]["20MA"]]
@@ -659,22 +634,19 @@ async def main():
                     hist_p, b_recs = run_pre_backtest(api, stock)
                     if b_recs:
                         for r in b_recs:
-                            r["stock_id"] = str(stock).strip()
-                            GLOBAL_RADAR_RECORDS.append(r)
+                            r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
 
                     if stars == 3:
                         current_3star_new.append({"stock_id": stock, "stock_name": c_name, "close": latest_close})
                         print(f"🔬 偵測到 3星起飆新秀：{display_title}，納入實戰建倉評估...")
-                        safe_score = hist_p if hist_p > 0 else 1  # 賦予保底分數
+                        safe_score = hist_p if hist_p > 0 else 1 
                         candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "3星起飆", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score})
-                        if hist_p > 0:
-                            print(f"✅ [體檢過關] {display_title} 歷史利潤：{hist_p} 元，正常配置！")
-                        else: 
-                            print(f"⚠️ [籌碼放行] {display_title} 歷史洗盤(利潤 {hist_p} 元)，但大戶籌碼在，放行微量試單！")
         except: pass
         time.sleep(0.01)
 
     new_sim_buys = []
+    eliminated_msgs = [] # 收集被開除的老兵，準備傳給 LINE
+    
     if candidate_buys:
         total_score = sum([c["score"] for c in candidate_buys])
         df_portfolio_mod = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str}) if os.path.exists(PORTFOLIO_FILE) else pd.DataFrame()
@@ -705,10 +677,12 @@ async def main():
                                 allocated_budget += red_s * float(df_portfolio_mod.loc[t_idx, "buy_price"])
                                 available_cash += red_s * float(df_portfolio_mod.loc[t_idx, "buy_price"])
                                 print(f"✂️ [智能置換] 老兵 {r_old['stock_id']} 進行減資，釋放子彈！")
+                                eliminated_msgs.append(f"▪️ {r_old['stock_id']} (部分減資，挪用資金給新秀)")
                         else:
                             df_portfolio_mod = df_portfolio_mod.drop(t_idx)
                             allocated_budget += r_old["value"]; available_cash += r_old["value"]
                             print(f"💀 [老兵淘汰] 開除低勝率老兵 {r_old['stock_id']}，騰出大資產！")
+                            eliminated_msgs.append(f"▪️ {r_old['stock_id']} (勝率偏低，強制作廢釋放資金)")
                         if allocated_budget >= MIN_STOCK_BUDGET: break
             
             if allocated_budget >= MIN_STOCK_BUDGET:
@@ -716,7 +690,6 @@ async def main():
                 if calc_shares > 0:
                     new_sim_buys.append({"stock_id": c["stock_id"], "stock_name": c["stock_name"], "buy_price": c["latest_close"], "buy_shares": calc_shares, "buy_type": c["buy_type"], "buy_date": c["buy_date"], "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": c["latest_close"], "break_days_count": 0})
                     available_cash -= (c["latest_close"] * calc_shares)
-                    print(f"💰 [置換入選] {c['stock_id']} 獲配預算: {allocated_budget:,.0f} 元")
                     
         if not df_portfolio_mod.empty: df_portfolio_mod.to_csv(PORTFOLIO_FILE, index=False)
 
@@ -792,7 +765,8 @@ async def main():
     for r in raw_ambush_data:
         h_am_str.append(f'<span class="badge bg-success me-2">{r["stars"]} 潛伏</span> <strong>{r["title"]}</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: {r["spread"]*100:.1f}% | 布林帶寬: {r["bb"]:.2f}</span>')
 
-    generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data, raw_breakout_data, raw_ambush_data)
+    # 正確呼叫網頁渲染引擎，傳遞漲停板陣列
+    generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data)
 
     try:
         p_dir = os.path.dirname(PORTFOLIO_FILE)
@@ -803,6 +777,12 @@ async def main():
     except: pass
 
     line_report_chunks = []
+    
+    if eliminated_msgs:
+        line_report_chunks.append("⚠️【系統強制減資/陣容置換】")
+        line_report_chunks.extend(eliminated_msgs)
+        line_report_chunks.append("───────────────────")
+        
     if new_sim_buys:
         line_report_chunks.append("🚀【明日開盤預備建倉新秀】")
         for nb in new_sim_buys:
