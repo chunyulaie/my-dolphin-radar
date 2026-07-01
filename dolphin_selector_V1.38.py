@@ -8,7 +8,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.08 參數設定區 (視覺色彩精準校正 × 雷達明細強制全開)
+# 26.08 參數設定區 (拔除汰弱留強，訊號優先建倉)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400; REMOVE_LIST = [] 
 INIT_POOL_BUDGET = 250000; MIN_STOCK_BUDGET = 15000     
@@ -645,53 +645,22 @@ async def main():
         time.sleep(0.01)
 
     new_sim_buys = []
-    eliminated_msgs = [] # 收集被開除的老兵，準備傳給 LINE
     
     if candidate_buys:
         total_score = sum([c["score"] for c in candidate_buys])
-        df_portfolio_mod = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str}) if os.path.exists(PORTFOLIO_FILE) else pd.DataFrame()
-        win_dict = {}
-        if os.path.exists(OPTIMIZER_DETAILS_FILE):
-            try:
-                df_temp = pd.read_csv(OPTIMIZER_DETAILS_FILE, dtype={"stock_id": str})
-                for s_t, s_df in df_temp.groupby("stock_id"): win_dict[str(s_t).strip()] = sum([1 for r in s_df.to_dict(orient="records") if float(r.get("net_profit", 0)) > 0]) / len(s_df)
-            except: pass
-
         for c in candidate_buys:
-            new_sid = str(c["stock_id"]).strip(); new_wr = win_dict.get(new_sid, 0.55)
             allocated_budget = available_cash * (c["score"] / total_score)
             
-            if allocated_budget < MIN_STOCK_BUDGET and not df_portfolio_mod.empty:
-                print(f"⚠️ [可用資金不足] 啟動 i7-7700 陣容置換，尋找低勝率老兵開刀...")
-                p_list = []
-                for p_idx, p_r in df_portfolio_mod.iterrows(): p_list.append({"idx": p_idx, "stock_id": str(p_r["stock_id"]).strip(), "win_rate": win_dict.get(str(p_r["stock_id"]).strip(), 0.50), "value": float(p_r["buy_price"]) * int(p_r["buy_shares"])})
-                df_rank = pd.DataFrame(p_list).sort_values(by="win_rate", ascending=True)
-                
-                for _, r_old in df_rank.iterrows():
-                    if new_wr > r_old["win_rate"]:
-                        t_idx = r_old["idx"]; gap = MIN_STOCK_BUDGET - allocated_budget
-                        if r_old["value"] > gap:
-                            red_s = int(gap // float(df_portfolio_mod.loc[t_idx, "buy_price"]))
-                            if red_s > 0:
-                                df_portfolio_mod.loc[t_idx, "buy_shares"] -= red_s
-                                allocated_budget += red_s * float(df_portfolio_mod.loc[t_idx, "buy_price"])
-                                available_cash += red_s * float(df_portfolio_mod.loc[t_idx, "buy_price"])
-                                print(f"✂️ [智能置換] 老兵 {r_old['stock_id']} 進行減資，釋放子彈！")
-                                eliminated_msgs.append(f"▪️ {r_old['stock_id']} (部分減資，挪用資金給新秀)")
-                        else:
-                            df_portfolio_mod = df_portfolio_mod.drop(t_idx)
-                            allocated_budget += r_old["value"]; available_cash += r_old["value"]
-                            print(f"💀 [老兵淘汰] 開除低勝率老兵 {r_old['stock_id']}，騰出大資產！")
-                            eliminated_msgs.append(f"▪️ {r_old['stock_id']} (勝率偏低，強制作廢釋放資金)")
-                        if allocated_budget >= MIN_STOCK_BUDGET: break
+            # 🎯 這裡已經拔除「陣容置換」邏輯：只要錢不夠，直接印出警告並放棄建倉。
+            if allocated_budget < MIN_STOCK_BUDGET:
+                print(f"⚠️ [可用資金不足] {c['stock_id']} {c['stock_name']} 獲配預算 ({allocated_budget:,.0f} 元) 低於建倉門檻，放棄建倉。")
+                continue
             
-            if allocated_budget >= MIN_STOCK_BUDGET:
-                calc_shares = int(allocated_budget // c["latest_close"])
-                if calc_shares > 0:
-                    new_sim_buys.append({"stock_id": c["stock_id"], "stock_name": c["stock_name"], "buy_price": c["latest_close"], "buy_shares": calc_shares, "buy_type": c["buy_type"], "buy_date": c["buy_date"], "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": c["latest_close"], "break_days_count": 0})
-                    available_cash -= (c["latest_close"] * calc_shares)
-                    
-        if not df_portfolio_mod.empty: df_portfolio_mod.to_csv(PORTFOLIO_FILE, index=False)
+            calc_shares = int(allocated_budget // c["latest_close"])
+            if calc_shares > 0:
+                new_sim_buys.append({"stock_id": c["stock_id"], "stock_name": c["stock_name"], "buy_price": c["latest_close"], "buy_shares": calc_shares, "buy_type": c["buy_type"], "buy_date": c["buy_date"], "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": c["latest_close"], "break_days_count": 0})
+                available_cash -= (c["latest_close"] * calc_shares)
+                print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 獲配預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股")
 
     if new_sim_buys:
         df_new = pd.DataFrame(new_sim_buys)
@@ -765,7 +734,6 @@ async def main():
     for r in raw_ambush_data:
         h_am_str.append(f'<span class="badge bg-success me-2">{r["stars"]} 潛伏</span> <strong>{r["title"]}</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: {r["spread"]*100:.1f}% | 布林帶寬: {r["bb"]:.2f}</span>')
 
-    # 正確呼叫網頁渲染引擎，傳遞漲停板陣列
     generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data)
 
     try:
@@ -777,21 +745,14 @@ async def main():
     except: pass
 
     line_report_chunks = []
-    
-    if eliminated_msgs:
-        line_report_chunks.append("⚠️【系統強制減資/陣容置換】")
-        line_report_chunks.extend(eliminated_msgs)
-        line_report_chunks.append("───────────────────")
         
     if new_sim_buys:
-        # 讀取經過優化器洗禮後的最終實戰記帳簿
+        # 進行最後一道雙重確認，確保股票沒有被優化器 (v2_13) 給砍掉才發送通知
         try:
             df_final_pf = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
             final_pf_stocks = df_final_pf["stock_id"].tolist() if not df_final_pf.empty else []
-        except:
-            final_pf_stocks = []
+        except: final_pf_stocks = []
             
-        # 交叉比對：只保留真正存活在最終記帳簿裡的新秀
         verified_buys = [nb for nb in new_sim_buys if str(nb['stock_id']).strip() in final_pf_stocks]
         
         if verified_buys:

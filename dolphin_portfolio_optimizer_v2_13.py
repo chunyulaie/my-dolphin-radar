@@ -179,7 +179,6 @@ def main():
     ma_options = ["5MA", "10MA", "20MA", "5WMA", "10WMA"]   
     
     all_combinations = [(th, dr, ma_opt) for ma_opt in ma_options for th in threshold_range for dr in drop_range]
-    # 👉 i7-7700 物理核心分流調度，優雅鎖定 4~5 核心，保留執行緒給主系統
     num_cores = min(4, multiprocessing.cpu_count()) 
     chunk_size = max(1, len(all_combinations) // num_cores)
     chunks = [all_combinations[i:i + chunk_size] for i in range(0, len(all_combinations), chunk_size)]
@@ -197,7 +196,7 @@ def main():
         df = pd.DataFrame(index=df_raw.index)
         df["close"] = df_raw["close"].astype(float)
         df["open"] = df_raw["open"].astype(float)
-        df["high"] = df_raw["max"].astype(float) # 注入最高價陣列，供漲停過濾器精密對齊
+        df["high"] = df_raw["max"].astype(float) 
         df["volume"] = df_raw["Trading_Volume"].astype(float) / 1000 
         
         df["5MA"] = df["close"].rolling(window=5).mean()
@@ -228,29 +227,28 @@ def main():
         print(f"🏆 {stock_id} 純淨最佳解：守【{best_ma}】，停利 {best_th*100:.1f}% | 回撤 {best_dr*100:.1f}% | 實戰利潤: {best_profit} 元")
         best_params_dict[stock_id] = {"best_tp": best_th, "best_drop": best_dr, "best_ma": best_ma, "best_profit": best_profit}
 
-        if best_profit > 0:
-            best_records = optimize_core(df, best_th, best_dr, best_ma, return_records=True)
-            if best_records:
-                final_rows = []
-                for r in best_records:
-                    final_rows.append({"stock_id": str(stock_id).strip(), "buy_date": r["buy_date"], "buy_price": r["buy_price"], "sell_date": r["sell_date"], "sell_price": r["sell_price"], "net_profit": int(r["net_profit"]), "profit_percent": round(r["profit_percent"], 2), "exit_reason": r["exit_reason"]})
-                df_detail_append = pd.DataFrame(final_rows)
-                df_detail_append.to_csv(OPTIMIZER_DETAILS_FILE, mode='a', header=not os.path.exists(OPTIMIZER_DETAILS_FILE), index=False, encoding="utf-8-sig")
+        # 🎯 這裡已經解除限制：無論利潤是正或負，都會把明細匯出到儀表板供指揮官參考
+        best_records = optimize_core(df, best_th, best_dr, best_ma, return_records=True)
+        if best_records:
+            final_rows = []
+            for r in best_records:
+                final_rows.append({"stock_id": str(stock_id).strip(), "buy_date": r["buy_date"], "buy_price": r["buy_price"], "sell_date": r["sell_date"], "sell_price": r["sell_price"], "net_profit": int(r["net_profit"]), "profit_percent": round(r["profit_percent"], 2), "exit_reason": r["exit_reason"]})
+            df_detail_append = pd.DataFrame(final_rows)
+            df_detail_append.to_csv(OPTIMIZER_DETAILS_FILE, mode='a', header=not os.path.exists(OPTIMIZER_DETAILS_FILE), index=False, encoding="utf-8-sig")
 
     print("\n📝 正在把黃金密碼回寫至實戰記帳簿...")
-    rows_to_delete = []  
     for idx, row in df_pf.iterrows():
         sid = row["stock_id"]
         if sid in best_params_dict:
+            # 🎯 拔除滅殺機制，僅給予警告不刪除
             if best_params_dict[sid]["best_profit"] <= 0:
-                print(f"❌ [因果滅殺] 劣質股 {sid} 扣除假漲停後真實期望值為負 ({best_params_dict[sid]['best_profit']} 元)，踢除！")
-                rows_to_delete.append(idx); continue  
+                print(f"⚠️ [防線放行] 劣質股 {sid} 扣除假漲停後歷史期望值為負 ({best_params_dict[sid]['best_profit']} 元)，指揮官豁免，強制保留建倉！")
+                
             df_pf.at[idx, "best_tp"] = best_params_dict[sid]["best_tp"]
             df_pf.at[idx, "best_drop"] = best_params_dict[sid]["best_drop"]
             df_pf.at[idx, "best_ma"] = best_params_dict[sid]["best_ma"] 
             
-    if rows_to_delete:
-        df_pf = df_pf.drop(rows_to_delete)
+    # 🎯 將原本刪除的段落徹底移除
     df_pf.to_csv(PORTFOLIO_FILE, index=False)
     print("🏁 【優化器雙向閉環校正完畢】！")
 
