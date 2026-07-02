@@ -11,7 +11,7 @@ logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 # 26.08 參數設定區 (拔除汰弱留強，訊號優先建倉)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400; REMOVE_LIST = [] 
-INIT_POOL_BUDGET = 250000; MIN_STOCK_BUDGET = 15000     
+FIXED_STOCK_BUDGET = 30000  # [修改] 每檔股票固定投入預算，無上限
 GLOBAL_TP_THRESHOLD = 0.15; GLOBAL_TP_DROP = 0.03        
 MA_SPREAD_LIMIT = 0.035; BB_COMPRESS_LIMIT = 0.18   
 WAS_COMPRESSED_LIMIT = 0.04; LOOKBACK_WINDOW = 5        
@@ -338,7 +338,8 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         for p in portfolio_data:
             p_sign = "+" if p['net_profit'] >= 0 else ""
             p_class = "text-taiwan-red" if p['net_profit'] >= 0 else "text-taiwan-green"
-            w_pct = ((p['buy_price'] * p['buy_shares']) / 250000) * 100
+            # [修改] 權重計算改為依據真實總成本，避免寫死總預算分母
+            w_pct = ((p['buy_price'] * p['buy_shares']) / total_cost) * 100 if total_cost > 0 else 0
             radar_badge = '<span class="badge bg-warning text-dark">⏳ 留校察看</span>' if p['break_days'] == 1 else ('<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>')
             
             html_content += f"""
@@ -547,24 +548,16 @@ async def main():
     except: dynamic_name_dict = {}
 
     today_str = datetime.date.today().strftime("%Y-%m-%d"); start_str = (datetime.date.today() - datetime.timedelta(days=120)).strftime("%Y-%m-%d")
-    historical_net_sum = 0
-    if os.path.exists(HISTORY_LEDGER_FILE):
-        try:
-            df_ledger = pd.read_csv(HISTORY_LEDGER_FILE)
-            if not df_ledger.empty and "net_profit" in df_ledger.columns: historical_net_sum = df_ledger["net_profit"].sum()
-        except: pass
 
-    DYNAMIC_POOL_BUDGET = INIT_POOL_BUDGET + historical_net_sum
-    current_occupied_cash = 0; sim_purchased_stocks = []
+    # [修改] 移除了總資金水位和餘額限制，直接啟動無上限模式
+    sim_purchased_stocks = []
     if os.path.exists(PORTFOLIO_FILE):
         try:
             df_exist = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
             sim_purchased_stocks = df_exist["stock_id"].tolist()
-            current_occupied_cash = sum(df_exist["buy_price"] * df_exist["buy_shares"])
         except: pass
 
-    available_cash = max(0, DYNAMIC_POOL_BUDGET - current_occupied_cash)
-    print(f"💰 [複利總資產池] 當前總水位: {DYNAMIC_POOL_BUDGET:,.0f} 元 | 剩餘可用現金: {available_cash:,.0f} 元")
+    print(f"💰 [建倉模式] 每支股票固定投入 {FIXED_STOCK_BUDGET:,.0f} 元 (無總資金上限)")
     raw_ambush_data = []; raw_breakout_data = []; candidate_buys = []; current_3star_new = []; raw_limit_up_data = [] 
     
     GLOBAL_RADAR_RECORDS = []
@@ -646,21 +639,27 @@ async def main():
 
     new_sim_buys = []
     
+    # [修改] 直接依照固定預算換算買入股數，移除與總資金和 score 相關的複雜計算
     if candidate_buys:
-        total_score = sum([c["score"] for c in candidate_buys])
         for c in candidate_buys:
-            allocated_budget = available_cash * (c["score"] / total_score)
-            
-            # 🎯 這裡已經拔除「陣容置換」邏輯：只要錢不夠，直接印出警告並放棄建倉。
-            if allocated_budget < MIN_STOCK_BUDGET:
-                print(f"⚠️ [可用資金不足] {c['stock_id']} {c['stock_name']} 獲配預算 ({allocated_budget:,.0f} 元) 低於建倉門檻，放棄建倉。")
-                continue
-            
+            allocated_budget = FIXED_STOCK_BUDGET
             calc_shares = int(allocated_budget // c["latest_close"])
+            
             if calc_shares > 0:
-                new_sim_buys.append({"stock_id": c["stock_id"], "stock_name": c["stock_name"], "buy_price": c["latest_close"], "buy_shares": calc_shares, "buy_type": c["buy_type"], "buy_date": c["buy_date"], "best_tp": GLOBAL_TP_THRESHOLD, "best_drop": GLOBAL_TP_DROP, "best_ma": "20MA", "max_price": c["latest_close"], "break_days_count": 0})
-                available_cash -= (c["latest_close"] * calc_shares)
-                print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 獲配預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股")
+                new_sim_buys.append({
+                    "stock_id": c["stock_id"], 
+                    "stock_name": c["stock_name"], 
+                    "buy_price": c["latest_close"], 
+                    "buy_shares": calc_shares, 
+                    "buy_type": c["buy_type"], 
+                    "buy_date": c["buy_date"], 
+                    "best_tp": GLOBAL_TP_THRESHOLD, 
+                    "best_drop": GLOBAL_TP_DROP, 
+                    "best_ma": "20MA", 
+                    "max_price": c["latest_close"], 
+                    "break_days_count": 0
+                })
+                print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 固定預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股")
 
     if new_sim_buys:
         df_new = pd.DataFrame(new_sim_buys)
