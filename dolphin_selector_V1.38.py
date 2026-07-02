@@ -11,7 +11,7 @@ logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 # 26.08 參數設定區 (拔除汰弱留強，訊號優先建倉)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400; REMOVE_LIST = [] 
-FIXED_STOCK_BUDGET = 30000  # [修改] 每檔股票固定投入預算，無上限
+FIXED_STOCK_BUDGET = 30000  # 每檔股票固定投入預算，無上限
 GLOBAL_TP_THRESHOLD = 0.15; GLOBAL_TP_DROP = 0.03        
 MA_SPREAD_LIMIT = 0.035; BB_COMPRESS_LIMIT = 0.18   
 WAS_COMPRESSED_LIMIT = 0.04; LOOKBACK_WINDOW = 5        
@@ -169,9 +169,10 @@ def update_and_print_portfolio(api, today_str):
             if datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0):
                 break_days = 0
             
-        tp_tag = " 🔥(監控中)" if max_price >= target_tp_price else ""
+        # 恢復舊版詳細格式，準備傳給 LINE
+        tp_tag = " 🔥(鎖利雷達監控中!)" if max_price >= target_tp_price else ""
         if break_days == 1: tp_tag += " ⏳(警戒)"
-        report_p_rows.append(f"{'📈' if net_profit>=0 else '📉'} {sid} {sname} | 現價: {current_price} | 損益: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)")
+        report_p_rows.append(f"{'📈' if net_profit>=0 else '📉'} {sid} {sname} | 成本: {b_price} -> 現價: {current_price} [停利起跑價: {target_tp_price} | 當前鎖利線(最高{max_price}): {dynamic_lock_price} | 防守停損({target_ma_line}): {active_stop_loss_value:.2f}]{tp_tag} | 損益: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)")
         
         html_portfolio_data.append({
             "stock_id": sid, "stock_name": sname, "buy_date": b_date, "buy_price": b_price, "buy_shares": shares,
@@ -338,7 +339,6 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         for p in portfolio_data:
             p_sign = "+" if p['net_profit'] >= 0 else ""
             p_class = "text-taiwan-red" if p['net_profit'] >= 0 else "text-taiwan-green"
-            # [修改] 權重計算改為依據真實總成本，避免寫死總預算分母
             w_pct = ((p['buy_price'] * p['buy_shares']) / total_cost) * 100 if total_cost > 0 else 0
             radar_badge = '<span class="badge bg-warning text-dark">⏳ 留校察看</span>' if p['break_days'] == 1 else ('<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>')
             
@@ -549,7 +549,6 @@ async def main():
 
     today_str = datetime.date.today().strftime("%Y-%m-%d"); start_str = (datetime.date.today() - datetime.timedelta(days=120)).strftime("%Y-%m-%d")
 
-    # [修改] 移除了總資金水位和餘額限制，直接啟動無上限模式
     sim_purchased_stocks = []
     if os.path.exists(PORTFOLIO_FILE):
         try:
@@ -639,7 +638,6 @@ async def main():
 
     new_sim_buys = []
     
-    # [修改] 直接依照固定預算換算買入股數，移除與總資金和 score 相關的複雜計算
     if candidate_buys:
         for c in candidate_buys:
             allocated_budget = FIXED_STOCK_BUDGET
@@ -743,10 +741,12 @@ async def main():
         print("✅ [雲端同步] 成功！")
     except: pass
 
+    # ====================================================================
+    # 🎯 恢復舊版 LINE 全推播火力展示 (突破區 + 星星評價區 + 持股明細)
+    # ====================================================================
     line_report_chunks = []
         
     if new_sim_buys:
-        # 進行最後一道雙重確認，確保股票沒有被優化器 (v2_13) 給砍掉才發送通知
         try:
             df_final_pf = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
             final_pf_stocks = df_final_pf["stock_id"].tolist() if not df_final_pf.empty else []
@@ -773,6 +773,29 @@ async def main():
                 line_report_chunks.append(f"▪️ {er}")
             line_report_chunks.append("───────────────────")
 
+    # 1. 恢復：真·正飆股 · 動能突破擊潰區
+    if raw_breakout_data:
+        line_report_chunks.append("🚀【真·正飆股 · 動能突破擊潰區】")
+        for r in raw_breakout_data:
+            days_str = "今天剛發動" if r["days_ago"]==0 else f"{r['days_ago']}天前發動"
+            line_report_chunks.append(f"▪️ {r['stock_id']} {r['stock_name']} ({days_str})\n  [均線糾結: {r['spread']*100:.1f}% | 布林: {r['bb']*100:.1f}%]")
+        line_report_chunks.append("───────────────────")
+
+    # 2. 恢復：準·起飆股 · 鱷魚潛伏地底區 (含星星評價)
+    if raw_ambush_data:
+        line_report_chunks.append("🎯【準·起飆股 · 鱷魚潛伏地底區】")
+        for r in raw_ambush_data:
+            line_report_chunks.append(f"{r['stars']} {r['stock_id']} {r['stock_name']}\n  [均線: {r['spread']*100:.1f}% | Bro: {r['bb']*100:.1f}% | MACD: {r['macd']}]")
+        line_report_chunks.append("───────────────────")
+
+    # 3. 恢復：模擬部位當前淨損益回報 (附帶停損停利防線明細)
+    if port_text.strip():
+        line_report_chunks.append("💼 【部位當前淨損益回報】:")
+        for pt in port_text.split('\n'):
+            if pt.strip():
+                line_report_chunks.append(pt.strip())
+        line_report_chunks.append("───────────────────")
+
     if line_report_chunks:
         if line_report_chunks[-1] == "───────────────────":
             line_report_chunks.pop()
@@ -785,7 +808,7 @@ async def main():
         final_report_text = "\n".join(header + line_report_chunks)
         send_line_notify(final_report_text)
     else:
-        print("📭 [實戰監控] 在倉股票安穩續抱中，且無新秀觸發，自動封鎖 LINE 雜訊不打擾。")
+        print("📭 [實戰監控] 今日盤面無動態，封鎖推播。")
 
     os._exit(0)
 
