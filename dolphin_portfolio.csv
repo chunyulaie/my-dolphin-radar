@@ -1,9 +1,9 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
 2867,三商壽,7.97,1887,3星起飆,2026-06-09,0.28,0.02,8.88,10WMA,0,,⭐⭐ | 糾結:1.1% | 帶寬:10.1% | MACD:<span class='text-taiwan-red'>水上(+0.14)</span>
 1460,宏遠,7.29,4115,3星起飆,2026-06-24,0.05,0.035,8.7,10WMA,0,,🚀 | 糾結:4.8% | 帶寬:20.4% | MACD:<span class='text-taiwan-red'>水上(+0.17)</span>
-2204,中華,56.5,3635,正飆(0天),2026-07-01,0.05,0.06,57.6,20MA,0,,⭐⭐⭐ | 糾結:0.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>4.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.52)</span>
+2204,中華,56.5,3635,正飆(0天),2026-07-01,0.18,0.02,57.6,20MA,0,,⭐⭐⭐ | 糾結:0.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>4.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.52)</span>
 1305,華夏,13.7,2189,正飆(0天),2026-07-02,0.1,0.02,15.0,10WMA,0,,🚀 | 糾結:3.6% | 帶寬:16.2% | MACD:<span class='text-taiwan-red'>水上(+0.17)</span>
-2103,台橡,21.4,1401,正飆(0天),2026-07-02,0.11,0.095,23.5,10MA,0,,⭐⭐ | 糾結:0.7% | 帶寬:13.5% | MACD:<span class='text-taiwan-red'>水上(+0.29)</span>
+2103,台橡,21.4,1401,正飆(0天),2026-07-02,0.05,0.095,23.5,10MA,0,,⭐⭐ | 糾結:0.7% | 帶寬:13.5% | MACD:<span class='text-taiwan-red'>水上(+0.29)</span>
 2520,冠德,34.6,867,正飆(0天),2026-07-02,0.15,0.03,35.2,5WMA,0,,⭐⭐ | 糾結:0.6% | 帶寬:13.9% | MACD:<span class='text-taiwan-red'>水上(+0.74)</span>
 3022,威強電,87.0,344,正飆(0天),2026-07-02,0.06,0.02,88.1,10WMA,0,,⭐⭐ | 糾結:1.4% | 帶寬:12.3% | MACD:<span class='text-taiwan-red'>水上(+2.49)</span>
 4306,炎洲,16.35,1834,正飆(0天),2026-07-02,0.11,0.06,16.6,10MA,0,,⭐⭐ | 糾結:1.8% | 帶寬:10.7% | MACD:<span class='text-taiwan-red'>水上(+0.48)</span>
