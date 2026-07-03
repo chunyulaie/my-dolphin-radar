@@ -796,11 +796,29 @@ async def main():
 
     try:
         p_dir = os.path.dirname(PORTFOLIO_FILE)
-        subprocess.run(["git", "add", "."], cwd=p_dir, check=True, stdout=subprocess.DEVNULL)
-        subprocess.run(["git", "commit", "-m", f"📋 雷達自動更新: {today_str}"], cwd=p_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(["git", "push", "origin", "main"], cwd=p_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        print("✅ [雲端同步] 成功！")
-    except: pass
+        # 執行 git add
+        subprocess.run(["git", "add", "."], cwd=p_dir, check=True)
+        
+        # 執行 git commit (不吃掉錯誤，讓它顯示日誌)
+        commit_res = subprocess.run(["git", "commit", "-m", f"📋 雷達自動更新: {today_str}"], cwd=p_dir, capture_output=True, text=True)
+        if commit_res.returncode == 0:
+            print("📝 [Git 提交] 本地端 Commit 成功！")
+        else:
+            # 如果是因為沒有檔案變更而 commit 失敗，這是正常的
+            if "nothing to commit" in commit_res.stdout or "nothing to commit" in commit_res.stderr:
+                print("📝 [Git 提示] 今日數據無任何變更，無需產生新 Commit。")
+            else:
+                print(f"⚠️ [Git 警告] Commit 異常: {commit_res.stderr.strip()}")
+        
+        # 執行 git push (捕獲 GitHub 的真實錯誤回應)
+        push_res = subprocess.run(["git", "push", "origin", "main"], cwd=p_dir, capture_output=True, text=True)
+        if push_res.returncode == 0:
+            print("✅ [雲端同步] 成功推送到 GitHub 伺服器！")
+        else:
+            print(f"🛑 [雲端同步失敗] GitHub 拒絕推送！錯誤原因：\n{push_res.stderr}")
+            
+    except Exception as git_e:
+        print(f"🛑 [Git 管線崩潰] 無法執行 Git 命令，原因: {git_e}")
 
     line_report_chunks = []
         
