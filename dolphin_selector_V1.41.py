@@ -799,19 +799,24 @@ async def main():
         # 執行 git add
         subprocess.run(["git", "add", "."], cwd=p_dir, check=True)
         
-        # 執行 git commit (不吃掉錯誤，讓它顯示日誌)
-        commit_res = subprocess.run(["git", "commit", "-m", f"📋 雷達自動更新: {today_str}"], cwd=p_dir, capture_output=True, text=True)
+        # 執行 git commit (強制指定 encoding="utf-8"，徹底解決 cp950 崩潰問題)
+        commit_res = subprocess.run(
+            ["git", "commit", "-m", f"📋 雷達自動更新: {today_str}"], 
+            cwd=p_dir, capture_output=True, text=True, encoding="utf-8"
+        )
         if commit_res.returncode == 0:
             print("📝 [Git 提交] 本地端 Commit 成功！")
         else:
-            # 如果是因為沒有檔案變更而 commit 失敗，這是正常的
             if "nothing to commit" in commit_res.stdout or "nothing to commit" in commit_res.stderr:
                 print("📝 [Git 提示] 今日數據無任何變更，無需產生新 Commit。")
             else:
                 print(f"⚠️ [Git 警告] Commit 異常: {commit_res.stderr.strip()}")
         
-        # 執行 git push (捕獲 GitHub 的真實錯誤回應)
-        push_res = subprocess.run(["git", "push", "origin", "main"], cwd=p_dir, capture_output=True, text=True)
+        # 執行 git push (同樣強制指定 encoding="utf-8")
+        push_res = subprocess.run(
+            ["git", "push", "origin", "main"], 
+            cwd=p_dir, capture_output=True, text=True, encoding="utf-8"
+        )
         if push_res.returncode == 0:
             print("✅ [雲端同步] 成功推送到 GitHub 伺服器！")
         else:
