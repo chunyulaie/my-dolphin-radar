@@ -12,7 +12,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞、隔日開盤買入、星等視覺化)
+# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞、隔日開盤買入、全網頁星等視覺化)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400
 FIXED_STOCK_BUDGET = 30000      # 每檔股票固定投入預算
@@ -32,9 +32,9 @@ OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optim
 WATCHLIST_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_watchlist.csv" 
 
 # 資安優化：改由環境變數讀取金鑰
-LINE_ACCESS_TOKEN = os.getenv('LINE_ACCESS_TOKEN', '請填寫你的LINE_TOKEN')
-TARGET_USER_ID = os.getenv('LINE_USER_ID', '請填寫你的USER_ID')
-FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', '')
+LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
+TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
+FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8')
 
 URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
@@ -139,7 +139,6 @@ def update_and_print_portfolio(api, today_str):
         tp_th = float(row["best_tp"]) if "best_tp" in row and not pd.isna(row["best_tp"]) else GLOBAL_TP_THRESHOLD
         tp_dr = float(row["best_drop"]) if "best_drop" in row and not pd.isna(row["best_drop"]) else GLOBAL_TP_DROP
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
-        strategy_stars = str(row["strategy_stars"]).strip() if "strategy_stars" in row and not pd.isna(row["strategy_stars"]) else "💼 在倉"
         
         try:
             df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
@@ -151,9 +150,27 @@ def update_and_print_portfolio(api, today_str):
             df_now = df_now.copy().reset_index(drop=True); df_now["close"] = df_now["close"].astype(float)
             df_now["5MA"] = df_now["close"].rolling(5).mean(); df_now["10MA"] = df_now["close"].rolling(10).mean(); df_now["20MA"] = df_now["close"].rolling(20).mean()
             df_now["5WMA"] = df_now["close"].rolling(25).mean(); df_now["10WMA"] = df_now["close"].rolling(50).mean()
+            df_now['20STD'] = df_now['close'].rolling(20).std(ddof=0)
+            df_now['BB_Width'] = ((df_now['20MA'] + 2*df_now['20STD']) - (df_now['20MA'] - 2*df_now['20STD'])) / df_now['20MA']
+            df_now['EMA12'] = df_now['close'].ewm(span=12, adjust=False).mean(); df_now['EMA26'] = df_now['close'].ewm(span=26, adjust=False).mean()
+            df_now['MACD'] = df_now['EMA12'] - df_now['EMA26']
             active_stop_loss_value = float(df_now.iloc[-1][target_ma_line])
+            
+            # [核心優化] 針對在庫老兵，如果沒有星等欄位，現場進行海豚意念計算，確保百分之百有星星
+            if "strategy_stars" in row and not pd.isna(row["strategy_stars"]) and str(row["strategy_stars"]).strip() != "💼 在倉":
+                strategy_stars = str(row["strategy_stars"]).strip()
+            else:
+                # 動態回溯計算星等
+                today_ma = [df_now.iloc[-1]["5MA"], df_now.iloc[-1]["10MA"], df_now.iloc[-1]["20MA"]]
+                if df_now.iloc[-1]["5MA"] >= df_now.iloc[-1]["10MA"] >= df_now.iloc[-1]["20MA"] and (max(today_ma) - min(today_ma)) / df_now.iloc[-1]["20MA"] <= MA_SPREAD_LIMIT:
+                    stars_calc = 1 + (1 if df_now.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT else 0) + (1 if df_now.iloc[-1]["MACD"] > 0 else 0)
+                    strategy_stars = "⭐" * stars_calc + " 持續潛伏"
+                else:
+                    strategy_stars = "🚀 動能持股"
+                    
         except Exception as e:
             print(f"🛑 [API 崩潰] {sid} 撈取失敗（錯誤: {e}），強制鎖定在倉狀態防禦誤殺。")
+            strategy_stars = str(row["strategy_stars"]).strip() if "strategy_stars" in row and not pd.isna(row["strategy_stars"]) else "🚀 動能持股"
             survived_rows.append(row); continue
             
         buy_spent = (b_price * shares) + max(20, int(b_price * shares * FEE_RATE * FEE_DISCOUNT))
@@ -196,16 +213,16 @@ def update_and_print_portfolio(api, today_str):
             "current_price": current_price, "target_tp_price": target_tp_price, "max_price": max_price,
             "dynamic_lock_price": dynamic_lock_price, "target_ma_line": target_ma_line, "stop_loss_value": active_stop_loss_value,
             "net_profit": net_profit, "profit_percent": profit_percent, "radar_active": max_price >= target_tp_price, "break_days": break_days_status,
-            "strategy_stars": strategy_stars  # 傳遞星星到前端
+            "strategy_stars": strategy_stars  
         })
-        row["max_price"] = max_price; row["break_days_count"] = break_days_status; survived_rows.append(row)
+        row["max_price"] = max_price; row["break_days_count"] = break_days_status; row["strategy_stars"] = strategy_stars; survived_rows.append(row)
         
     pd.DataFrame(survived_rows).to_csv(PORTFOLIO_FILE, index=False)
     global GLOBAL_V134_落難老兵; GLOBAL_V134_落難老兵 = v134_落難老兵名單
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
 
 # ====================================================================
-# 🎯 網頁渲染引擎 (已整合星等視覺化)
+# 網頁渲染引擎 (未變動)
 # ====================================================================
 def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data):
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
@@ -553,7 +570,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 V1.38：[星等視覺化完全體] 啟動...")
+    print("🚀 海豚選股 V1.38：[全在庫老兵星等追溯完全體] 啟動...")
     print("====================================================")
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
@@ -679,7 +696,7 @@ async def main():
                     "best_ma": "20MA", 
                     "max_price": c["latest_close"], 
                     "break_days_count": 0,
-                    "strategy_stars": c["stars_display"]  # 將星等標籤存入大帳本
+                    "strategy_stars": c["stars_display"]  
                 })
                 current_positions_count += 1
                 print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 固定預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股")
@@ -690,7 +707,7 @@ async def main():
         else:
             df_exist_cols = pd.read_csv(PORTFOLIO_FILE, nrows=1)
             for col in df_exist_cols.columns:
-                if col not in df_new.columns: df_new[col] = "💼 在倉" if col == "strategy_stars" else (0 if col == "break_days_count" else None)
+                if col not in df_new.columns: df_new[col] = "🚀 動能持股" if col == "strategy_stars" else (0 if col == "break_days_count" else None)
             df_new[df_exist_cols.columns].to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
 
     try:
@@ -745,7 +762,7 @@ async def main():
         df_wl_f.columns = ["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "目前最新收盤", "已觀測天數", "評等"]
         df_wl_f.to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
     else:
-        pd.DataFrame(columns=["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "目前最新收盤", "已觀測天數", "評等"]).to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
+        pd.DataFrame(columns=["stock_id", "stock_name", "初次評選日", "當初潛伏價格", "currently_price", "已觀測天數", "評等"]).to_csv(WATCHLIST_FILE, index=False, encoding="utf-8-sig")
 
     h_bo_str = []
     for r in raw_breakout_data:
