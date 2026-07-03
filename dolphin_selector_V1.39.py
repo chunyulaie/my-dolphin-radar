@@ -2,40 +2,33 @@ import asyncio, datetime, logging, os, time, requests, subprocess
 from FinMind.data import DataLoader
 import pandas as pd
 from pyppeteer import launch
-from dotenv import load_dotenv
-
-# 讀取環境變數 (請在同目錄建立 .env 檔案存放 Token)
-load_dotenv()
 
 logging.getLogger('pyppeteer').setLevel(logging.CRITICAL)
 logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞)
+# 26.08 參數設定區 (拔除汰弱留強，訊號優先建倉)
 # ====================================================================
-VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400
-FIXED_STOCK_BUDGET = 30000      # 每檔股票固定投入預算
-MAX_PORTFOLIO_POSITIONS = 10    # [新增] 最大持股檔數上限，避免超額曝險
-MAX_TOTAL_BUDGET = MAX_PORTFOLIO_POSITIONS * FIXED_STOCK_BUDGET # [新增] 總資金曝險上限
-
+VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400; REMOVE_LIST = [] 
+FIXED_STOCK_BUDGET = 30000  # [修改] 每檔股票固定投入預算
+MAX_TOTAL_EXPOSURE = 300000  # [新增/V1.39] 總曝險上限（在倉成本 + 當日新倉），依實際可用資金調整
+MAX_POSITIONS = 10           # [新增/V1.39] 最大同時持股檔數上限
 GLOBAL_TP_THRESHOLD = 0.15; GLOBAL_TP_DROP = 0.03        
 MA_SPREAD_LIMIT = 0.035; BB_COMPRESS_LIMIT = 0.18   
 WAS_COMPRESSED_LIMIT = 0.04; LOOKBACK_WINDOW = 5        
-FEE_RATE = 0.001425; FEE_DISCOUNT = 0.28; TAX_RATE = 0.003            
+FEE_RATE = 0.001425; FEE_DISCOUNT = 0.28; TAX_RATE = 0.003
+BREAK_WINDOW = 4; BREAK_TRIGGER = 2   # [新增/V1.39] 停損確認：近 N 日內累計跌破次數達門檻才出場（取代嚴格連續兩天）
+BACKTEST_TRAIN_RATIO = 0.7            # [新增/V1.39] 回測參數優化：訓練/樣本外驗證切分比例
 
-# 路徑設定 (請依據你的實際環境調整)
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
 HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" 
 HISTORY_LEDGER_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_history_ledger.csv" 
 OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optimizer_details.csv"
 WATCHLIST_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_watchlist.csv" 
 
-# [新增] 資安優化：改由環境變數讀取金鑰
-LINE_ACCESS_TOKEN = os.getenv('LINE_ACCESS_TOKEN', '請填寫你的LINE_TOKEN')
-TARGET_USER_ID = os.getenv('LINE_USER_ID', '請填寫你的USER_ID')
-FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', '')
-
+LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
+TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
 URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 
@@ -59,67 +52,94 @@ def log_to_history_ledger(row, current_price, net_profit, profit_percent, exit_r
     df_new = pd.DataFrame([new_entry])
     df_new.to_csv(HISTORY_LEDGER_FILE, mode='a', header=not os.path.exists(HISTORY_LEDGER_FILE), index=False, encoding="utf-8-sig")
 
+def _simulate_range(closes, opens, highs, vols, vol5mas, ma5s, ma10s, ma20s, ma_targets, ma_opt, th, dr, dates, start_i, end_i):
+    """在 [start_i, end_i) 區間內跑一次模擬（進場部位在區間起點強制歸零），回傳 (獲利, 交易明細)。"""
+    in_pos = False; b_price = 0.0; b_shares = 0; m_price = 0.0; grand_profit = 0; tp_radar = False
+    temp_records = []; temp_buy = {}
+    for i in range(start_i, end_i):
+        c_close = closes[i]; k_date = dates[i]
+        if in_pos:
+            if c_close > m_price: m_price = c_close
+            if ((m_price - b_price) / b_price) >= th: tp_radar = True
+
+            b_fee = max(20, int(b_price * b_shares * FEE_RATE * FEE_DISCOUNT))
+            s_fee = max(20, int(c_close * b_shares * FEE_RATE * FEE_DISCOUNT))
+            s_tax = int(c_close * b_shares * TAX_RATE)
+            net_p = int((c_close * b_shares) - s_fee - s_tax - (b_price * b_shares) - b_fee)
+
+            if tp_radar and c_close <= (m_price * (1 - dr)):
+                grand_profit += net_p; in_pos = False; tp_radar = False
+                temp_buy.update({"sell_date": k_date, "sell_price": c_close, "net_profit": net_p, "profit_percent": (net_p/((b_price*b_shares)+b_fee))*100, "exit_reason": f"移動鎖利({dr*100:.1f}%)"})
+                temp_records.append(temp_buy.copy())
+            elif ma_targets[i] > 0 and c_close < ma_targets[i]:
+                grand_profit += net_p; in_pos = False; tp_radar = False
+                temp_buy.update({"sell_date": k_date, "sell_price": c_close, "net_profit": net_p, "profit_percent": (net_p/((b_price*b_shares)+b_fee))*100, "exit_reason": f"跌破均線({ma_opt})"})
+                temp_records.append(temp_buy.copy())
+        else:
+            if i < 2: continue
+            if vols[i] < 500 or vol5mas[i] < 400: continue
+            y_close = closes[i-1]
+            if y_close > 0 and ((c_close - y_close) / y_close * 100) >= 9.8 and c_close == highs[i]: continue
+
+            y_ma = [ma5s[i-2], ma10s[i-2], ma20s[i-2]]
+            if closes[i-2] > 0 and (max(y_ma) - min(y_ma)) / closes[i-2] <= 0.04 and closes[i-1] > opens[i-1] and c_close >= max(ma5s[i], ma10s[i], ma20s[i]):
+                in_pos = True; b_price = c_close; b_shares = int(30000 // c_close); m_price = c_close; tp_radar = False
+                temp_buy = {"buy_date": k_date, "buy_price": b_price}
+
+    return grand_profit, temp_records
+
+
 def run_pre_backtest(api, stock_id):
+    """
+    [V1.39 修正] 原本直接在全部 2 年樣本內窮舉 60 組參數、取「歷史獲利最大」的那組當最佳參數，
+    等於是先看到答案再挑劇本，過度配適(overfitting)風險很高。
+    改為：前 BACKTEST_TRAIN_RATIO 比例當「訓練期」用來挑參數，
+          剩餘資料當「樣本外驗證期」，用挑出的參數在沒看過的資料上重新跑一次，
+          回傳的分數與交易明細都是樣本外結果，較能反映參數未來是否還可能有效。
+    回傳: (樣本外獲利, 樣本外交易明細, 最佳參數dict)
+    """
     today = datetime.date.today()
     df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=(today - datetime.timedelta(days=730)).strftime("%Y-%m-%d"), end_date=today.strftime("%Y-%m-%d"))
-    if df_raw.empty or len(df_raw) < 50: return 0, []
-    
+    if df_raw.empty or len(df_raw) < 150: return 0, [], None  # 資料量不足以做訓練/驗證切分，直接放棄評分（保守處理，非硬性擋單）
+
     df = pd.DataFrame()
     df["close"] = df_raw["close"].astype(float); df["open"] = df_raw["open"].astype(float)
     df["high"] = df_raw["max"].astype(float); df["volume"] = df_raw["Trading_Volume"].astype(float) / 1000 
     df["5MA"] = df["close"].rolling(5).mean(); df["10MA"] = df["close"].rolling(10).mean(); df["20MA"] = df["close"].rolling(20).mean()
     df["5MA_Vol"] = df["volume"].rolling(5).mean()
-    
+
     closes = df['close'].values; opens = df['open'].values; highs = df['high'].values
     vols = df['volume'].values; vol5mas = df['5MA_Vol'].values
     ma5s = df['5MA'].values; ma10s = df['10MA'].values; ma20s = df['20MA'].values
     ma5ws = df["close"].rolling(25).mean().values; ma10ws = df["close"].rolling(50).mean().values
     dates = df_raw['date'].astype(str).str[:10].values
 
-    max_possible_profit = -999999
-    best_records = []
+    total_len = len(closes)
+    split_idx = int(total_len * BACKTEST_TRAIN_RATIO)
+    split_idx = max(split_idx, 50)  # 至少保留前50筆做均線暖機
+    if total_len - split_idx < 20:  # 樣本外資料太少（<20筆），評分不具意義
+        return 0, [], None
+
     ma_arrays = {"5MA": ma5s, "10MA": ma10s, "20MA": ma20s, "5WMA": ma5ws, "10WMA": ma10ws}
-    
+
+    best_train_profit = -999999
+    best_params = None
     for ma_opt in ["5MA", "10MA", "20MA", "5WMA", "10WMA"]:
         ma_targets = ma_arrays[ma_opt]
         for th in [0.1, 0.15, 0.2, 0.25]:
             for dr in [0.02, 0.03, 0.04]:
-                in_pos = False; b_price = 0.0; b_shares = 0; m_price = 0.0; grand_profit = 0; tp_radar = False
-                temp_records = []; temp_buy = {}
-                for i in range(50, len(closes)):
-                    c_close = closes[i]; k_date = dates[i]
-                    if in_pos:
-                        if c_close > m_price: m_price = c_close
-                        if ((m_price - b_price) / b_price) >= th: tp_radar = True
-                        
-                        b_fee = max(20, int(b_price * b_shares * FEE_RATE * FEE_DISCOUNT))
-                        s_fee = max(20, int(c_close * b_shares * FEE_RATE * FEE_DISCOUNT))
-                        s_tax = int(c_close * b_shares * TAX_RATE)
-                        net_p = int((c_close * b_shares) - s_fee - s_tax - (b_price * b_shares) - b_fee)
-                        
-                        if tp_radar and c_close <= (m_price * (1 - dr)):
-                            grand_profit += net_p; in_pos = False; tp_radar = False
-                            temp_buy.update({"sell_date": k_date, "sell_price": c_close, "net_profit": net_p, "profit_percent": (net_p/((b_price*b_shares)+b_fee))*100, "exit_reason": f"移動鎖利({dr*100:.1f}%)"})
-                            temp_records.append(temp_buy.copy())
-                        elif ma_targets[i] > 0 and c_close < ma_targets[i]:
-                            grand_profit += net_p; in_pos = False; tp_radar = False
-                            temp_buy.update({"sell_date": k_date, "sell_price": c_close, "net_profit": net_p, "profit_percent": (net_p/((b_price*b_shares)+b_fee))*100, "exit_reason": f"跌破均線({ma_opt})"})
-                            temp_records.append(temp_buy.copy())
-                    else:
-                        if vols[i] < 500 or vol5mas[i] < 400: continue
-                        y_close = closes[i-1]
-                        if y_close > 0 and ((c_close - y_close) / y_close * 100) >= 9.8 and c_close == highs[i]: continue
-                        
-                        y_ma = [ma5s[i-2], ma10s[i-2], ma20s[i-2]]
-                        if closes[i-2] > 0 and (max(y_ma) - min(y_ma)) / closes[i-2] <= 0.04 and closes[i-1] > opens[i-1] and c_close >= max(ma5s[i], ma10s[i], ma20s[i]):
-                            in_pos = True; b_price = c_close; b_shares = int(FIXED_STOCK_BUDGET // c_close); m_price = c_close; tp_radar = False
-                            temp_buy = {"buy_date": k_date, "buy_price": b_price}
-                            
-                if grand_profit > max_possible_profit:
-                    max_possible_profit = grand_profit
-                    best_records = temp_records
-                    
-    return max_possible_profit, best_records
+                train_profit, _ = _simulate_range(closes, opens, highs, vols, vol5mas, ma5s, ma10s, ma20s, ma_targets, ma_opt, th, dr, dates, 50, split_idx)
+                if train_profit > best_train_profit:
+                    best_train_profit = train_profit
+                    best_params = {"ma": ma_opt, "tp": th, "drop": dr, "train_profit": train_profit}
+
+    if best_params is None: return 0, [], None
+
+    # 用訓練期挑出的固定參數，在「沒看過」的樣本外期間重新模擬一次，作為真正的評分依據
+    oos_ma_targets = ma_arrays[best_params["ma"]]
+    oos_profit, oos_records = _simulate_range(closes, opens, highs, vols, vol5mas, ma5s, ma10s, ma20s, oos_ma_targets, best_params["ma"], best_params["tp"], best_params["drop"], dates, split_idx, total_len)
+
+    return oos_profit, oos_records, best_params
 
 def update_and_print_portfolio(api, today_str):
     df_pf = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
@@ -130,6 +150,9 @@ def update_and_print_portfolio(api, today_str):
 
     for idx, row in df_pf.iterrows():
         sid = str(row["stock_id"]).strip(); sname = row["stock_name"]; b_date = row["buy_date"]; b_price = float(row["buy_price"]); shares = int(row["buy_shares"])
+        break_days = int(row["break_days_count"]) if "break_days_count" in row and not pd.isna(row["break_days_count"]) else 0
+        # [新增/V1.39] break_history：近 BREAK_WINDOW 個評估日「是否跌破防線」的紀錄字串，取代嚴格連續兩天的判斷
+        break_history = str(row["break_history"]).strip() if "break_history" in row and not pd.isna(row["break_history"]) else ""
         tp_th = float(row["best_tp"]) if "best_tp" in row and not pd.isna(row["best_tp"]) else GLOBAL_TP_THRESHOLD
         tp_dr = float(row["best_drop"]) if "best_drop" in row and not pd.isna(row["best_drop"]) else GLOBAL_TP_DROP
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
@@ -156,49 +179,51 @@ def update_and_print_portfolio(api, today_str):
         max_price = max(today_high, float(row["max_price"]) if "max_price" in row and not pd.isna(row["max_price"]) else b_price)
         dynamic_lock_price = round(max_price * (1 - tp_dr), 2)
         
-        # [修改] 停損機制優化：抓取近3日資料，判斷是否累計2日跌破均線
-        last_3_days = df_now.tail(3)
-        breaks_in_3_days = sum(1 for _, r in last_3_days.iterrows() if r["close"] < r.get(target_ma_line, 0))
-        is_currently_broken = current_price < active_stop_loss_value
-
         if max_price >= target_tp_price and current_price <= dynamic_lock_price:
             exit_p_rows.append(f"🎉 鎖利通知：{sid} {sname} 今日收盤 {current_price} 跌破鎖利線 {dynamic_lock_price}，淨利: {sign}{net_profit}元")
             log_to_history_ledger(row, current_price, net_profit, profit_percent, f"移動鎖利({tp_dr*100:.1f}%)"); continue 
             
-        current_time = datetime.datetime.now().time()
-        is_real_battle_window = (datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0))
-
-        break_days_status = 0 # 用於前端顯示警戒狀態
-        if is_currently_broken and active_stop_loss_value > 0.0:
-            if is_real_battle_window:
-                if breaks_in_3_days >= 2:
-                    exit_p_rows.append(f"⚠️ 停損出場：{sid} {sname} 近3日累計2天收盤跌破 {target_ma_line} 防線，最終損益: {sign}{net_profit}元")
-                    log_to_history_ledger(row, current_price, net_profit, profit_percent, f"跌破均線({target_ma_line}·近3日破2次)"); continue
-                else:
-                    exit_p_rows.append(f"⏳ [防線警戒] {sid} {sname} 今日收盤跌破 {target_ma_line}，進入留校察看！")
-                    v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
-                    break_days_status = 1
-            else:
-                exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉防禦。")
+        if active_stop_loss_value > 0.0 and current_price < active_stop_loss_value:
+            current_time = datetime.datetime.now().time()
+            is_real_battle_window = (datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0))
             
+            if is_real_battle_window:
+                break_days += 1  # 僅供顯示/相容舊欄位用，不再是出場依據
+                break_history = (break_history + "1")[-BREAK_WINDOW:]
+                break_count = break_history.count("1")
+                if break_count >= BREAK_TRIGGER:
+                    exit_p_rows.append(f"⚠️ 停損出場：{sid} {sname} 近{BREAK_WINDOW}個評估日內已累計{break_count}次收盤跌破 {target_ma_line} 防線，最終損益: {sign}{net_profit}元")
+                    log_to_history_ledger(row, current_price, net_profit, profit_percent, f"跌破均線({target_ma_line}·近{BREAK_WINDOW}日內{break_count}次確認)"); continue
+                else:
+                    exit_p_rows.append(f"⏳ [防線警戒] {sid} {sname} 今日收盤跌破 {target_ma_line}，近{BREAK_WINDOW}日內跌破計數 {break_count}/{BREAK_TRIGGER}！")
+                    v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
+            else:
+                exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉狀態防禦誤殺。")
+        else:
+            current_time = datetime.datetime.now().time()
+            if datetime.time(14, 0, 0) <= current_time <= datetime.time(23, 59, 0):
+                break_days = 0
+                break_history = (break_history + "0")[-BREAK_WINDOW:]  # [修改/V1.39] 站回防線僅記錄「今日未跌破」，不直接清空歷史紀錄，避免反覆假突破洗掉停損計數
+            
+        break_count_display = break_history.count("1")
         tp_tag = " 🔥(監控中)" if max_price >= target_tp_price else ""
-        if break_days_status == 1: tp_tag += " ⏳(警戒)"
+        if 0 < break_count_display < BREAK_TRIGGER: tp_tag += f" ⏳(警戒 {break_count_display}/{BREAK_TRIGGER})"
         report_p_rows.append(f"{'📈' if net_profit>=0 else '📉'} {sid} {sname} | 現價: {current_price} | 損益: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)")
         
         html_portfolio_data.append({
             "stock_id": sid, "stock_name": sname, "buy_date": b_date, "buy_price": b_price, "buy_shares": shares,
             "current_price": current_price, "target_tp_price": target_tp_price, "max_price": max_price,
             "dynamic_lock_price": dynamic_lock_price, "target_ma_line": target_ma_line, "stop_loss_value": active_stop_loss_value,
-            "net_profit": net_profit, "profit_percent": profit_percent, "radar_active": max_price >= target_tp_price, "break_days": break_days_status
+            "net_profit": net_profit, "profit_percent": profit_percent, "radar_active": max_price >= target_tp_price, "break_days": break_count_display
         })
-        row["max_price"] = max_price; row["break_days_count"] = break_days_status; survived_rows.append(row)
+        row["max_price"] = max_price; row["break_days_count"] = break_days; row["break_history"] = break_history; survived_rows.append(row)
         
     pd.DataFrame(survived_rows).to_csv(PORTFOLIO_FILE, index=False)
     global GLOBAL_V134_落難老兵; GLOBAL_V134_落難老兵 = v134_落難老兵名單
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
 
 # ====================================================================
-# 網頁渲染引擎 (未變動，保持原本UI呈現)
+# 🎯 網頁渲染引擎：色彩精準校正 × 雷達明細手風琴全開 × 漲停強制收錄
 # ====================================================================
 def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data):
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
@@ -267,6 +292,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
             for sid, sub_df in df_opt_det.groupby("stock_id"): opt_details_dict[str(sid).strip()] = sub_df.to_dict(orient="records")
         except: pass
 
+    # 準備漲停板的 HTML
     limit_up_html = ""
     if not raw_limit_up_data:
         limit_up_html = '<li class="list-group-item bg-transparent text-muted-custom small py-3">今日無漲停鎖死標的。</li>'
@@ -304,7 +330,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
 </head>
 <body>
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v1.38 健檢風控優化版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v26.08 資金周轉透視 × 雷達明細全開</small></span>
     <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 <div class="container-fluid p-4">
@@ -349,6 +375,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         for p in portfolio_data:
             p_sign = "+" if p['net_profit'] >= 0 else ""
             p_class = "text-taiwan-red" if p['net_profit'] >= 0 else "text-taiwan-green"
+            # [修改] 權重計算改為依據真實總成本，避免寫死總預算分母
             w_pct = ((p['buy_price'] * p['buy_shares']) / total_cost) * 100 if total_cost > 0 else 0
             radar_badge = '<span class="badge bg-warning text-dark">⏳ 留校察看</span>' if p['break_days'] == 1 else ('<span class="badge badge-radar">🔥 監控中</span>' if p['radar_active'] else '<span class="text-muted-custom small">未開啟</span>')
             
@@ -545,14 +572,13 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 V1.38：[健檢風控優化版] 啟動...")
+    print("🚀 海豚選股 26.08：[雷達視野全開強制體檢完全體] 啟動...")
     print("====================================================")
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
 
     api = DataLoader()
-    if FINMIND_TOKEN:
-        api.login_by_token(api_token=FINMIND_TOKEN)
+    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
     try:
         df_info = api.taiwan_stock_info()
         dynamic_name_dict = dict(zip(df_info["stock_id"], df_info["stock_name"]))
@@ -560,19 +586,22 @@ async def main():
 
     today_str = datetime.date.today().strftime("%Y-%m-%d"); start_str = (datetime.date.today() - datetime.timedelta(days=120)).strftime("%Y-%m-%d")
 
+    # [修改/V1.39] 恢復總資金水位與最大持股檔數上限管控（曝險 = 既有持股成本 + 新倉）
     sim_purchased_stocks = []
+    current_exposure = 0.0; current_position_count = 0
     if os.path.exists(PORTFOLIO_FILE):
         try:
             df_exist = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
             sim_purchased_stocks = df_exist["stock_id"].tolist()
+            if not df_exist.empty:
+                current_exposure = float((df_exist["buy_price"].astype(float) * df_exist["buy_shares"].astype(float)).sum())
+                current_position_count = len(df_exist)
         except: pass
+    print(f"🛡️ [風控體檢] 目前在倉 {current_position_count}/{MAX_POSITIONS} 檔，曝險 {current_exposure:,.0f}/{MAX_TOTAL_EXPOSURE:,.0f} 元")
 
-    # [修改] 顯示目前資金狀態與剩餘額度
-    current_positions_count = len(sim_purchased_stocks)
-    print(f"💰 [風控設定] 最大部位檔數: {MAX_PORTFOLIO_POSITIONS} 檔 | 總預算上限: {MAX_TOTAL_BUDGET:,.0f} 元")
-    print(f"📊 [目前狀態] 在倉檔數: {current_positions_count} 檔 | 可用扣打: {max(0, MAX_PORTFOLIO_POSITIONS - current_positions_count)} 檔")
-
+    print(f"💰 [建倉模式] 每支股票固定投入 {FIXED_STOCK_BUDGET:,.0f} 元｜總曝險上限 {MAX_TOTAL_EXPOSURE:,.0f} 元｜最大持股 {MAX_POSITIONS} 檔")
     raw_ambush_data = []; raw_breakout_data = []; candidate_buys = []; current_3star_new = []; raw_limit_up_data = [] 
+    
     GLOBAL_RADAR_RECORDS = []
 
     for stock in STOCK_POOL:
@@ -621,64 +650,78 @@ async def main():
                 raw_breakout_data.append({"stock_id": stock, "stock_name": c_name, "title": display_title, "days_ago": triggered_days_ago, "spread": bo_spread, "bb": bo_bb, "close": latest_close})
                 is_bo_active = True 
                 
+                # [修改/V1.39] 回測運算成本高，只對「今天真的要買」的候選股執行；純觀察用的雷達標的不再跑回測
                 if triggered_days_ago == 0:
                     print(f"🔬 偵測到今日發動標的：{display_title}，納入實戰建倉評估...")
-                    # [優化] 僅在真正可能買進時才執行耗時的歷史回測
-                    hist_p, b_recs = run_pre_backtest(api, stock)
+                    hist_p, b_recs, best_params = run_pre_backtest(api, stock)
                     if b_recs:
-                        for r in b_recs: r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
-                    safe_score = hist_p if hist_p > 0 else 1  
-                    candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "正飆(0天)", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score})
+                        for r in b_recs:
+                            r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
+                    candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "正飆(0天)", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": hist_p, "best_params": best_params})
 
             if not is_bo_active and df.iloc[-1]["5MA"] >= df.iloc[-1]["10MA"] >= df.iloc[-1]["20MA"]:
                 today_ma = [df.iloc[-1]["5MA"], df.iloc[-1]["10MA"], df.iloc[-1]["20MA"]]
                 if (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"] <= MA_SPREAD_LIMIT:
                     stars = 1 + (1 if df.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT else 0) + (1 if df.iloc[-1]["MACD"] > 0 else 0)
                     raw_ambush_data.append({"stock_id": stock, "stock_name": c_name, "stars": "⭐" * stars, "title": display_title, "spread": (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"], "bb": df.iloc[-1]["BB_Width"], "macd": "水上" if df.iloc[-1]["MACD"] > 0 else "水下", "close": latest_close})
-                    
+
                     if stars == 3:
                         current_3star_new.append({"stock_id": stock, "stock_name": c_name, "close": latest_close})
                         print(f"🔬 偵測到 3星起飆新秀：{display_title}，納入實戰建倉評估...")
-                        # [優化] 僅在真正可能買進時才執行耗時的歷史回測
-                        hist_p, b_recs = run_pre_backtest(api, stock)
+                        # [修改/V1.39] 同上，只有真的要買（滿3星）才跑回測
+                        hist_p, b_recs, best_params = run_pre_backtest(api, stock)
                         if b_recs:
-                            for r in b_recs: r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
-                        safe_score = hist_p if hist_p > 0 else 1 
-                        candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "3星起飆", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score})
-        except Exception as e:
-            # [優化] 增加例外追蹤，不再吃掉錯誤
-            print(f"⚠️ 處理 {stock} 時發生錯誤: {e}")
-            continue
+                            for r in b_recs:
+                                r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
+                        candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "3星起飆", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": hist_p, "best_params": best_params})
+        except: pass
         time.sleep(0.01)
 
     new_sim_buys = []
-    
+
+    # [修改/V1.39] 依 score（樣本外回測獲利）由高到低排序，資金/檔數有限時優先給分數較高的候選股
+    candidate_buys.sort(key=lambda c: (c.get("score") if c.get("score") is not None else -999999), reverse=True)
+
     if candidate_buys:
-        # [修改] 進行建倉前，檢查總檔數限制
         for c in candidate_buys:
-            if current_positions_count >= MAX_PORTFOLIO_POSITIONS:
-                print(f"🛑 [風控攔截] 持股已達 {MAX_PORTFOLIO_POSITIONS} 檔上限，放棄買進 {c['stock_id']} {c['stock_name']}")
-                continue
-                
             allocated_budget = FIXED_STOCK_BUDGET
+
+            # [新增/V1.39] 總曝險與最大持股檔數雙重上限，額度用完就停止建倉（其餘候選股本輪捨棄，留在雷達繼續觀察）
+            if current_position_count >= MAX_POSITIONS:
+                print(f"🛑 [風控攔截] 已達最大持股檔數上限 {MAX_POSITIONS} 檔，{c['stock_id']} {c['stock_name']} 本輪不建倉。")
+                continue
+            if current_exposure + allocated_budget > MAX_TOTAL_EXPOSURE:
+                print(f"🛑 [風控攔截] 曝險將超過上限 {MAX_TOTAL_EXPOSURE:,.0f} 元，{c['stock_id']} {c['stock_name']} 本輪不建倉。")
+                continue
+
             calc_shares = int(allocated_budget // c["latest_close"])
             
             if calc_shares > 0:
+                # [修改/V1.39] 若該股有通過樣本外驗證的回測參數（score>0）就採用，否則回退全域預設值，
+                # 避免直接套用可能過度配適、且未經樣本外驗證的參數
+                best_params = c.get("best_params")
+                if best_params and c.get("score", 0) and c["score"] > 0:
+                    use_tp, use_drop, use_ma = best_params["tp"], best_params["drop"], best_params["ma"]
+                else:
+                    use_tp, use_drop, use_ma = GLOBAL_TP_THRESHOLD, GLOBAL_TP_DROP, "20MA"
+
                 new_sim_buys.append({
                     "stock_id": c["stock_id"], 
                     "stock_name": c["stock_name"], 
-                    "buy_price": c["latest_close"], # 註記：實戰上這應視為明日開盤目標價
+                    "buy_price": c["latest_close"], 
                     "buy_shares": calc_shares, 
                     "buy_type": c["buy_type"], 
                     "buy_date": c["buy_date"], 
-                    "best_tp": GLOBAL_TP_THRESHOLD, 
-                    "best_drop": GLOBAL_TP_DROP, 
-                    "best_ma": "20MA", 
+                    "best_tp": use_tp, 
+                    "best_drop": use_drop, 
+                    "best_ma": use_ma, 
                     "max_price": c["latest_close"], 
-                    "break_days_count": 0
+                    "break_days_count": 0,
+                    "break_history": ""
                 })
-                current_positions_count += 1
-                print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 固定預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股")
+                current_exposure += allocated_budget; current_position_count += 1
+                score_disp = f"{c['score']:,.0f}" if c.get("score") is not None else "N/A"
+                print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 固定預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股（樣本外評分: {score_disp}｜出場參數: {use_ma}/TP{use_tp*100:.0f}%/回吐{use_drop*100:.0f}%）")
 
     if new_sim_buys:
         df_new = pd.DataFrame(new_sim_buys)
@@ -765,6 +808,7 @@ async def main():
     line_report_chunks = []
         
     if new_sim_buys:
+        # 進行最後一道雙重確認，確保股票沒有被優化器 (v2_13) 給砍掉才發送通知
         try:
             df_final_pf = pd.read_csv(PORTFOLIO_FILE, dtype={"stock_id": str})
             final_pf_stocks = df_final_pf["stock_id"].tolist() if not df_final_pf.empty else []
@@ -775,7 +819,7 @@ async def main():
         if verified_buys:
             line_report_chunks.append("🚀【明日開盤預備建倉新秀】")
             for nb in verified_buys:
-                line_report_chunks.append(f"▪️ {nb['stock_id']} {nb['stock_name']}\n  ➔ 設定預算：{FIXED_STOCK_BUDGET} 元 (參考價 {nb['buy_price']:.2f})")
+                line_report_chunks.append(f"▪️ {nb['stock_id']} {nb['stock_name']}\n  ➔ 設定價格：{nb['buy_price']:.2f} 元 買入建倉")
             line_report_chunks.append("───────────────────")
 
     if exit_text.strip():
@@ -796,7 +840,7 @@ async def main():
             line_report_chunks.pop()
             
         header = [
-            f"🐬 海豚選股 V1.38 決戰指標 🐬",
+            f"🐬 海豚選股 v26.08 決戰指標 🐬",
             f"📅 戰略日期：{today_str}",
             f"───────────────────"
         ]
