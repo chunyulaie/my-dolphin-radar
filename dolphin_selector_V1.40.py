@@ -32,8 +32,8 @@ OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optim
 WATCHLIST_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_watchlist.csv" 
 
 # 資安優化：改由環境變數讀取金鑰
-LINE_ACCESS_TOKEN = os.getenv('LINE_ACCESS_TOKEN', '請填寫你的LINE_TOKEN')
-TARGET_USER_ID = os.getenv('LINE_USER_ID', '請填寫你的USER_ID')
+LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
+TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
 FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', '')
 
 URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
