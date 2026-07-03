@@ -12,7 +12,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞、隔日開盤買入邏輯)
+# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞、隔日開盤買入、星等視覺化)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400
 FIXED_STOCK_BUDGET = 30000      # 每檔股票固定投入預算
@@ -32,8 +32,8 @@ OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optim
 WATCHLIST_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_watchlist.csv" 
 
 # 資安優化：改由環境變數讀取金鑰
-LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
-TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
+LINE_ACCESS_TOKEN = os.getenv('LINE_ACCESS_TOKEN', '請填寫你的LINE_TOKEN')
+TARGET_USER_ID = os.getenv('LINE_USER_ID', '請填寫你的USER_ID')
 FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', '')
 
 URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
@@ -41,11 +41,17 @@ URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&c
 
 def send_line_notify(message):
     url = 'https://api.line.me/v2/bot/message/push'
-    headers = { 'Content-Type': 'application/json', 'Authorization': f'Bearer {LINE_ACCESS_TOKEN}' }
-    payload = { 'to': TARGET_USER_ID, 'messages': [{'type': 'text', 'text': message}] }
+    token_clean = str(LINE_ACCESS_TOKEN).strip().replace('"', '').replace("'", "")
+    user_id_clean = str(TARGET_USER_ID).strip().replace('"', '').replace("'", "")
+    
+    headers = { 'Content-Type': 'application/json; charset=UTF-8', 'Authorization': f'Bearer {token_clean}' }
+    payload = { 'to': user_id_clean, 'messages': [{'type': 'text', 'text': message}] }
     try:
-        requests.post(url, headers=headers, json=payload)
-        print("📲 [系統通知] LINE 戰報即時推播成功！")
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        if response.status_code == 200:
+            print("📲 [系統通知] LINE 戰報即時推播成功！")
+        else:
+            print(f"⚠️ [系統通知] LINE 發送失敗，伺服器回傳: {response.status_code} - {response.text}")
     except Exception as line_err:
         print(f"⚠️ [系統通知] LINE 發送失敗（原因: {line_err}）")
 
@@ -133,6 +139,7 @@ def update_and_print_portfolio(api, today_str):
         tp_th = float(row["best_tp"]) if "best_tp" in row and not pd.isna(row["best_tp"]) else GLOBAL_TP_THRESHOLD
         tp_dr = float(row["best_drop"]) if "best_drop" in row and not pd.isna(row["best_drop"]) else GLOBAL_TP_DROP
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
+        strategy_stars = str(row["strategy_stars"]).strip() if "strategy_stars" in row and not pd.isna(row["strategy_stars"]) else "💼 在倉"
         
         try:
             df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
@@ -156,7 +163,6 @@ def update_and_print_portfolio(api, today_str):
         max_price = max(today_high, float(row["max_price"]) if "max_price" in row and not pd.isna(row["max_price"]) else b_price)
         dynamic_lock_price = round(max_price * (1 - tp_dr), 2)
         
-        # 停損機制優化：抓取近3日資料，判斷是否累計2日跌破均線
         last_3_days = df_now.tail(3)
         breaks_in_3_days = sum(1 for _, r in last_3_days.iterrows() if r["close"] < r.get(target_ma_line, 0))
         is_currently_broken = current_price < active_stop_loss_value
@@ -179,7 +185,7 @@ def update_and_print_portfolio(api, today_str):
                     v134_落難老兵名單.append({"stock_id": sid, "stock_name": sname, "close": current_price})
                     break_days_status = 1
             else:
-                exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉防禦。")
+                exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉防禦。")
             
         tp_tag = " 🔥(監控中)" if max_price >= target_tp_price else ""
         if break_days_status == 1: tp_tag += " ⏳(警戒)"
@@ -189,7 +195,8 @@ def update_and_print_portfolio(api, today_str):
             "stock_id": sid, "stock_name": sname, "buy_date": b_date, "buy_price": b_price, "buy_shares": shares,
             "current_price": current_price, "target_tp_price": target_tp_price, "max_price": max_price,
             "dynamic_lock_price": dynamic_lock_price, "target_ma_line": target_ma_line, "stop_loss_value": active_stop_loss_value,
-            "net_profit": net_profit, "profit_percent": profit_percent, "radar_active": max_price >= target_tp_price, "break_days": break_days_status
+            "net_profit": net_profit, "profit_percent": profit_percent, "radar_active": max_price >= target_tp_price, "break_days": break_days_status,
+            "strategy_stars": strategy_stars  # 傳遞星星到前端
         })
         row["max_price"] = max_price; row["break_days_count"] = break_days_status; survived_rows.append(row)
         
@@ -198,7 +205,7 @@ def update_and_print_portfolio(api, today_str):
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
 
 # ====================================================================
-# 網頁渲染引擎 (未變動，保持原本UI呈現)
+# 🎯 網頁渲染引擎 (已整合星等視覺化)
 # ====================================================================
 def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data):
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
@@ -300,6 +307,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         .accordion-button {{ background-color: #22293a !important; color: #00f2fe !important; border: 1px solid #2d3548; }}
         .accordion-button:not(.collapsed) {{ background-color: #ff4a4a !important; color: white !important; }}
         .accordion-body {{ background-color: #151b29; border: 1px solid #2d3548; color: #ffffff; }}
+        .star-tag {{ color: #ffca28; font-size: 0.85rem; font-weight: bold; }}
     </style>
 </head>
 <body>
@@ -356,7 +364,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
                             <tr>
                                 <td>
                                     <strong class="text-white">{p['stock_id']} {p['stock_name']}</strong><br>
-                                    <small class='text-muted-custom fw-normal'>(比重: {w_pct:.1f}%)</small>
+                                    <span class="star-tag">{p['strategy_stars']}</span> <small class='text-muted-custom fw-normal'>(比重: {w_pct:.1f}%)</small>
                                 </td>
                                 <td class="small text-muted-custom">{p['buy_date']}</td>
                                 <td class="text-white">{p['buy_price']:.2f} <small class="text-muted-custom">({p['buy_shares']}股)</small></td>
@@ -545,7 +553,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 V1.38：[隔日開盤執行完全體] 啟動...")
+    print("🚀 海豚選股 V1.38：[星等視覺化完全體] 啟動...")
     print("====================================================")
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
@@ -569,7 +577,6 @@ async def main():
 
     current_positions_count = len(sim_purchased_stocks)
     print(f"💰 [風控設定] 最大部位檔數: {MAX_PORTFOLIO_POSITIONS} 檔 | 總預算上限: {MAX_TOTAL_BUDGET:,.0f} 元")
-    print(f"📊 [目前狀態] 在倉檔數: {current_positions_count} 檔 | 可用扣打: {max(0, MAX_PORTFOLIO_POSITIONS - current_positions_count)} 檔")
 
     raw_ambush_data = []; raw_breakout_data = []; candidate_buys = []; current_3star_new = []; raw_limit_up_data = [] 
     GLOBAL_RADAR_RECORDS = []
@@ -626,13 +633,14 @@ async def main():
                     if b_recs:
                         for r in b_recs: r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
                     safe_score = hist_p if hist_p > 0 else 1  
-                    candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "正飆(0天)", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score})
+                    candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "正飆(0天)", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score, "stars_display": "🚀 真·正飆破"})
 
             if not is_bo_active and df.iloc[-1]["5MA"] >= df.iloc[-1]["10MA"] >= df.iloc[-1]["20MA"]:
                 today_ma = [df.iloc[-1]["5MA"], df.iloc[-1]["10MA"], df.iloc[-1]["20MA"]]
                 if (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"] <= MA_SPREAD_LIMIT:
                     stars = 1 + (1 if df.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT else 0) + (1 if df.iloc[-1]["MACD"] > 0 else 0)
-                    raw_ambush_data.append({"stock_id": stock, "stock_name": c_name, "stars": "⭐" * stars, "title": display_title, "spread": (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"], "bb": df.iloc[-1]["BB_Width"], "macd": "水上" if df.iloc[-1]["MACD"] > 0 else "水下", "close": latest_close})
+                    stars_string = "⭐" * stars
+                    raw_ambush_data.append({"stock_id": stock, "stock_name": c_name, "stars": stars_string, "title": display_title, "spread": (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"], "bb": df.iloc[-1]["BB_Width"], "macd": "水上" if df.iloc[-1]["MACD"] > 0 else "水下", "close": latest_close})
                     
                     if stars == 3:
                         current_3star_new.append({"stock_id": stock, "stock_name": c_name, "close": latest_close})
@@ -641,7 +649,7 @@ async def main():
                         if b_recs:
                             for r in b_recs: r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
                         safe_score = hist_p if hist_p > 0 else 1 
-                        candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "3星起飆", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score})
+                        candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "3星起飆", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score, "stars_display": "⭐⭐⭐ 滿星潛伏"})
         except Exception as e:
             print(f"⚠️ 處理 {stock} 時發生錯誤: {e}")
             continue
@@ -662,7 +670,7 @@ async def main():
                 new_sim_buys.append({
                     "stock_id": c["stock_id"], 
                     "stock_name": c["stock_name"], 
-                    "buy_price": c["latest_close"], # 改為「隔日開盤買」，此欄位在記帳時先做為參考基底
+                    "buy_price": c["latest_close"], 
                     "buy_shares": calc_shares, 
                     "buy_type": c["buy_type"], 
                     "buy_date": c["buy_date"], 
@@ -670,7 +678,8 @@ async def main():
                     "best_drop": GLOBAL_TP_DROP, 
                     "best_ma": "20MA", 
                     "max_price": c["latest_close"], 
-                    "break_days_count": 0
+                    "break_days_count": 0,
+                    "strategy_stars": c["stars_display"]  # 將星等標籤存入大帳本
                 })
                 current_positions_count += 1
                 print(f"💰 [建倉確認] {c['stock_id']} {c['stock_name']} 固定預算: {allocated_budget:,.0f} 元，預計買入 {calc_shares} 股")
@@ -681,7 +690,7 @@ async def main():
         else:
             df_exist_cols = pd.read_csv(PORTFOLIO_FILE, nrows=1)
             for col in df_exist_cols.columns:
-                if col not in df_new.columns: df_new[col] = 0 if col == "break_days_count" else None
+                if col not in df_new.columns: df_new[col] = "💼 在倉" if col == "strategy_stars" else (0 if col == "break_days_count" else None)
             df_new[df_exist_cols.columns].to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
 
     try:
@@ -718,7 +727,7 @@ async def main():
         if old_soldier["stock_id"] not in [r["stock_id"] for r in wl_updated]:
             wl_updated.append({
                 "stock_id": old_soldier["stock_id"], "stock_name": old_soldier["stock_name"],
-                "初次評選日": today_str, "當初潛伏價格": old_soldier["close"], "目前最新收盤": old_soldier["close"],
+                "初次評選日": today_str, "當初潛伏價格": old_soldier["close"], "currently_price": old_soldier["close"],
                 "已觀測天數": 1, "評等": "⚠️ 均線警戒老兵"
             })
             
@@ -745,7 +754,7 @@ async def main():
         
     h_am_str = []
     for r in raw_ambush_data:
-        h_am_str.append(f'<span class="badge bg-success me-2">{r["stars"]} 潛伏</span> <strong>{r["title"]}</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: {r["spread"]*100:.1f}% | 布林帶寬: {r["bb"]:.2f}</span>')
+        h_am_str.append(f'<span class="badge bg-success me-2">{r["stars"]} 潛伏</span> <strong>{r["title"]}</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: {r["spread"]*100:.1f}% | 布林帶寬: {r["bb"]:.2f} | MACD: {r["macd"]}</span>')
 
     generate_one_page_html(today_str, h_bo_str, h_am_str, html_p_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data)
 
@@ -768,11 +777,15 @@ async def main():
         verified_buys = [nb for nb in new_sim_buys if str(nb['stock_id']).strip() in final_pf_stocks]
         
         if verified_buys:
-            # [修改] 精準校正 LINE 通知文字，引導開盤直接執行
             line_report_chunks.append("🚀【明日開盤直接進場新秀】")
-            line_report_chunks.append("⚠️ 請於明日 09:00 開盤直接以開盤價建立新倉")
+            line_report_chunks.append("⚠️ 請於明日 09:00 直接以開盤價買入精確股數")
             for nb in verified_buys:
-                line_report_chunks.append(f"▪️ {nb['stock_id']} {nb['stock_name']}\n  ➔ 每檔預算：{FIXED_STOCK_BUDGET} 元 (今日收盤參考價 {nb['buy_price']:.2f})")
+                share_type = "零股" if nb['buy_shares'] < 1000 else f"{int(nb['buy_shares'] // 1000)} 張"
+                line_report_chunks.append(
+                    f"▪️ {nb['stock_id']} {nb['stock_name']} ({nb['strategy_stars']})\n"
+                    f"  ➔ 執行動作：買入 【 {nb['buy_shares']} 股 】 ({share_type})\n"
+                    f"  ➔ 預算基底：{FIXED_STOCK_BUDGET} 元"
+                )
             line_report_chunks.append("───────────────────")
 
     if exit_text.strip():
