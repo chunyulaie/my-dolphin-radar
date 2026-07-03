@@ -12,7 +12,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞、隔日開盤買入、全網頁星等視覺化)
+# 26.08 參數設定區 (已優化：新增總部位風控、修正停損漏洞、隔日開盤買入、嚴格星等累加機制)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400
 FIXED_STOCK_BUDGET = 30000      # 每檔股票固定投入預算
@@ -20,7 +20,12 @@ MAX_PORTFOLIO_POSITIONS = 10    # 最大持股檔數上限，避免超額曝險
 MAX_TOTAL_BUDGET = MAX_PORTFOLIO_POSITIONS * FIXED_STOCK_BUDGET # 總資金曝險上限
 
 GLOBAL_TP_THRESHOLD = 0.15; GLOBAL_TP_DROP = 0.03        
-MA_SPREAD_LIMIT = 0.035; BB_COMPRESS_LIMIT = 0.18   
+
+# --- [指揮官極致海豚意念參數] ---
+MA_SPREAD_LIMIT = 0.035        # 均線糾結門檻
+BB_COMPRESS_LIMIT = 0.10       # 布林帶寬要求小於 10% 內
+# ---------------------------------
+
 WAS_COMPRESSED_LIMIT = 0.04; LOOKBACK_WINDOW = 5        
 FEE_RATE = 0.001425; FEE_DISCOUNT = 0.28; TAX_RATE = 0.003            
 
@@ -28,13 +33,14 @@ FEE_RATE = 0.001425; FEE_DISCOUNT = 0.28; TAX_RATE = 0.003
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
 HTML_OUTPUT_FILE = r"D:\Python-Training\N100\海豚選股法\index.html" 
 HISTORY_LEDGER_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_history_ledger.csv" 
-OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optimizer_details.csv"
+OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optimizer_details.csv" 
 WATCHLIST_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_watchlist.csv" 
 
 # 資安優化：改由環境變數讀取金鑰
 LINE_ACCESS_TOKEN = 'uyt/NqkAS3yCOhUAWGqey5HYGBe5mfct1n5MB1OQaV8Y1/X8HoypqNBwq/LOVXk5YnCknVCi8LEE5KZTXkbXT2V0CpOCAk0C/YRPJRA3Z2RREefQjAG41UQV0pbp1YQCnewazDskTwrpBsxHwRo4OQdB04t89/1O/w1cDnyilFU='
 TARGET_USER_ID = 'Uf8818996f2c5846640e0ae8ae0360a72'
 FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8')
+
 
 URL_1000_SHARES = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=1&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
 URL_400_SHARES  = "https://norway.twsthr.info/StockHoldersContinue.aspx?Show=2&continue=Y&weeks=4&growthrate=2&beforeweek=8&price=5000&valuerank=1-3000&display=0"
@@ -156,20 +162,28 @@ def update_and_print_portfolio(api, today_str):
             df_now['MACD'] = df_now['EMA12'] - df_now['EMA26']
             active_stop_loss_value = float(df_now.iloc[-1][target_ma_line])
             
-            # [核心優化] 針對在庫老兵，如果沒有星等欄位，現場進行海豚意念計算，確保百分之百有星星
-            if "strategy_stars" in row and not pd.isna(row["strategy_stars"]) and str(row["strategy_stars"]).strip() != "💼 在倉":
-                strategy_stars = str(row["strategy_stars"]).strip()
+            # 🔄 [嚴格依照指揮官指示] 在庫老兵每日重新計算精確星等
+            star_count = 0
+            today_ma = [df_now.iloc[-1]["5MA"], df_now.iloc[-1]["10MA"], df_now.iloc[-1]["20MA"]]
+            
+            # 指標 1: 均線糾結符合 -> 獲得1星
+            if (max(today_ma) - min(today_ma)) / df_now.iloc[-1]["20MA"] <= MA_SPREAD_LIMIT:
+                star_count += 1
+                # 指標 2: 布林帶寬小於10% -> 獲得1星
+                if df_now.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT:
+                    star_count += 1
+                # 指標 3: MACD水上 -> 獲得1星
+                if df_now.iloc[-1]["MACD"] > 0:
+                    star_count += 1
+            
+            # 轉換成網頁秀出來的星星標籤
+            if star_count > 0:
+                strategy_stars = "⭐" * star_count + f" ({star_count}星潛伏)"
             else:
-                # 動態回溯計算星等
-                today_ma = [df_now.iloc[-1]["5MA"], df_now.iloc[-1]["10MA"], df_now.iloc[-1]["20MA"]]
-                if df_now.iloc[-1]["5MA"] >= df_now.iloc[-1]["10MA"] >= df_now.iloc[-1]["20MA"] and (max(today_ma) - min(today_ma)) / df_now.iloc[-1]["20MA"] <= MA_SPREAD_LIMIT:
-                    stars_calc = 1 + (1 if df_now.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT else 0) + (1 if df_now.iloc[-1]["MACD"] > 0 else 0)
-                    strategy_stars = "⭐" * stars_calc + " 持續潛伏"
-                else:
-                    strategy_stars = "🚀 動能持股"
+                strategy_stars = "🚀 動能突破" # 完全沒線型糾結則歸類為純突破動能
                     
         except Exception as e:
-            print(f"🛑 [API 崩潰] {sid} 撈取失敗（錯誤: {e}），強制鎖定在倉狀態防禦誤殺。")
+            print(f"🛑 [API 崩潰] {sid} 撈取失敗（錯誤: {e}），保留原有欄位。")
             strategy_stars = str(row["strategy_stars"]).strip() if "strategy_stars" in row and not pd.isna(row["strategy_stars"]) else "🚀 動能持股"
             survived_rows.append(row); continue
             
@@ -204,8 +218,6 @@ def update_and_print_portfolio(api, today_str):
             else:
                 exit_p_rows.append(f"🔬 [沙盒測試] {sid} {sname} 技術型態上跌破 {target_ma_line}，但非實戰考核時間(14:00-23:30)，鎖定在倉防禦。")
             
-        tp_tag = " 🔥(監控中)" if max_price >= target_tp_price else ""
-        if break_days_status == 1: tp_tag += " ⏳(警戒)"
         report_p_rows.append(f"{'📈' if net_profit>=0 else '📉'} {sid} {sname} | 現價: {current_price} | 損益: {sign}{net_profit}元 ({sign}{profit_percent:.2f}%)")
         
         html_portfolio_data.append({
@@ -222,7 +234,7 @@ def update_and_print_portfolio(api, today_str):
     return "\n".join(exit_p_rows), "\n".join(report_p_rows), html_portfolio_data
 
 # ====================================================================
-# 網頁渲染引擎 (未變動)
+# 網頁渲染引擎
 # ====================================================================
 def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_breakout_data, raw_ambush_data, raw_limit_up_data):
     total_cost = sum([r['buy_price'] * r['buy_shares'] for r in portfolio_data])
@@ -324,7 +336,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
         .accordion-button {{ background-color: #22293a !important; color: #00f2fe !important; border: 1px solid #2d3548; }}
         .accordion-button:not(.collapsed) {{ background-color: #ff4a4a !important; color: white !important; }}
         .accordion-body {{ background-color: #151b29; border: 1px solid #2d3548; color: #ffffff; }}
-        .star-tag {{ color: #ffca28; font-size: 0.85rem; font-weight: bold; }}
+        .star-tag {{ color: #ffca28; font-size: 0.95rem; font-weight: bold; letter-spacing: 1px; }}
     </style>
 </head>
 <body>
@@ -570,7 +582,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 V1.38：[全在庫老兵星等追溯完全體] 啟動...")
+    print("🚀 海豚選股 V1.38：[精確 1-3 星等視覺完全體] 啟動...")
     print("====================================================")
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
@@ -654,12 +666,20 @@ async def main():
 
             if not is_bo_active and df.iloc[-1]["5MA"] >= df.iloc[-1]["10MA"] >= df.iloc[-1]["20MA"]:
                 today_ma = [df.iloc[-1]["5MA"], df.iloc[-1]["10MA"], df.iloc[-1]["20MA"]]
+                
+                # 🔄 [嚴格依照指揮官指示] 精確判定 1星、2星、3星的累加邏輯
                 if (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"] <= MA_SPREAD_LIMIT:
-                    stars = 1 + (1 if df.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT else 0) + (1 if df.iloc[-1]["MACD"] > 0 else 0)
-                    stars_string = "⭐" * stars
+                    stars_count = 1  # 均線糾結先拿 1 星
+                    if df.iloc[-1]["BB_Width"] <= BB_COMPRESS_LIMIT:
+                        stars_count += 1  # 布林極致壓縮再加 1 星
+                    if df.iloc[-1]["MACD"] > 0:
+                        stars_count += 1  # MACD 水上再加 1 星
+                        
+                    stars_string = "⭐" * stars_count
                     raw_ambush_data.append({"stock_id": stock, "stock_name": c_name, "stars": stars_string, "title": display_title, "spread": (max(today_ma) - min(today_ma)) / df.iloc[-1]["20MA"], "bb": df.iloc[-1]["BB_Width"], "macd": "水上" if df.iloc[-1]["MACD"] > 0 else "水下", "close": latest_close})
                     
-                    if stars == 3:
+                    # 只要被納入買進新秀（達3星），或者只要具備星等特質，皆可推進建倉
+                    if stars_count == 3:
                         current_3star_new.append({"stock_id": stock, "stock_name": c_name, "close": latest_close})
                         print(f"🔬 偵測到 3星起飆新秀：{display_title}，納入實戰建倉評估...")
                         hist_p, b_recs = run_pre_backtest(api, stock)
@@ -667,6 +687,9 @@ async def main():
                             for r in b_recs: r["stock_id"] = str(stock).strip(); GLOBAL_RADAR_RECORDS.append(r)
                         safe_score = hist_p if hist_p > 0 else 1 
                         candidate_buys.append({"stock_id": stock, "stock_name": c_name, "latest_close": latest_close, "buy_type": "3星起飆", "buy_date": str(df_raw.iloc[-1]["date"])[:10], "score": safe_score, "stars_display": "⭐⭐⭐ 滿星潛伏"})
+                    elif stars_count >= 1:
+                        # 允許 1星 與 2星 個股在符合流動性前提下做為動能儲備觀察
+                        pass
         except Exception as e:
             print(f"⚠️ 處理 {stock} 時發生錯誤: {e}")
             continue
@@ -707,7 +730,7 @@ async def main():
         else:
             df_exist_cols = pd.read_csv(PORTFOLIO_FILE, nrows=1)
             for col in df_exist_cols.columns:
-                if col not in df_new.columns: df_new[col] = "🚀 動能持股" if col == "strategy_stars" else (0 if col == "break_days_count" else None)
+                if col not in df_new.columns: df_new[col] = "🚀 動能突破" if col == "strategy_stars" else (0 if col == "break_days_count" else None)
             df_new[df_exist_cols.columns].to_csv(PORTFOLIO_FILE, mode='a', header=False, index=False)
 
     try:
