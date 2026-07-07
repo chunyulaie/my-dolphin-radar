@@ -1,16 +1,16 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
-2867,三商壽,7.97,1887,3星起飆,2026-06-09,0.28,0.02,8.88,10WMA,0,,⭐⭐ | 糾結:0.7% | 帶寬:10.0% | MACD:<span class='text-taiwan-red'>水上(+0.16)</span>
-2204,中華,56.5,3635,正飆(0天),2026-07-01,0.18,0.02,57.9,20MA,0,,⭐⭐⭐ | 糾結:1.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.2%</span> | MACD:<span class='text-taiwan-red'>水上(+0.61)</span>
-1305,華夏,13.7,2189,正飆(0天),2026-07-02,0.1,0.02,15.0,10WMA,0,,🚀 | 糾結:5.1% | 帶寬:17.6% | MACD:<span class='text-taiwan-red'>水上(+0.22)</span>
-2103,台橡,21.4,1401,正飆(0天),2026-07-02,0.05,0.095,25.85,10MA,0,,⭐⭐ | 糾結:2.3% | 帶寬:17.4% | MACD:<span class='text-taiwan-red'>水上(+0.49)</span>
-2520,冠德,34.6,867,正飆(0天),2026-07-02,0.15,0.03,35.45,5WMA,0,,⭐⭐ | 糾結:0.6% | 帶寬:12.8% | MACD:<span class='text-taiwan-red'>水上(+0.76)</span>
-3022,威強電,87.0,344,正飆(0天),2026-07-02,0.06,0.02,91.6,10WMA,0,,⭐⭐ | 糾結:2.0% | 帶寬:10.6% | MACD:<span class='text-taiwan-red'>水上(+2.54)</span>
-4306,炎洲,16.35,1834,正飆(0天),2026-07-02,0.05,0.02,16.85,10MA,0,,⭐⭐⭐ | 糾結:2.0% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.48)</span>
-6944,兆聯實業,1010.0,29,正飆(0天),2026-07-02,0.28,0.02,1010.0,10WMA,0,,⭐⭐ | 糾結:0.9% | 帶寬:17.4% | MACD:<span class='text-taiwan-red'>水上(+13.21)</span>
-1342,八貫,115.5,259,正飆(0天),2026-07-03,0.12,0.02,117.5,10MA,0,,⭐⭐ | 糾結:0.4% | 帶寬:11.3% | MACD:<span class='text-taiwan-red'>水上(+3.57)</span>
-1210,大成,58.0,517,正飆(0天),2026-07-03,0.05,0.02,59.5,20MA,0,,⭐⭐⭐ | 糾結:2.8% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.5%</span> | MACD:<span class='text-taiwan-red'>水上(+1.01)</span>
-1532,勤美,23.4,1282,正飆(0天),2026-07-03,0.05,0.03,23.75,20MA,0,,⭐⭐ | 糾結:0.7% | 帶寬:10.0% | MACD:<span class='text-taiwan-red'>水上(+0.34)</span>
-1709,和益,23.7,1265,正飆(0天),2026-07-03,0.08,0.03,25.45,10MA,0,,🚀 | 糾結:8.3% | 帶寬:22.0% | MACD:<span class='text-taiwan-red'>水上(+1.05)</span>
-2428,興勤,342.0,87,正飆(0天),2026-07-03,0.15,0.03,363.5,10WMA,0,,🚀 | 糾結:6.7% | 帶寬:23.5% | MACD:<span class='text-taiwan-red'>水上(+19.64)</span>
-2476,鉅祥,133.0,225,正飆(0天),2026-07-03,0.24,0.04,138.0,10WMA,0,,🚀 | 糾結:4.8% | 帶寬:15.9% | MACD:<span class='text-taiwan-red'>水上(+3.61)</span>
-2705,六福,16.65,1801,正飆(0天),2026-07-03,0.05,0.02,16.85,5MA,0,,⭐⭐⭐ | 糾結:1.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.1%</span> | MACD:<span class='text-taiwan-red'>水上(+0.16)</span>
+2867,三商壽,7.97,1887,3星起飆,2026-06-09,0.28,0.02,8.88,10WMA,0,,⭐⭐⭐ | 糾結:0.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.17)</span>
+2204,中華,56.5,3635,正飆(0天),2026-07-01,0.05,0.06,57.9,20MA,0,,⭐⭐⭐ | 糾結:1.8% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.3%</span> | MACD:<span class='text-taiwan-red'>水上(+0.63)</span>
+1305,華夏,13.7,2189,正飆(0天),2026-07-02,0.1,0.02,15.0,10WMA,0,,🚀 | 糾結:5.5% | 帶寬:17.6% | MACD:<span class='text-taiwan-red'>水上(+0.21)</span>
+2103,台橡,21.4,1401,正飆(0天),2026-07-02,0.11,0.095,25.85,10MA,0,,🚀 | 糾結:5.1% | 帶寬:21.0% | MACD:<span class='text-taiwan-red'>水上(+0.67)</span>
+2520,冠德,34.6,867,正飆(0天),2026-07-02,0.15,0.03,35.45,5WMA,0,,⭐⭐ | 糾結:0.9% | 帶寬:10.1% | MACD:<span class='text-taiwan-red'>水上(+0.72)</span>
+3022,威強電,87.0,344,正飆(0天),2026-07-02,0.06,0.02,91.6,10WMA,0,,⭐⭐⭐ | 糾結:2.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.6%</span> | MACD:<span class='text-taiwan-red'>水上(+2.61)</span>
+4306,炎洲,16.35,1834,正飆(0天),2026-07-02,0.06,0.02,16.85,10WMA,0,,⭐⭐⭐ | 糾結:1.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.2%</span> | MACD:<span class='text-taiwan-red'>水上(+0.45)</span>
+6944,兆聯實業,1010.0,29,正飆(0天),2026-07-02,0.28,0.02,1010.0,10WMA,0,,⭐⭐ | 糾結:0.7% | 帶寬:16.0% | MACD:<span class='text-taiwan-red'>水上(+10.53)</span>
+1342,八貫,115.5,259,正飆(0天),2026-07-03,0.12,0.02,117.5,10MA,0,,⭐⭐ | 糾結:0.6% | 帶寬:11.3% | MACD:<span class='text-taiwan-red'>水上(+3.29)</span>
+1210,大成,58.0,517,正飆(0天),2026-07-03,0.05,0.02,59.5,20MA,0,,⭐⭐⭐ | 糾結:3.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.0%</span> | MACD:<span class='text-taiwan-red'>水上(+1.09)</span>
+1532,勤美,23.4,1282,正飆(0天),2026-07-03,0.05,0.03,23.75,20MA,0,,⭐⭐⭐ | 糾結:1.0% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.34)</span>
+1709,和益,23.7,1265,正飆(0天),2026-07-03,0.08,0.03,25.45,10MA,0,,🚀 | 糾結:9.5% | 帶寬:23.4% | MACD:<span class='text-taiwan-red'>水上(+1.13)</span>
+2428,興勤,342.0,87,正飆(0天),2026-07-03,0.15,0.03,363.5,10WMA,0,,🚀 | 糾結:5.6% | 帶寬:21.5% | MACD:<span class='text-taiwan-red'>水上(+17.85)</span>
+2476,鉅祥,133.0,225,正飆(0天),2026-07-03,0.24,0.04,140.0,10WMA,0,,🚀 | 糾結:4.4% | 帶寬:14.9% | MACD:<span class='text-taiwan-red'>水上(+3.44)</span>
+2705,六福,16.65,1801,正飆(0天),2026-07-03,0.05,0.02,16.85,5MA,0,,⭐⭐⭐ | 糾結:1.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.18)</span>
