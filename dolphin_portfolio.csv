@@ -1,10 +1,10 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
 2867,三商壽,7.97,1887,3星起飆,2026-06-09,0.28,0.02,8.98,10WMA,0,,⭐⭐⭐ | 糾結:2.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.3%</span> | MACD:<span class='text-taiwan-red'>水上(+0.19)</span>
-2204,中華,56.5,3635,正飆(0天),2026-07-01,0.05,0.06,57.9,20MA,0,,⭐⭐⭐ | 糾結:2.1% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.68)</span>
+2204,中華,56.5,3635,正飆(0天),2026-07-01,0.18,0.02,57.9,20MA,0,,⭐⭐⭐ | 糾結:2.1% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.68)</span>
 2520,冠德,34.6,867,正飆(0天),2026-07-02,0.15,0.03,35.45,5WMA,0,,⭐⭐⭐ | 糾結:1.0% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.1%</span> | MACD:<span class='text-taiwan-red'>水上(+0.69)</span>
 4306,炎洲,16.35,1834,正飆(0天),2026-07-02,0.06,0.02,16.85,10WMA,0,,⭐⭐⭐ | 糾結:0.6% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.33)</span>
 1210,大成,58.0,517,正飆(0天),2026-07-03,0.05,0.025,59.5,20MA,0,,⭐⭐⭐ | 糾結:3.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.98)</span>
 1709,和益,23.7,1265,正飆(0天),2026-07-03,0.08,0.03,25.45,10MA,0,,🚀 | 糾結:9.4% | 帶寬:24.9% | MACD:<span class='text-taiwan-red'>水上(+1.17)</span>
-2428,興勤,342.0,87,正飆(0天),2026-07-03,0.3,0.1,363.5,10WMA,0,,🚀 | 糾結:5.5% | 帶寬:20.7% | MACD:<span class='text-taiwan-red'>水上(+15.52)</span>
+2428,興勤,342.0,87,正飆(0天),2026-07-03,0.3,0.1,363.5,10WMA,0,,🚀 | 糾結:5.5% | 帶寬:20.7% | MACD:<span class='text-taiwan-red'>水上(+15.51)</span>
 2476,鉅祥,133.0,225,正飆(0天),2026-07-03,0.24,0.04,140.0,10WMA,0,,⭐⭐ | 糾結:3.5% | 帶寬:13.8% | MACD:<span class='text-taiwan-red'>水上(+3.01)</span>
 2705,六福,16.65,1801,正飆(0天),2026-07-03,0.05,0.03,16.85,5WMA,0,,⭐⭐⭐ | 糾結:1.3% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.3%</span> | MACD:<span class='text-taiwan-red'>水上(+0.14)</span>
