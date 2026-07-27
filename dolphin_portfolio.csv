@@ -1,8 +1,11 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
-2520,冠德,34.6,867,正飆(0天),2026-07-02,0.17,0.03,36.85,5WMA,0,,⭐⭐⭐ | 糾結:1.3% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.52)</span>
-2377,微星,149.5,200,正飆(0天),2026-07-13,0.21,0.03,158.0,10WMA,0,,⭐⭐ | 糾結:2.7% | 帶寬:14.0% | MACD:<span class='text-taiwan-red'>水上(+4.01)</span>
-1532,勤美,23.55,1273,正飆(0天),2026-07-16,0.05,0.03,23.75,20MA,0,,⭐⭐⭐ | 糾結:0.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.3%</span> | MACD:<span class='text-taiwan-red'>水上(+0.17)</span>
-2845,遠東銀,13.4,2238,3星起飆,2026-07-21,0.05,0.035,13.5,20MA,0,,⭐⭐⭐ | 糾結:0.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>4.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.15)</span>
-9941,裕融,82.0,365,3星起飆,2026-07-22,0.05,0.02,84.1,20MA,0,,⭐⭐⭐ | 糾結:0.8% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.4%</span> | MACD:<span class='text-taiwan-red'>水上(+0.56)</span>
-3712,永崴投控,18.35,1634,正飆(0天),2026-07-23,0.07,0.025,18.7,10MA,0,,🚀 | 糾結:3.5% | 帶寬:20.0% | MACD:<span class='text-taiwan-green'>水下(-0.02)</span>
-1210,大成,57.8,519,正飆(0天),2026-07-24,0.05,0.035,57.8,20MA,0,,⭐⭐⭐ | 糾結:0.7% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.4%</span> | MACD:<span class='text-taiwan-red'>水上(+0.65)</span>
+2520,冠德,34.6,867,正飆(0天),2026-07-02,0.17,0.03,36.85,5WMA,0,,⭐⭐⭐ | 糾結:1.1% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.48)</span>
+2377,微星,149.5,200,正飆(0天),2026-07-13,0.21,0.03,158.0,10WMA,0,,⭐⭐ | 糾結:2.8% | 帶寬:11.4% | MACD:<span class='text-taiwan-red'>水上(+3.71)</span>
+1532,勤美,23.55,1273,正飆(0天),2026-07-16,0.05,0.03,23.75,20MA,1,,⭐⭐⭐ | 糾結:0.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>4.9%</span> | MACD:<span class='text-taiwan-red'>水上(+0.13)</span>
+2845,遠東銀,13.4,2238,3星起飆,2026-07-21,0.05,0.035,13.5,20MA,0,,⭐⭐⭐ | 糾結:0.8% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>4.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.15)</span>
+9941,裕融,82.0,365,3星起飆,2026-07-22,0.05,0.02,84.1,20MA,0,,⭐⭐⭐ | 糾結:0.7% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.4%</span> | MACD:<span class='text-taiwan-red'>水上(+0.54)</span>
+3712,永崴投控,18.35,1634,正飆(0天),2026-07-23,0.07,0.025,18.8,10MA,0,,🚀 | 糾結:4.5% | 帶寬:20.4% | MACD:<span class='text-taiwan-red'>水上(+0.05)</span>
+1210,大成,57.8,519,正飆(0天),2026-07-24,0.05,0.035,58.2,20MA,0,,⭐⭐⭐ | 糾結:0.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.7%</span> | MACD:<span class='text-taiwan-red'>水上(+0.66)</span>
+2027,大成鋼,44.55,673,正飆(0天),2026-07-27,0.24,0.05,45.15,5WMA,0,,🚀 | 糾結:5.3% | 帶寬:14.6% | MACD:<span class='text-taiwan-red'>水上(+0.65)</span>
+2892,第一金,34.8,862,正飆(0天),2026-07-27,0.13,0.02,35.1,5WMA,0,,⭐⭐⭐ | 糾結:2.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.4%</span> | MACD:<span class='text-taiwan-red'>水上(+0.83)</span>
+9938,百和,47.15,636,正飆(0天),2026-07-27,0.05,0.025,47.45,10WMA,0,,⭐⭐⭐ | 糾結:2.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.7%</span> | MACD:<span class='text-taiwan-red'>水上(+0.62)</span>
