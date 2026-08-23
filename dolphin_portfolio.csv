@@ -1,9 +1,9 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
 2867,三商壽,9.37,3201,正飆(0天),2026-07-29,0.21,0.02,10.05,10WMA,0,,⭐⭐⭐ | 糾結:1.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.20)</span>
 2542,興富發,44.1,680,正飆(0天),2026-08-06,0.06,0.02,49.0,10WMA,0,,🚀 | 糾結:6.0% | 帶寬:15.9% | MACD:<span class='text-taiwan-red'>水上(+1.19)</span>
-6409,旭隼,1015.0,29,正飆(0天),2026-08-14,0.18,0.02,1080.0,20MA,0,,🚀 | 糾結:3.8% | 帶寬:18.2% | MACD:<span class='text-taiwan-red'>水上(+7.81)</span>
+6409,旭隼,1015.0,29,正飆(0天),2026-08-14,0.18,0.02,1080.0,20MA,0,,🚀 | 糾結:3.8% | 帶寬:18.2% | MACD:<span class='text-taiwan-red'>水上(+7.82)</span>
 2609,陽明,54.7,548,正飆(0天),2026-08-17,0.07,0.02,64.6,5WMA,0,,🚀 | 糾結:11.2% | 帶寬:28.8% | MACD:<span class='text-taiwan-red'>水上(+2.32)</span>
-3005,神基,121.5,246,正飆(0天),2026-08-17,0.18,0.03,125.0,20MA,0,,⭐⭐ | 糾結:3.1% | 帶寬:10.7% | MACD:<span class='text-taiwan-red'>水上(+2.08)</span>
+3005,神基,121.5,246,正飆(0天),2026-08-17,0.17,0.03,125.0,20MA,0,,⭐⭐ | 糾結:3.1% | 帶寬:10.7% | MACD:<span class='text-taiwan-red'>水上(+2.08)</span>
 6277,宏正,87.5,342,正飆(0天),2026-08-17,0.12,0.02,88.6,10WMA,0,,🚀 | 糾結:4.5% | 帶寬:16.3% | MACD:<span class='text-taiwan-red'>水上(+2.05)</span>
 5269,祥碩,1460.0,20,正飆(0天),2026-08-19,0.25,0.02,1480.0,5WMA,0,,⭐ | 糾結:1.1% | 帶寬:12.4% | MACD:<span class='text-taiwan-green'>水下(-4.22)</span>
 2618,長榮航,42.6,704,正飆(0天),2026-08-21,0.24,0.02,42.6,10WMA,0,,⭐⭐ | 糾結:1.5% | 帶寬:10.1% | MACD:<span class='text-taiwan-red'>水上(+0.05)</span>
