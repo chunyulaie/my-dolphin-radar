@@ -1,10 +1,8 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
 2867,三商壽,9.37,3201,正飆(0天),2026-07-29,0.21,0.02,10.05,10WMA,0,,⭐⭐⭐ | 糾結:1.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.20)</span>
-6277,宏正,87.5,342,正飆(0天),2026-08-17,0.12,0.02,88.6,10WMA,1,,⭐ | 糾結:2.3% | 帶寬:12.2% | MACD:<span class='text-taiwan-green'>水下(-0.13)</span>
-2520,冠德,35.4,847,3星起飆,2026-08-25,0.24,0.055,37.55,5WMA,0,,⭐⭐⭐ | 糾結:1.6% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.44)</span>
-2542,興富發,47.9,626,正飆(0天),2026-09-01,0.06,0.02,48.75,10WMA,0,,⭐⭐⭐ | 糾結:0.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.0%</span> | MACD:<span class='text-taiwan-red'>水上(+0.63)</span>
-6510,精測,3125.0,9,正飆(0天),2026-09-01,0.15,0.085,3935.0,20MA,0,,🚀 | 糾結:17.1% | 帶寬:49.3% | MACD:<span class='text-taiwan-red'>水上(+217.24)</span>
-2618,長榮航,42.8,700,正飆(0天),2026-09-03,0.05,0.025,42.95,5MA,1,,⭐⭐⭐ | 糾結:0.3% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.1%</span> | MACD:<span class='text-taiwan-red'>水上(+0.05)</span>
-2030,彰源,23.8,1260,正飆(0天),2026-09-08,0.22,0.02,24.2,20MA,0,,🚀 | 糾結:3.8% | 帶寬:18.0% | MACD:<span class='text-taiwan-red'>水上(+1.06)</span>
-3024,憶聲,14.55,2061,正飆(0天),2026-09-10,0.29,0.025,14.7,20MA,0,,⭐⭐ | 糾結:2.3% | 帶寬:13.8% | MACD:<span class='text-taiwan-red'>水上(+0.27)</span>
-6214,精誠,187.5,160,正飆(0天),2026-09-10,0.18,0.02,188.5,10WMA,0,,⭐⭐⭐ | 糾結:2.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.5%</span> | MACD:<span class='text-taiwan-red'>水上(+8.38)</span>
+2520,冠德,35.4,847,3星起飆,2026-08-25,0.05,0.07,37.55,5WMA,0,,⭐⭐⭐ | 糾結:1.1% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.40)</span>
+2542,興富發,47.9,626,正飆(0天),2026-09-01,0.05,0.02,48.75,10WMA,0,,⭐⭐⭐ | 糾結:0.8% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.50)</span>
+2618,長榮航,42.8,700,正飆(0天),2026-09-03,0.05,0.025,42.95,5MA,0,,⭐⭐⭐ | 糾結:0.1% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>3.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.06)</span>
+2030,彰源,23.8,1260,正飆(0天),2026-09-08,0.22,0.02,24.2,20MA,0,,⭐⭐ | 糾結:3.2% | 帶寬:16.1% | MACD:<span class='text-taiwan-red'>水上(+1.01)</span>
+3024,憶聲,14.55,2061,正飆(0天),2026-09-10,0.29,0.025,14.7,20MA,0,,⭐⭐ | 糾結:1.6% | 帶寬:12.8% | MACD:<span class='text-taiwan-red'>水上(+0.26)</span>
+6214,精誠,187.5,160,正飆(0天),2026-09-10,0.18,0.02,190.5,10WMA,0,,⭐⭐⭐ | 糾結:2.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.7%</span> | MACD:<span class='text-taiwan-red'>水上(+8.20)</span>
