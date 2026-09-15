@@ -1,7 +1,7 @@
 stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
 2867,三商壽,9.37,3201,正飆(0天),2026-07-29,0.21,0.02,10.05,10WMA,0,,⭐⭐⭐ | 糾結:1.2% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.8%</span> | MACD:<span class='text-taiwan-red'>水上(+0.20)</span>
-2520,冠德,35.4,847,3星起飆,2026-08-25,0.05,0.07,37.55,5WMA,0,,⭐⭐⭐ | 糾結:1.0% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.7%</span> | MACD:<span class='text-taiwan-red'>水上(+0.38)</span>
-2542,興富發,47.9,626,正飆(0天),2026-09-01,0.06,0.02,48.75,10WMA,0,,⭐⭐⭐ | 糾結:1.6% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.7%</span> | MACD:<span class='text-taiwan-red'>水上(+0.32)</span>
-2030,彰源,23.8,1260,正飆(0天),2026-09-08,0.22,0.02,24.2,20MA,0,,⭐⭐ | 糾結:2.9% | 帶寬:13.4% | MACD:<span class='text-taiwan-red'>水上(+0.94)</span>
-3024,憶聲,14.55,2061,正飆(0天),2026-09-10,0.29,0.025,14.85,20MA,0,,⭐⭐ | 糾結:0.9% | 帶寬:12.8% | MACD:<span class='text-taiwan-red'>水上(+0.28)</span>
-6214,精誠,187.5,160,正飆(0天),2026-09-10,0.18,0.02,190.5,10WMA,0,,⭐⭐⭐ | 糾結:2.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.2%</span> | MACD:<span class='text-taiwan-red'>水上(+7.87)</span>
+2520,冠德,35.4,847,3星起飆,2026-08-25,0.24,0.055,37.55,5WMA,0,,⭐⭐⭐ | 糾結:0.7% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.6%</span> | MACD:<span class='text-taiwan-red'>水上(+0.36)</span>
+2542,興富發,47.9,626,正飆(0天),2026-09-01,0.11,0.02,48.75,10WMA,1,,⭐⭐⭐ | 糾結:2.4% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>8.1%</span> | MACD:<span class='text-taiwan-red'>水上(+0.15)</span>
+2030,彰源,23.8,1260,正飆(0天),2026-09-08,0.22,0.045,24.2,20MA,1,,⭐⭐ | 糾結:1.2% | 帶寬:11.0% | MACD:<span class='text-taiwan-red'>水上(+0.80)</span>
+3024,憶聲,14.55,2061,正飆(0天),2026-09-10,0.29,0.025,14.85,20MA,1,,⭐⭐ | 糾結:0.2% | 帶寬:11.5% | MACD:<span class='text-taiwan-red'>水上(+0.25)</span>
+6214,精誠,187.5,160,正飆(0天),2026-09-10,0.18,0.02,195.0,10WMA,0,,⭐⭐⭐ | 糾結:2.5% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>7.1%</span> | MACD:<span class='text-taiwan-red'>水上(+7.73)</span>
