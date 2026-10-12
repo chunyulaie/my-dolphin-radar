@@ -12,7 +12,7 @@ logging.getLogger('websockets').setLevel(logging.CRITICAL)
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
 
 # ====================================================================
-# 26.08 參數設定區 (量化數值透視完全體版 + 三重強護盾 V1.44)
+# 26.08 參數設定區 (量化數值透視完全體版 + 終極拔管防護 V1.45)
 # ====================================================================
 VOLUME_FILTER = 500; VOLUME_5MA_FILTER = 400
 FIXED_STOCK_BUDGET = 30000      # 每檔股票固定投入預算
@@ -141,38 +141,77 @@ def update_and_print_portfolio(api, today_str, valid_stock_ids):
     real_start_str = (datetime.datetime.strptime(real_today_str, "%Y-%m-%d").date() - datetime.timedelta(days=150)).strftime("%Y-%m-%d")
     v134_落難老兵名單 = []
 
+    # 取得大盤最新交易日 (以0050為基準)，用來抓出資料停滯的下市股
+    try:
+        df_0050 = api.taiwan_stock_daily(stock_id="0050", start_date=real_start_str, end_date=real_today_str)
+        if not df_0050.empty:
+            market_latest_date = str(df_0050.iloc[-1]["date"])[:10]
+        else:
+            market_latest_date = real_today_str
+    except:
+        market_latest_date = real_today_str
+
     for idx, row in df_pf.iterrows():
         sid = str(row["stock_id"]).strip(); sname = row["stock_name"]; b_date = row["buy_date"]; b_price = float(row["buy_price"]); shares = int(row["buy_shares"])
         tp_th = float(row["best_tp"]) if "best_tp" in row and not pd.isna(row["best_tp"]) else GLOBAL_TP_THRESHOLD
         tp_dr = float(row["best_drop"]) if "best_drop" in row and not pd.isna(row["best_drop"]) else GLOBAL_TP_DROP
         target_ma_line = str(row["best_ma"]).strip() if "best_ma" in row and not pd.isna(row["best_ma"]) else "20MA"
         
-        # 🎯【防呆防線 1：下市/併購強制拔管】檢查是否已自台股下市
+        # 🎯【防呆防線 1：API 終止掛牌偵測】
         if sid not in valid_stock_ids:
             buy_spent = (b_price * shares) + max(20, int(b_price * shares * FEE_RATE * FEE_DISCOUNT))
-            sell_get = (b_price * shares) # 以下市/停牌前最後的成本當作假設計算
+            sell_get = (b_price * shares) 
             net_profit = int(sell_get - buy_spent)
             profit_percent = (net_profit / buy_spent) * 100
-            exit_p_rows.append(f"⚠️ 強制平倉：{sid} {sname} 已自台股終止上市或下檔，立即出清釋放資金！")
-            log_to_history_ledger(row, b_price, net_profit, profit_percent, "股票終止上市/下檔")
+            exit_p_rows.append(f"⚠️ 強制平倉：{sid} {sname} 已自台股終止掛牌，立即強制剔除釋放資金！")
+            log_to_history_ledger(row, b_price, net_profit, profit_percent, "股票終止掛牌")
             continue
 
         try:
             df_now = api.taiwan_stock_daily(stock_id=sid, start_date=real_start_str, end_date=real_today_str)
             
-            # 🎯【防呆防線 2：無最新行情】
+            # 🎯【防呆防線 2：無最新行情直接剔除，不再保留】
             if df_now.empty or len(df_now) < 5:
-                print(f"🛑 [下檔警報] {sid} 無法取得報價，疑似長期停牌或異常，保留至下一輪。")
-                survived_rows.append(row); continue
+                buy_spent = (b_price * shares) + max(20, int(b_price * shares * FEE_RATE * FEE_DISCOUNT))
+                sell_get = b_price * shares
+                net_profit = int(sell_get - buy_spent)
+                profit_percent = (net_profit / buy_spent) * 100
+                exit_p_rows.append(f"⚠️ 強制平倉：{sid} {sname} 無法取得報價 (疑似長期停牌)，強制剔除！")
+                log_to_history_ledger(row, b_price, net_profit, profit_percent, "無行情強制拔管")
+                continue
                 
             current_price = float(df_now.iloc[-1]["close"]); today_high = float(df_now.iloc[-1]["max"])
             latest_k_date = str(df_now.iloc[-1]["date"])[:10]
             is_data_updated_today = (latest_k_date == real_today_str)
 
-            # 🎯【防呆防線 3：死魚股 3 日心跳偵測】
+            # 🎯【防呆防線 3：大盤時間脫節偵測 (專殺三商壽這類停牌卡單股)】
+            # 比較持股最新日期與 0050 最新日期，落後 >= 3 天即判定停牌
+            try:
+                days_behind_market = (datetime.datetime.strptime(market_latest_date, "%Y-%m-%d").date() - datetime.datetime.strptime(latest_k_date, "%Y-%m-%d").date()).days
+            except:
+                days_behind_market = 0
+
+            if days_behind_market >= 3:
+                buy_spent = (b_price * shares) + max(20, int(b_price * shares * FEE_RATE * FEE_DISCOUNT))
+                sell_get = current_price * shares - max(20, int(current_price * shares * FEE_RATE * FEE_DISCOUNT)) - int(current_price * shares * TAX_RATE)
+                net_profit = int(sell_get - buy_spent)
+                profit_percent = (net_profit / buy_spent) * 100
+                exit_p_rows.append(f"⚠️ 強制平倉：{sid} {sname} 資料停滯於 {latest_k_date} (落後大盤)，疑似停牌或下市，強制剔除！")
+                log_to_history_ledger(row, current_price, net_profit, profit_percent, f"停牌脫節({days_behind_market}天)")
+                continue
+
+            # 🎯【防呆防線 4：死魚股 3 日心跳偵測】
             recent_3_close = df_now["close"].iloc[-3:]
-            if len(recent_3_close) >= 3 and (recent_3_close.max() == recent_3_close.min()) and (df_now.iloc[-1]["volume"] < 50):
-                exit_p_rows.append(f"⏳ [死魚警戒] {sid} {sname} 連續 3 日量縮無波動，建議手動檢視是否有重訊停牌。")
+            if "Trading_Volume" in df_now.columns:
+                today_vol_shares = float(df_now.iloc[-1]["Trading_Volume"])
+                if len(recent_3_close) >= 3 and (recent_3_close.max() == recent_3_close.min()) and (today_vol_shares < 50000):
+                    buy_spent = (b_price * shares) + max(20, int(b_price * shares * FEE_RATE * FEE_DISCOUNT))
+                    sell_get = current_price * shares - max(20, int(current_price * shares * FEE_RATE * FEE_DISCOUNT)) - int(current_price * shares * TAX_RATE)
+                    net_profit = int(sell_get - buy_spent)
+                    profit_percent = (net_profit / buy_spent) * 100
+                    exit_p_rows.append(f"⚠️ 強制平倉：{sid} {sname} 連續 3 日無波動且量縮，判定為死魚股，強制剔除！")
+                    log_to_history_ledger(row, current_price, net_profit, profit_percent, "死魚股拔管")
+                    continue
 
             df_now = df_now.copy().reset_index(drop=True); df_now["close"] = df_now["close"].astype(float)
             df_now["5MA"] = df_now["close"].rolling(5).mean(); df_now["10MA"] = df_now["close"].rolling(10).mean(); df_now["20MA"] = df_now["close"].rolling(20).mean()
@@ -210,17 +249,16 @@ def update_and_print_portfolio(api, today_str, valid_stock_ids):
         max_price = max(today_high, float(row["max_price"]) if "max_price" in row and not pd.isna(row["max_price"]) else b_price)
         dynamic_lock_price = round(max_price * (1 - tp_dr), 2)
 
-        # 🛠️ 階梯式保本與動態鎖利機制
         active_stop_loss_value = float(df_now.iloc[-1][target_ma_line])
         target_ma_line_display = target_ma_line
         max_profit_pct_achieved = (max_price - b_price) / b_price
         
-        breakeven_price = b_price * 1.01 # 階段一：獲利超過 5%，停損上移至買進成本+1%手續費
+        breakeven_price = b_price * 1.01 
         if max_profit_pct_achieved >= 0.05 and active_stop_loss_value < breakeven_price:
             active_stop_loss_value = breakeven_price
             target_ma_line_display = "保本防線"
             
-        mid_lock_price = max_price * 0.95 # 階段二：獲利超過 10%，啟動最高點回檔 5% 停利
+        mid_lock_price = max_price * 0.95 
         if max_profit_pct_achieved >= 0.10 and active_stop_loss_value < mid_lock_price:
             active_stop_loss_value = mid_lock_price
             target_ma_line_display = "階段鎖利"
@@ -378,7 +416,7 @@ def generate_one_page_html(today_str, h_bo_str, h_am_str, portfolio_data, raw_br
 </head>
 <body>
 <nav class="navbar navbar-dark px-4 py-3">
-    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v1.44 終極防護盾版</small></span>
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v1.45 終極拔管版</small></span>
     <span class="text-muted-custom">📅 數據更新時間：{today_str}</span>
 </nav>
 <div class="container-fluid p-4">
@@ -620,7 +658,7 @@ async def fetch_union_pyramid_pool():
 
 async def main():
     print("====================================================")
-    print("🚀 海豚選股 V1.44：[終極防護盾版] 啟動...")
+    print("🚀 海豚選股 V1.45：[終極拔管防護版] 啟動...")
     print("====================================================")
     STOCK_POOL = await fetch_union_pyramid_pool()
     if not STOCK_POOL: return
@@ -927,7 +965,7 @@ async def main():
             line_report_chunks.pop()
             
         header = [
-            f"🐬 海豚選股 V1.44 決戰指標 🐬",
+            f"🐬 海豚選股 V1.45 決戰指標 🐬",
             f"📅 戰略日期：{today_str}",
             f"───────────────────"
         ]
