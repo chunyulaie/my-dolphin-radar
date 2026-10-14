@@ -5,19 +5,21 @@ import pandas as pd
 import multiprocessing
 import concurrent.futures
 import warnings  
+from dotenv import load_dotenv
+
+# 讀取環境變數
+load_dotenv()
 
 # 🎯 終極攔截：在 Trio 包載入前，硬性把所有 RuntimeWarning 丟進黑洞抹殺
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
-
-# 👉 新增：徹底阻斷環境變數中的 Python 警告與 Pytrio 雜訊
 os.environ["PYTHONWARNINGS"] = "ignore"
 
 from FinMind.data import DataLoader
 
-# 徹底抑制 FinMind 的 INFO 下載提示，讓終端機保持極致純淨
 logging.getLogger('FinMind').setLevel(logging.CRITICAL)
+
 # ==========================================
-# 📊 【海豚量化自適應「雙向防線」最佳化設定】
+# 📊 【海豚量化自適應「雙向防線」最佳化設定 V2.14 實戰擬真版】
 # ==========================================
 TODAY = datetime.date.today()
 START_DATE = (TODAY - datetime.timedelta(days=730)).strftime("%Y-%m-%d") 
@@ -27,23 +29,34 @@ SIM_BUDGET = 30000
 FEE_RATE = 0.001425         
 FEE_DISCOUNT = 0.28         
 TAX_RATE = 0.003            
+
+# 路徑設定
 PORTFOLIO_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_portfolio.csv" 
 OPTIMIZER_DETAILS_FILE = r"D:\Python-Training\N100\海豚選股法\dolphin_optimizer_details.csv"
 
+FINMIND_TOKEN = os.getenv('FINMIND_TOKEN', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8')
+
 def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=False):
-    """🚀 效能狂暴升級版：完全捨棄 iloc，全面改用底層 Numpy 陣列極速運算 (內建歷史漲停過濾)"""
+    """🚀 V2.14 實戰擬真引擎：導入 T+1 開盤成交、勝率與最大回撤追蹤、期末部位強制結算"""
     in_position = False
     buy_price = 0.0
     buy_shares = 0
     max_price_after_buy = 0.0
+    
     grand_net_profit = 0
+    total_trades = 0
+    winning_trades = 0
+    current_equity = 0
+    peak_equity = 0
+    max_drawdown = 0
+    
     tp_radar_activated = False 
     trade_records = []  
     temp_buy_record = {}
 
     closes = df['close'].values
     opens = df['open'].values
-    highs = df['high'].values if 'high' in df.columns else df['close'].values # 防呆：若無high則用close
+    highs = df['high'].values if 'high' in df.columns else df['close'].values 
     vols = df['volume'].values
     vol5mas = df['5MA_Vol'].values
     ma5s = df['5MA'].values
@@ -58,61 +71,68 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
     else:
         dates = df['date'].astype(str).values
 
-    for i in range(50, len(closes)): 
-        current_close = closes[i]
+    # 🛠️ 迴圈只跑到倒數第二天，保留 i+1 給 "T+1 日" 的開盤成交使用
+    for i in range(50, len(closes) - 1): 
+        c_close = closes[i]
         k_date = dates[i]
+        
+        next_open = opens[i+1]
+        next_date = dates[i+1]
 
         if in_position:
-            if current_close > max_price_after_buy:
-                max_price_after_buy = current_close
+            # 結算與防線一律使用當天(T日)盤中高點或收盤價判定
+            if highs[i] > max_price_after_buy:
+                max_price_after_buy = highs[i]
                 
             max_profit_percent = ((max_price_after_buy - buy_price) / buy_price)
             if max_profit_percent >= tp_threshold:
                 tp_radar_activated = True
                 
-            buy_fee = max(20, int(buy_price * buy_shares * FEE_RATE * FEE_DISCOUNT))
-            total_buy_spent = (buy_price * buy_shares) + buy_fee
+            total_buy_spent = (buy_price * buy_shares) + max(20, int(buy_price * buy_shares * FEE_RATE * FEE_DISCOUNT))
             
-            sell_fee = max(20, int(current_close * buy_shares * FEE_RATE * FEE_DISCOUNT))
-            sell_tax = int(current_close * buy_shares * TAX_RATE)
-            total_sell_get = (current_close * buy_shares) - sell_fee - sell_tax
+            sell_triggered = False
+            exit_reason_str = ""
             
-            net_profit = int(total_sell_get - total_buy_spent)
-            profit_percent = (net_profit / total_buy_spent) * 100
-            
-            if tp_radar_activated and current_close <= (max_price_after_buy * (1 - tp_trailing_drop)):
+            # 判斷 T 日是否觸發離場條件
+            if tp_radar_activated and c_close <= (max_price_after_buy * (1 - tp_trailing_drop)):
+                sell_triggered = True
+                exit_reason_str = f"移動鎖利({tp_trailing_drop*100:.1f}%)"
+            elif ma_targets[i] > 0 and c_close < ma_targets[i]:
+                sell_triggered = True
+                exit_reason_str = f"跌破防線({ma_field})"
+
+            if sell_triggered:
+                # 🛠️ 實戰模擬：T+1 日以開盤價賣出
+                sell_price = next_open
+                sell_fee = max(20, int(sell_price * buy_shares * FEE_RATE * FEE_DISCOUNT))
+                sell_tax = int(sell_price * buy_shares * TAX_RATE)
+                total_sell_get = (sell_price * buy_shares) - sell_fee - sell_tax
+                
+                net_profit = int(total_sell_get - total_buy_spent)
+                profit_percent = (net_profit / total_buy_spent) * 100
+                
                 grand_net_profit += net_profit
+                current_equity += net_profit
+                total_trades += 1
+                if net_profit > 0: winning_trades += 1
+                
+                # 計算最大回撤 MDD
+                if current_equity > peak_equity: peak_equity = current_equity
+                drawdown = peak_equity - current_equity
+                if drawdown > max_drawdown: max_drawdown = drawdown
+                
                 in_position = False 
                 tp_radar_activated = False 
-                if return_records:
-                    temp_buy_record.update({
-                        "sell_date": k_date, "sell_price": current_close,
-                        "net_profit": net_profit, "profit_percent": profit_percent,
-                        "exit_reason": f"移動鎖利({tp_trailing_drop*100:.1f}%)"
-                    })
-                    trade_records.append(temp_buy_record)
                 
-            elif ma_targets[i] > 0 and current_close < ma_targets[i]:
-                grand_net_profit += net_profit
-                in_position = False 
-                tp_radar_activated = False
                 if return_records:
                     temp_buy_record.update({
-                        "sell_date": k_date, "sell_price": current_close,
+                        "sell_date": next_date, "sell_price": sell_price,
                         "net_profit": net_profit, "profit_percent": profit_percent,
-                        "exit_reason": f"跌破均線({ma_field})"
+                        "exit_reason": exit_reason_str
                     })
-                    trade_records.append(temp_buy_record)
+                    trade_records.append(temp_buy_record.copy())
         else:
             if vols[i] < 500 or vol5mas[i] < 400: continue
-            
-            # 🛑 26.02 核心修復：排除歷史回測中「當天」一開盤就鎖漲停根本買不到的假訊號
-            # 台股判定：當日收盤價 == 當日最高價，且漲幅 >= 9.8% (拿昨收當分母，加入除零保護)
-            yesterday_close = closes[i-1]
-            if yesterday_close > 0:
-                hist_change_pct = ((current_close - yesterday_close) / yesterday_close) * 100
-                if hist_change_pct >= 9.8 and current_close == highs[i]:
-                    continue  # 歷史時空鎖死漲停，無情拋棄，不准進場
             
             y_ma_max = max(ma5s[i-2], ma10s[i-2], ma20s[i-2])
             y_ma_min = min(ma5s[i-2], ma10s[i-2], ma20s[i-2])
@@ -123,7 +143,7 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
             y_open = opens[i-1]
             y1_ma_max = max(ma5s[i-1], ma10s[i-1], ma20s[i-1])
             
-            is_breakout = (y_spread <= 0.04 and y_close > y_open and y_close > y1_ma_max and current_close >= max(ma5s[i], ma10s[i], ma20s[i]))
+            is_breakout = (y_spread <= 0.04 and y_close > y_open and y_close > y1_ma_max and c_close >= max(ma5s[i], ma10s[i], ma20s[i]))
             
             is_ambush = False
             if not is_breakout and ma5s[i] >= ma10s[i] >= ma20s[i]:
@@ -134,32 +154,78 @@ def optimize_core(df, tp_threshold, tp_trailing_drop, ma_field, return_records=F
                     is_ambush = True
             
             if is_breakout or is_ambush:
+                # 🛠️ 實戰模擬：T 日產生訊號，T+1 日以開盤價買入
+                buy_price = next_open
+                
+                # 防呆：如果 T+1 開盤已經跳空超過 9.5%，視為買不到，放棄此單
+                if buy_price >= c_close * 1.095: continue
+                
+                buy_shares = int(SIM_BUDGET // buy_price)
+                if buy_shares <= 0: continue # 防呆：買不起一股
+                
                 in_position = True
-                buy_price = current_close
-                buy_shares = int(SIM_BUDGET // current_close)
-                max_price_after_buy = current_close
+                max_price_after_buy = buy_price
                 if return_records:
-                    temp_buy_record = {"buy_date": k_date, "buy_price": buy_price}
+                    temp_buy_record = {"buy_date": next_date, "buy_price": buy_price}
+
+    # 🛠️ 期末未平倉部位強制結算 (還原真實帳面價值)
+    if in_position:
+        last_close = closes[-1]
+        total_buy_spent = (buy_price * buy_shares) + max(20, int(buy_price * buy_shares * FEE_RATE * FEE_DISCOUNT))
+        sell_fee = max(20, int(last_close * buy_shares * FEE_RATE * FEE_DISCOUNT))
+        sell_tax = int(last_close * buy_shares * TAX_RATE)
+        total_sell_get = (last_close * buy_shares) - sell_fee - sell_tax
+        
+        net_profit = int(total_sell_get - total_buy_spent)
+        profit_percent = (net_profit / total_buy_spent) * 100
+        grand_net_profit += net_profit
+        total_trades += 1
+        if net_profit > 0: winning_trades += 1
+        
+        if return_records:
+            temp_buy_record.update({
+                "sell_date": dates[-1], "sell_price": last_close,
+                "net_profit": net_profit, "profit_percent": profit_percent,
+                "exit_reason": "期末未平倉強制結算"
+            })
+            trade_records.append(temp_buy_record.copy())
 
     if return_records: return trade_records
-    return grand_net_profit
+    
+    # 🛠️ 導入「綜合評分制」取代單一獲利
+    win_rate = (winning_trades / total_trades) if total_trades > 0 else 0
+    score = grand_net_profit
+    
+    # 嚴厲懲罰過度擬合 (交易樣本極少或勝率極差的組合)
+    if total_trades < 3: score -= 20000
+    if win_rate < 0.35: score -= 20000
+    
+    return score, grand_net_profit, win_rate, max_drawdown
 
 def process_chunk(chunk, df):
+    local_best_score = -999999
     local_best_profit = -999999
     local_best_th, local_best_dr, local_best_ma = 0.15, 0.03, "20MA"
+    local_best_wr = 0
+    local_best_mdd = 0
+    
     for th, dr, ma in chunk:
-        profit = optimize_core(df, th, dr, ma, return_records=False)
-        if profit > local_best_profit:
+        score, profit, wr, mdd = optimize_core(df, th, dr, ma, return_records=False)
+        if score > local_best_score:
+            local_best_score = score
             local_best_profit = profit
             local_best_th = th
             local_best_dr = dr
             local_best_ma = ma
-    return local_best_profit, local_best_th, local_best_dr, local_best_ma
+            local_best_wr = wr
+            local_best_mdd = mdd
+            
+    return local_best_score, local_best_profit, local_best_th, local_best_dr, local_best_ma, local_best_wr, local_best_mdd
 
 def main():
     print("====================================================")
-    print(f"🐬 海豚雙向 AI 優化器：[歷史漲停全面封殺完全體]")
-    print(f"📅 📅 演算歷史區間：{START_DATE} ~ {END_DATE}")
+    print(f"🐬 海豚雙向 AI 優化器：[V2.14 實戰擬真評分完全體]")
+    print(f"📅 演算歷史區間：{START_DATE} ~ {END_DATE} (啟用 T+1 實戰成交與強制結算)")
     print("====================================================")
     
     if os.path.exists(OPTIMIZER_DETAILS_FILE):
@@ -172,7 +238,8 @@ def main():
     
     unique_stocks = df_pf["stock_id"].unique()
     api = DataLoader()
-    api.login_by_token(api_token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoicGNoaW9uMjAwMiIsImVtYWlsIjoibGFpZWNodW55dUBnbWFpbC5jb20iLCJ0b2tlbl92ZXJzaW9uIjowfQ.si_2Ta3AlY1JtgVBDlqpnkaK3IH41Drrc7ogVgNBJq8")
+    if FINMIND_TOKEN:
+        api.login_by_token(api_token=FINMIND_TOKEN)
     
     threshold_range = [t / 100 for t in range(5, 31)]       
     drop_range = [d / 200 for d in range(4, 21)]            
@@ -186,7 +253,7 @@ def main():
     best_params_dict = {}
     
     for stock_id in unique_stocks:
-        print(f"🔍 正在啟動 {num_cores} 核心精密清剿 {stock_id} 歷史假漲停基因...")
+        print(f"🔍 啟動 {num_cores} 核心演化 {stock_id} 實戰風控基因...")
         df_raw = api.taiwan_stock_daily(stock_id=stock_id, start_date=START_DATE, end_date=END_DATE)
         if df_raw.empty or len(df_raw) < 50: continue
             
@@ -211,23 +278,26 @@ def main():
         df["5WMA"] = df["close"].rolling(window=25).mean()
         df["10WMA"] = df["close"].rolling(window=50).mean()
 
-        best_profit = -999999
+        best_score = -999999
+        final_best_profit, final_best_wr, final_best_mdd = 0, 0, 0
         best_th, best_dr, best_ma = 0.15, 0.03, "20MA"
         
         with concurrent.futures.ProcessPoolExecutor(max_workers=num_cores) as executor:
             futures = [executor.submit(process_chunk, chunk, df) for chunk in chunks]
             for future in concurrent.futures.as_completed(futures):
-                res_profit, res_th, res_dr, res_ma = future.result()
-                if res_profit > best_profit:
-                    best_profit = res_profit
+                res_score, res_profit, res_th, res_dr, res_ma, res_wr, res_mdd = future.result()
+                if res_score > best_score:
+                    best_score = res_score
+                    final_best_profit = res_profit
                     best_th = res_th
                     best_dr = res_dr
                     best_ma = res_ma
+                    final_best_wr = res_wr
+                    final_best_mdd = res_mdd
                         
-        print(f"🏆 {stock_id} 純淨最佳解：守【{best_ma}】，停利 {best_th*100:.1f}% | 回撤 {best_dr*100:.1f}% | 實戰利潤: {best_profit} 元")
-        best_params_dict[stock_id] = {"best_tp": best_th, "best_drop": best_dr, "best_ma": best_ma, "best_profit": best_profit}
+        print(f"🏆 {stock_id} 實戰最佳解：守【{best_ma}】，鎖利 {best_th*100:.1f}% | 回撤 {best_dr*100:.1f}% | 利潤: {final_best_profit}元 | 勝率: {final_best_wr*100:.1f}% | MDD: {final_best_mdd:,.0f}元")
+        best_params_dict[stock_id] = {"best_tp": best_th, "best_drop": best_dr, "best_ma": best_ma, "best_profit": final_best_profit}
 
-        # 🎯 這裡已經解除限制：無論利潤是正或負，都會把明細匯出到儀表板供指揮官參考
         best_records = optimize_core(df, best_th, best_dr, best_ma, return_records=True)
         if best_records:
             final_rows = []
@@ -240,17 +310,15 @@ def main():
     for idx, row in df_pf.iterrows():
         sid = row["stock_id"]
         if sid in best_params_dict:
-            # 🎯 拔除滅殺機制，僅給予警告不刪除
             if best_params_dict[sid]["best_profit"] <= 0:
-                print(f"⚠️ [防線放行] 劣質股 {sid} 扣除假漲停後歷史期望值為負 ({best_params_dict[sid]['best_profit']} 元)，指揮官豁免，強制保留建倉！")
+                print(f"⚠️ [風險警戒] {sid} T+1 擬真回測歷史期望值為負 ({best_params_dict[sid]['best_profit']} 元)，程式強制放行，請指揮官留意後續型態！")
                 
             df_pf.at[idx, "best_tp"] = best_params_dict[sid]["best_tp"]
             df_pf.at[idx, "best_drop"] = best_params_dict[sid]["best_drop"]
             df_pf.at[idx, "best_ma"] = best_params_dict[sid]["best_ma"] 
             
-    # 🎯 將原本刪除的段落徹底移除
     df_pf.to_csv(PORTFOLIO_FILE, index=False)
-    print("🏁 【優化器雙向閉環校正完畢】！")
+    print("🏁 【優化器 T+1 實戰評分閉環校正完畢】！")
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
