@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>海豚量化自適應指揮官儀表板</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body { background-color: #12141c; color: #e4e6eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background-color: #1a1f2c; border-bottom: 2px solid #ff4a4a; }
+        .card { background-color: #1a1f2c; border: 1px solid #2d3548; border-radius: 12px; margin-bottom: 20px; }
+        .card-header { background-color: #22293a; border-bottom: 1px solid #2d3548; font-weight: bold; color: #00f2fe; }
+        .table-custom-dark { color: #ffffff !important; }
+        .table-custom-dark th { background-color: #22293a !important; color: #00f2fe !important; border-color: #2d3548 !important; }
+        .table-custom-dark td { background-color: #1a1f2c !important; color: #ffffff; border-color: #2d3548 !important; }
+        .text-muted-custom { color: #a1a5b7 !important; }
+        .text-taiwan-red { color: #ff4a4a !important; font-weight: bold; }     
+        .text-taiwan-green { color: #2cf3a0 !important; font-weight: bold; }   
+        .badge-breakout { background-color: #ff9f43; color: #12141c; font-weight: bold; }
+        .badge-ambush { background-color: #00f2fe; color: #12141c; font-weight: bold; }
+        .badge-radar { background-color: #ff4a4a; animation: blink 1.5s infinite; font-weight: bold; padding: 4px 8px; border-radius: 4px; color: white; }
+        @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+        .summary-box { background: linear-gradient(135deg, #1e2638 0%, #151b29 100%); border-radius: 10px; padding: 15px; border-left: 4px solid #00f2fe; }
+        .accordion-button { background-color: #22293a !important; color: #00f2fe !important; border: 1px solid #2d3548; }
+        .accordion-button:not(.collapsed) { background-color: #ff4a4a !important; color: white !important; }
+        .accordion-body { background-color: #151b29; border: 1px solid #2d3548; color: #ffffff; }
+        .star-tag { color: #a1a5b7; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark px-4 py-3">
+    <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v1.45 終極拔管版</small></span>
+    <span class="text-muted-custom">📅 數據更新時間：2026-10-14</span>
+</nav>
+<div class="container-fluid p-4">
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="summary-box">
+                <div class="text-muted-custom small">當前持股總成本</div>
+                <div class="fs-4 fw-bold text-info">$239,127 元</div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="summary-box" style="border-left-color: #ffffff;">
+                <div class="text-muted-custom small">持股現值估算</div>
+                <div class="fs-4 fw-bold text-white">$249,667 元</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-box" style="border-left-color: #ff4a4a;">
+                <div class="text-muted-custom small">在倉持股總淨損益</div>
+                <div class="fs-4 fw-bold text-taiwan-red">+10,540 元 (+4.41%)</div>
+            </div>
+        </div>
+        
+            <div class="col-md-2">
+                <div class="summary-box" style="border-left-color: #ff9f43;">
+                    <div class="text-muted-custom small">歷史已結算戰績</div>
+                    <div class="fs-4 fw-bold text-taiwan-green">-32,557 元</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="summary-box" style="border-left-color: #00f2fe;">
+                    <div class="text-muted-custom small">歷史勝率 / 總單數</div>
+                    <div class="fs-4 fw-bold text-white">27.9% <small class="text-muted-custom">(68單)</small></div>
+                </div>
+            </div>
+            
+    </div>
+    
+    <div class="row">
+        <div class="col-12 col-xl-8">
+            <div class="card">
+                <div class="card-header fs-5">💼 實戰持股狀態機雙向防線即時雷達</div>
+                <div class="table-responsive">
+                    <table class="table table-custom-dark mb-0">
+                        <thead>
+                            <tr>
+                                <th>代號/名稱</th><th>買入日期</th><th>參考進場價</th><th>目前價</th><th>起跑門檻</th>
+                                <th>鎖利線(最高)</th><th>生命均線(停損價)</th><th>當前損益</th><th>雷達狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                            <tr>
+                                <td>
+                                    <strong class="text-white">6214 精誠</strong><br>
+                                    <span class="star-tag">⭐⭐⭐ | 糾結:1.1% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>4.8%</span> | MACD:<span class='text-taiwan-red'>水上(+3.62)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-09-10</td>
+                                <td class="text-white">187.50 <small class="text-muted-custom">(160股)</small></td>
+                                <td class="fw-bold text-warning">196.00</td>
+                                <td class="text-white">208.13</td>
+                                <td><span class="text-info">194.04</span> <small class="text-muted-custom">(198.00)</small></td>
+                                <td><span class="text-danger">189.38</span> <small class="text-muted-custom">(保本防線)</small></td>
+                                <td class="fw-bold text-taiwan-red">+1,226元<br><small>+4.08%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">5469 瀚宇博</strong><br>
+                                    <span class="star-tag">🚀 | 糾結:7.6% | 帶寬:20.8% | MACD:<span class='text-taiwan-red'>水上(+2.52)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-01</td>
+                                <td class="text-white">74.60 <small class="text-muted-custom">(402股)</small></td>
+                                <td class="fw-bold text-warning">82.90</td>
+                                <td class="text-white">85.04</td>
+                                <td><span class="text-info">79.52</span> <small class="text-muted-custom">(85.50)</small></td>
+                                <td><span class="text-danger">81.90</span> <small class="text-muted-custom">(5MA)</small></td>
+                                <td class="fw-bold text-taiwan-red">+3,197元<br><small>+10.65%</small></td>
+                                <td><span class="badge badge-radar">🔥 監控中</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">2377 微星</strong><br>
+                                    <span class="star-tag">⭐⭐⭐ | 糾結:1.8% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>6.5%</span> | MACD:<span class='text-taiwan-red'>水上(+1.55)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-02</td>
+                                <td class="text-white">155.00 <small class="text-muted-custom">(193股)</small></td>
+                                <td class="fw-bold text-warning">159.00</td>
+                                <td class="text-white">165.85</td>
+                                <td><span class="text-info">155.51</span> <small class="text-muted-custom">(159.50)</small></td>
+                                <td><span class="text-danger">152.33</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-red">+640元<br><small>+2.14%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">1718 中纖</strong><br>
+                                    <span class="star-tag">🚀 | 糾結:9.6% | 帶寬:25.1% | MACD:<span class='text-taiwan-red'>水上(+0.42)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-05</td>
+                                <td class="text-white">11.15 <small class="text-muted-custom">(2690股)</small></td>
+                                <td class="fw-bold text-warning">12.90</td>
+                                <td class="text-white">11.71</td>
+                                <td><span class="text-info">12.74</span> <small class="text-muted-custom">(13.20)</small></td>
+                                <td><span class="text-danger">12.54</span> <small class="text-muted-custom">(階段鎖利)</small></td>
+                                <td class="fw-bold text-taiwan-red">+4,563元<br><small>+15.20%</small></td>
+                                <td><span class="badge badge-radar">🔥 監控中</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">2031 新光鋼</strong><br>
+                                    <span class="star-tag">⭐⭐⭐ | 糾結:1.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>9.5%</span> | MACD:<span class='text-taiwan-red'>水上(+0.58)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-05</td>
+                                <td class="text-white">45.80 <small class="text-muted-custom">(655股)</small></td>
+                                <td class="fw-bold text-warning">47.35</td>
+                                <td class="text-white">48.09</td>
+                                <td><span class="text-info">44.98</span> <small class="text-muted-custom">(47.35)</small></td>
+                                <td><span class="text-danger">45.48</span> <small class="text-muted-custom">(20MA)</small></td>
+                                <td class="fw-bold text-taiwan-red">+882元<br><small>+2.94%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">2520 冠德</strong><br>
+                                    <span class="star-tag">⭐⭐⭐ | 糾結:0.9% | 帶寬:<span style='color: #00f2fe; font-weight:bold;'>5.5%</span> | MACD:<span class='text-taiwan-red'>水上(+0.25)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-07</td>
+                                <td class="text-white">37.00 <small class="text-muted-custom">(810股)</small></td>
+                                <td class="fw-bold text-warning">37.40</td>
+                                <td class="text-white">42.55</td>
+                                <td><span class="text-info">37.73</span> <small class="text-muted-custom">(38.50)</small></td>
+                                <td><span class="text-danger">37.02</span> <small class="text-muted-custom">(5WMA)</small></td>
+                                <td class="fw-bold text-taiwan-red">+194元<br><small>+0.65%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">5269 祥碩</strong><br>
+                                    <span class="star-tag">⭐⭐ | 糾結:2.7% | 帶寬:11.8% | MACD:<span class='text-taiwan-red'>水上(+25.18)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.2%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-12</td>
+                                <td class="text-white">1540.00 <small class="text-muted-custom">(19股)</small></td>
+                                <td class="fw-bold text-warning">1545.00</td>
+                                <td class="text-white">1632.40</td>
+                                <td><span class="text-info">1504.12</span> <small class="text-muted-custom">(1575.00)</small></td>
+                                <td><span class="text-danger">1455.60</span> <small class="text-muted-custom">(5WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-33元<br><small>-0.11%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                            <tr>
+                                <td>
+                                    <strong class="text-white">2323 中環</strong><br>
+                                    <span class="star-tag">⭐⭐ | 糾結:2.6% | 帶寬:10.8% | MACD:<span class='text-taiwan-red'>水上(+0.12)</span></span><br>
+                                    <small class='text-muted-custom fw-normal'>(比重: 12.5%)</small>
+                                </td>
+                                <td class="small text-muted-custom">2026-10-14</td>
+                                <td class="text-white">11.90 <small class="text-muted-custom">(2521股)</small></td>
+                                <td class="fw-bold text-warning">11.90</td>
+                                <td class="text-white">12.50</td>
+                                <td><span class="text-info">11.66</span> <small class="text-muted-custom">(11.90)</small></td>
+                                <td><span class="text-danger">10.64</span> <small class="text-muted-custom">(10WMA)</small></td>
+                                <td class="fw-bold text-taiwan-green">-129元<br><small>-0.43%</small></td>
+                                <td><span class="text-muted-custom small">未開啟</span></td>
+                            </tr>
+            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 text-info">🔍 📂 歷史評選 · 3星新秀與方案2落難老兵動態留校察看哨站</div>
+                <div class="table-responsive">
+                    <table class="table table-custom-dark mb-0 text-center small">
+                        <thead><tr><th>代號/名稱</th><th>狀態屬性</th><th>捕獲/警戒日</th><th>當初潛伏/防線價</th><th>目前最新收盤</th><th>生命流狀態</th></tr></thead>
+                        <tbody><tr><td colspan="6" class="text-center text-muted-custom py-2 small">觀測哨站目前空棚。</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 text-warning">🔍 AI 優化器：2年時空基因回測明細紀錄 (持股與雷達標的)</div>
+                <div class="card-body p-3">
+                    <div class="accordion" id="optimizerAccordion">
+    
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_6214">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_6214" aria-expanded="false" aria-controls="collapse_6214">
+                        📊 [💼 實戰持股] 6214 精誠 — 2年最佳化策略回測歷史明細紀錄 (共 19 筆)
+                        <span style="margin-left: 20px; color: #ff4a4a; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: +11,654 元 | 勝率: 37% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_6214" class="accordion-collapse collapse" aria-labelledby="heading_6214" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-02-11</td><td>140.5</td>
+                                        <td>2025-02-12</td><td class="text-warning">1 天</td> <td>139.0</td>
+                                        <td class="text-taiwan-green fw-bold">-447元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.49%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-02-14</td><td>147.5</td>
+                                        <td>2025-02-25</td><td class="text-warning">11 天</td> <td>138.5</td>
+                                        <td class="text-taiwan-green fw-bold">-1,951元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.51%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-03-24</td><td>138.5</td>
+                                        <td>2025-03-25</td><td class="text-warning">1 天</td> <td>137.5</td>
+                                        <td class="text-taiwan-green fw-bold">-345元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.15%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-03-27</td><td>137.5</td>
+                                        <td>2025-03-31</td><td class="text-warning">4 天</td> <td>129.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,977元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.59%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-04-29</td><td>123.0</td>
+                                        <td>2025-04-30</td><td class="text-warning">1 天</td> <td>126.0</td>
+                                        <td class="text-taiwan-red fw-bold">+598元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.00%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-06-19</td><td>115.5</td>
+                                        <td>2025-06-20</td><td class="text-warning">1 天</td> <td>113.5</td>
+                                        <td class="text-taiwan-green fw-bold">-646元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.16%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-07-15</td><td>111.5</td>
+                                        <td>2025-07-16</td><td class="text-warning">1 天</td> <td>111.0</td>
+                                        <td class="text-taiwan-green fw-bold">-263元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.88%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2025-08-12</td><td>115.5</td>
+                                        <td>2025-10-15</td><td class="text-warning">64 天</td> <td>129.0</td>
+                                        <td class="text-taiwan-red fw-bold">+3,356元</td>
+                                        <td class="text-taiwan-red fw-bold">+11.21%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2025-10-31</td><td>129.5</td>
+                                        <td>2025-11-17</td><td class="text-warning">17 天</td> <td>122.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,856元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.20%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2025-12-05</td><td>123.0</td>
+                                        <td>2025-12-08</td><td class="text-warning">3 天</td> <td>120.5</td>
+                                        <td class="text-taiwan-green fw-bold">-734元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.45%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2025-12-23</td><td>129.5</td>
+                                        <td>2025-12-29</td><td class="text-warning">6 天</td> <td>124.5</td>
+                                        <td class="text-taiwan-green fw-bold">-1,281元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.28%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2025-12-30</td><td>122.5</td>
+                                        <td>2025-12-31</td><td class="text-warning">1 天</td> <td>120.0</td>
+                                        <td class="text-taiwan-green fw-bold">-737元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.46%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2026-01-28</td><td>122.5</td>
+                                        <td>2026-01-30</td><td class="text-warning">2 天</td> <td>118.5</td>
+                                        <td class="text-taiwan-green fw-bold">-1,102元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.68%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2026-03-17</td><td>113.5</td>
+                                        <td>2026-03-18</td><td class="text-warning">1 天</td> <td>112.5</td>
+                                        <td class="text-taiwan-green fw-bold">-393元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.31%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2026-04-09</td><td>113.5</td>
+                                        <td>2026-04-24</td><td class="text-warning">15 天</td> <td>122.5</td>
+                                        <td class="text-taiwan-red fw-bold">+2,239元</td>
+                                        <td class="text-taiwan-red fw-bold">+7.47%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2026-05-06</td><td>126.5</td>
+                                        <td>2026-06-04</td><td class="text-warning">29 天</td> <td>156.5</td>
+                                        <td class="text-taiwan-red fw-bold">+6,959元</td>
+                                        <td class="text-taiwan-red fw-bold">+23.20%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2026-07-14</td><td>141.0</td>
+                                        <td>2026-08-18</td><td class="text-warning">35 天</td> <td>175.0</td>
+                                        <td class="text-taiwan-red fw-bold">+7,057元</td>
+                                        <td class="text-taiwan-red fw-bold">+23.59%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>18</td><td>2026-08-19</td><td>174.5</td>
+                                        <td>2026-09-16</td><td class="text-warning">28 天</td> <td>191.0</td>
+                                        <td class="text-taiwan-red fw-bold">+2,684元</td>
+                                        <td class="text-taiwan-red fw-bold">+8.99%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>19</td><td>2026-09-17</td><td>192.0</td>
+                                        <td>2026-10-14</td><td class="text-warning">27 天</td> <td>196.0</td>
+                                        <td class="text-taiwan-red fw-bold">+493元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.64%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_5469">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_5469" aria-expanded="false" aria-controls="collapse_5469">
+                        📊 [💼 實戰持股] 5469 瀚宇博 — 2年最佳化策略回測歷史明細紀錄 (共 35 筆)
+                        <span style="margin-left: 20px; color: #ff4a4a; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: +12,444 元 | 勝率: 46% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_5469" class="accordion-collapse collapse" aria-labelledby="heading_5469" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-01-02</td><td>52.9</td>
+                                        <td>2025-01-08</td><td class="text-warning">6 天</td> <td>53.1</td>
+                                        <td class="text-taiwan-green fw-bold">-16元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.05%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-01-10</td><td>51.8</td>
+                                        <td>2025-01-13</td><td class="text-warning">3 天</td> <td>52.6</td>
+                                        <td class="text-taiwan-red fw-bold">+332元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.11%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-02-07</td><td>54.2</td>
+                                        <td>2025-02-14</td><td class="text-warning">7 天</td> <td>55.8</td>
+                                        <td class="text-taiwan-red fw-bold">+752元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.51%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-02-25</td><td>56.6</td>
+                                        <td>2025-02-27</td><td class="text-warning">2 天</td> <td>56.1</td>
+                                        <td class="text-taiwan-green fw-bold">-394元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.31%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-03-03</td><td>55.5</td>
+                                        <td>2025-03-04</td><td class="text-warning">1 天</td> <td>54.7</td>
+                                        <td class="text-taiwan-green fw-bold">-560元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.87%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-03-20</td><td>55.6</td>
+                                        <td>2025-03-28</td><td class="text-warning">8 天</td> <td>56.1</td>
+                                        <td class="text-taiwan-red fw-bold">+139元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.46%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-03-31</td><td>54.0</td>
+                                        <td>2025-04-01</td><td class="text-warning">1 天</td> <td>52.5</td>
+                                        <td class="text-taiwan-green fw-bold">-959元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.20%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2025-05-02</td><td>48.0</td>
+                                        <td>2025-06-02</td><td class="text-warning">31 天</td> <td>59.9</td>
+                                        <td class="text-taiwan-red fw-bold">+7,285元</td>
+                                        <td class="text-taiwan-red fw-bold">+24.27%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2025-06-13</td><td>61.2</td>
+                                        <td>2025-06-16</td><td class="text-warning">3 天</td> <td>60.3</td>
+                                        <td class="text-taiwan-green fw-bold">-569元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.90%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2025-06-17</td><td>62.6</td>
+                                        <td>2025-06-18</td><td class="text-warning">1 天</td> <td>61.3</td>
+                                        <td class="text-taiwan-green fw-bold">-750元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.50%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2025-06-19</td><td>60.2</td>
+                                        <td>2025-06-20</td><td class="text-warning">1 天</td> <td>59.8</td>
+                                        <td class="text-taiwan-green fw-bold">-328元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.09%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2025-06-30</td><td>61.8</td>
+                                        <td>2025-07-04</td><td class="text-warning">4 天</td> <td>61.5</td>
+                                        <td class="text-taiwan-green fw-bold">-274元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.91%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2025-07-07</td><td>61.0</td>
+                                        <td>2025-07-08</td><td class="text-warning">1 天</td> <td>59.6</td>
+                                        <td class="text-taiwan-green fw-bold">-814元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.72%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2025-07-15</td><td>61.0</td>
+                                        <td>2025-08-05</td><td class="text-warning">21 天</td> <td>71.9</td>
+                                        <td class="text-taiwan-red fw-bold">+5,206元</td>
+                                        <td class="text-taiwan-red fw-bold">+17.37%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2025-08-18</td><td>72.1</td>
+                                        <td>2025-08-21</td><td class="text-warning">3 天</td> <td>73.0</td>
+                                        <td class="text-taiwan-red fw-bold">+243元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.81%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2025-08-22</td><td>74.9</td>
+                                        <td>2025-08-25</td><td class="text-warning">3 天</td> <td>73.8</td>
+                                        <td class="text-taiwan-green fw-bold">-568元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.89%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2025-08-27</td><td>76.0</td>
+                                        <td>2025-09-02</td><td class="text-warning">6 天</td> <td>86.0</td>
+                                        <td class="text-taiwan-red fw-bold">+3,799元</td>
+                                        <td class="text-taiwan-red fw-bold">+12.68%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>18</td><td>2025-09-22</td><td>99.5</td>
+                                        <td>2025-09-24</td><td class="text-warning">2 天</td> <td>107.0</td>
+                                        <td class="text-taiwan-red fw-bold">+2,121元</td>
+                                        <td class="text-taiwan-red fw-bold">+7.08%</td>
+                                        <td class="text-muted-custom">移動鎖利(7.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>19</td><td>2025-10-17</td><td>99.3</td>
+                                        <td>2025-10-20</td><td class="text-warning">3 天</td> <td>89.6</td>
+                                        <td class="text-taiwan-green fw-bold">-3,050元</td>
+                                        <td class="text-taiwan-green fw-bold">-10.16%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>20</td><td>2025-10-29</td><td>92.7</td>
+                                        <td>2025-11-06</td><td class="text-warning">8 天</td> <td>94.2</td>
+                                        <td class="text-taiwan-red fw-bold">+353元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.18%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>21</td><td>2025-11-10</td><td>92.5</td>
+                                        <td>2025-11-11</td><td class="text-warning">1 天</td> <td>92.4</td>
+                                        <td class="text-taiwan-green fw-bold">-161元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.54%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>22</td><td>2025-11-27</td><td>99.1</td>
+                                        <td>2025-12-03</td><td class="text-warning">6 天</td> <td>101.5</td>
+                                        <td class="text-taiwan-red fw-bold">+593元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.98%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>23</td><td>2026-01-13</td><td>98.0</td>
+                                        <td>2026-01-22</td><td class="text-warning">9 天</td> <td>102.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,091元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.64%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>24</td><td>2026-04-14</td><td>89.4</td>
+                                        <td>2026-04-24</td><td class="text-warning">10 天</td> <td>93.1</td>
+                                        <td class="text-taiwan-red fw-bold">+1,106元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.69%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>25</td><td>2026-06-04</td><td>87.6</td>
+                                        <td>2026-06-05</td><td class="text-warning">1 天</td> <td>85.6</td>
+                                        <td class="text-taiwan-green fw-bold">-811元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.71%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>26</td><td>2026-06-08</td><td>76.0</td>
+                                        <td>2026-06-09</td><td class="text-warning">1 天</td> <td>80.5</td>
+                                        <td class="text-taiwan-red fw-bold">+1,638元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.47%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>27</td><td>2026-06-16</td><td>88.0</td>
+                                        <td>2026-06-24</td><td class="text-warning">8 天</td> <td>85.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,146元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.83%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>28</td><td>2026-06-25</td><td>86.0</td>
+                                        <td>2026-06-26</td><td class="text-warning">1 天</td> <td>86.0</td>
+                                        <td class="text-taiwan-green fw-bold">-129元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.43%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>29</td><td>2026-06-29</td><td>90.8</td>
+                                        <td>2026-07-02</td><td class="text-warning">3 天</td> <td>84.9</td>
+                                        <td class="text-taiwan-green fw-bold">-2,070元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.90%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>30</td><td>2026-07-03</td><td>87.5</td>
+                                        <td>2026-07-06</td><td class="text-warning">3 天</td> <td>88.0</td>
+                                        <td class="text-taiwan-red fw-bold">+41元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.14%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>31</td><td>2026-07-07</td><td>89.0</td>
+                                        <td>2026-07-08</td><td class="text-warning">1 天</td> <td>84.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,809元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.03%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>32</td><td>2026-08-11</td><td>75.5</td>
+                                        <td>2026-08-17</td><td class="text-warning">6 天</td> <td>74.1</td>
+                                        <td class="text-taiwan-green fw-bold">-683元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.28%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>33</td><td>2026-08-31</td><td>73.5</td>
+                                        <td>2026-09-03</td><td class="text-warning">3 天</td> <td>73.9</td>
+                                        <td class="text-taiwan-red fw-bold">+33元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.11%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>34</td><td>2026-09-18</td><td>74.1</td>
+                                        <td>2026-09-21</td><td class="text-warning">3 天</td> <td>72.9</td>
+                                        <td class="text-taiwan-green fw-bold">-612元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.04%</td>
+                                        <td class="text-muted-custom">跌破防線(5MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>35</td><td>2026-09-30</td><td>74.1</td>
+                                        <td>2026-10-14</td><td class="text-warning">14 天</td> <td>82.9</td>
+                                        <td class="text-taiwan-red fw-bold">+3,415元</td>
+                                        <td class="text-taiwan-red fw-bold">+11.40%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2377">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2377" aria-expanded="false" aria-controls="collapse_2377">
+                        📊 [💼 實戰持股] 2377 微星 — 2年最佳化策略回測歷史明細紀錄 (共 25 筆)
+                        <span style="margin-left: 20px; color: #ff4a4a; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: +2,348 元 | 勝率: 40% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_2377" class="accordion-collapse collapse" aria-labelledby="heading_2377" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2024-12-25</td><td>179.5</td>
+                                        <td>2025-01-08</td><td class="text-warning">14 天</td> <td>186.5</td>
+                                        <td class="text-taiwan-red fw-bold">+1,036元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.45%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-01-10</td><td>185.0</td>
+                                        <td>2025-02-05</td><td class="text-warning">26 天</td> <td>197.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,809元</td>
+                                        <td class="text-taiwan-red fw-bold">+6.03%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-02-07</td><td>192.5</td>
+                                        <td>2025-02-19</td><td class="text-warning">12 天</td> <td>202.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,339元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.48%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-02-20</td><td>199.5</td>
+                                        <td>2025-03-03</td><td class="text-warning">11 天</td> <td>183.0</td>
+                                        <td class="text-taiwan-green fw-bold">-2,597元</td>
+                                        <td class="text-taiwan-green fw-bold">-8.67%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-05-13</td><td>145.5</td>
+                                        <td>2025-05-14</td><td class="text-warning">1 天</td> <td>145.0</td>
+                                        <td class="text-taiwan-green fw-bold">-232元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.77%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-06-06</td><td>141.5</td>
+                                        <td>2025-06-09</td><td class="text-warning">3 天</td> <td>141.5</td>
+                                        <td class="text-taiwan-green fw-bold">-129元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.43%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-06-12</td><td>145.0</td>
+                                        <td>2025-06-24</td><td class="text-warning">12 天</td> <td>140.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,156元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.87%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2025-07-01</td><td>144.0</td>
+                                        <td>2025-07-08</td><td class="text-warning">7 天</td> <td>141.0</td>
+                                        <td class="text-taiwan-green fw-bold">-751元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.51%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2025-07-17</td><td>144.0</td>
+                                        <td>2025-07-23</td><td class="text-warning">6 天</td> <td>141.5</td>
+                                        <td class="text-taiwan-green fw-bold">-648元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.16%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2025-07-24</td><td>144.0</td>
+                                        <td>2025-08-14</td><td class="text-warning">21 天</td> <td>144.5</td>
+                                        <td class="text-taiwan-green fw-bold">-26元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.09%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2025-11-11</td><td>112.5</td>
+                                        <td>2025-11-12</td><td class="text-warning">1 天</td> <td>110.0</td>
+                                        <td class="text-taiwan-green fw-bold">-792元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.64%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2025-11-28</td><td>107.0</td>
+                                        <td>2025-12-01</td><td class="text-warning">3 天</td> <td>106.5</td>
+                                        <td class="text-taiwan-green fw-bold">-269元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.90%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2026-01-16</td><td>100.5</td>
+                                        <td>2026-01-19</td><td class="text-warning">3 天</td> <td>99.3</td>
+                                        <td class="text-taiwan-green fw-bold">-485元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.62%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2026-01-21</td><td>100.5</td>
+                                        <td>2026-01-22</td><td class="text-warning">1 天</td> <td>101.0</td>
+                                        <td class="text-taiwan-red fw-bold">+19元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.06%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2026-01-26</td><td>101.0</td>
+                                        <td>2026-01-27</td><td class="text-warning">1 天</td> <td>99.2</td>
+                                        <td class="text-taiwan-green fw-bold">-662元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.21%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2026-03-03</td><td>99.5</td>
+                                        <td>2026-03-04</td><td class="text-warning">1 天</td> <td>94.5</td>
+                                        <td class="text-taiwan-green fw-bold">-1,630元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.44%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2026-04-20</td><td>92.6</td>
+                                        <td>2026-04-21</td><td class="text-warning">1 天</td> <td>92.5</td>
+                                        <td class="text-taiwan-green fw-bold">-161元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.54%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>18</td><td>2026-04-23</td><td>99.0</td>
+                                        <td>2026-04-24</td><td class="text-warning">1 天</td> <td>98.5</td>
+                                        <td class="text-taiwan-green fw-bold">-280元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.93%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>19</td><td>2026-05-08</td><td>100.5</td>
+                                        <td>2026-05-13</td><td class="text-warning">5 天</td> <td>108.0</td>
+                                        <td class="text-taiwan-red fw-bold">+2,099元</td>
+                                        <td class="text-taiwan-red fw-bold">+7.00%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>20</td><td>2026-06-22</td><td>140.0</td>
+                                        <td>2026-07-15</td><td class="text-warning">23 天</td> <td>149.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,791元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.97%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>21</td><td>2026-07-21</td><td>143.0</td>
+                                        <td>2026-07-24</td><td class="text-warning">3 天</td> <td>149.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,121元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.75%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>22</td><td>2026-07-27</td><td>146.5</td>
+                                        <td>2026-07-30</td><td class="text-warning">3 天</td> <td>137.0</td>
+                                        <td class="text-taiwan-green fw-bold">-2,061元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.89%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>23</td><td>2026-08-06</td><td>151.0</td>
+                                        <td>2026-08-14</td><td class="text-warning">8 天</td> <td>170.5</td>
+                                        <td class="text-taiwan-red fw-bold">+3,720元</td>
+                                        <td class="text-taiwan-red fw-bold">+12.43%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>24</td><td>2026-09-02</td><td>152.5</td>
+                                        <td>2026-09-08</td><td class="text-warning">6 天</td> <td>157.5</td>
+                                        <td class="text-taiwan-red fw-bold">+848元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.84%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>25</td><td>2026-09-22</td><td>156.0</td>
+                                        <td>2026-10-14</td><td class="text-warning">22 天</td> <td>159.0</td>
+                                        <td class="text-taiwan-red fw-bold">+445元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.48%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_1718">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_1718" aria-expanded="false" aria-controls="collapse_1718">
+                        📊 [💼 實戰持股] 1718 中纖 — 2年最佳化策略回測歷史明細紀錄 (共 26 筆)
+                        <span style="margin-left: 20px; color: #2cf3a0; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: -2,673 元 | 勝率: 38% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_1718" class="accordion-collapse collapse" aria-labelledby="heading_1718" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-01-17</td><td>7.42</td>
+                                        <td>2025-01-20</td><td class="text-warning">3 天</td> <td>7.52</td>
+                                        <td class="text-taiwan-red fw-bold">+273元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.91%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-01-21</td><td>7.5</td>
+                                        <td>2025-01-22</td><td class="text-warning">1 天</td> <td>7.55</td>
+                                        <td class="text-taiwan-red fw-bold">+70元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.23%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-02-17</td><td>7.56</td>
+                                        <td>2025-02-18</td><td class="text-warning">1 天</td> <td>7.5</td>
+                                        <td class="text-taiwan-green fw-bold">-367元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.22%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-02-27</td><td>7.48</td>
+                                        <td>2025-03-03</td><td class="text-warning">4 天</td> <td>7.44</td>
+                                        <td class="text-taiwan-green fw-bold">-289元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.96%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-03-04</td><td>7.57</td>
+                                        <td>2025-03-12</td><td class="text-warning">8 天</td> <td>7.33</td>
+                                        <td class="text-taiwan-green fw-bold">-1,078元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.59%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-05-06</td><td>6.64</td>
+                                        <td>2025-05-07</td><td class="text-warning">1 天</td> <td>6.69</td>
+                                        <td class="text-taiwan-red fw-bold">+95元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.32%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-05-14</td><td>6.7</td>
+                                        <td>2025-05-15</td><td class="text-warning">1 天</td> <td>6.71</td>
+                                        <td class="text-taiwan-green fw-bold">-85元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.28%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2025-05-16</td><td>6.64</td>
+                                        <td>2025-05-19</td><td class="text-warning">3 天</td> <td>6.74</td>
+                                        <td class="text-taiwan-red fw-bold">+320元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.07%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2025-05-20</td><td>6.73</td>
+                                        <td>2025-05-21</td><td class="text-warning">1 天</td> <td>6.71</td>
+                                        <td class="text-taiwan-green fw-bold">-218元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.73%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2025-05-22</td><td>6.69</td>
+                                        <td>2025-05-23</td><td class="text-warning">1 天</td> <td>6.66</td>
+                                        <td class="text-taiwan-green fw-bold">-263元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.88%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2025-05-26</td><td>6.76</td>
+                                        <td>2025-06-03</td><td class="text-warning">8 天</td> <td>6.59</td>
+                                        <td class="text-taiwan-green fw-bold">-881元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.94%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2025-07-21</td><td>6.29</td>
+                                        <td>2025-07-22</td><td class="text-warning">1 天</td> <td>6.34</td>
+                                        <td class="text-taiwan-red fw-bold">+108元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.36%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2025-07-24</td><td>6.35</td>
+                                        <td>2025-07-25</td><td class="text-warning">1 天</td> <td>6.28</td>
+                                        <td class="text-taiwan-green fw-bold">-459元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.53%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2025-07-28</td><td>6.32</td>
+                                        <td>2025-07-30</td><td class="text-warning">2 天</td> <td>6.33</td>
+                                        <td class="text-taiwan-green fw-bold">-82元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.27%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2025-07-31</td><td>6.47</td>
+                                        <td>2025-08-21</td><td class="text-warning">21 天</td> <td>6.95</td>
+                                        <td class="text-taiwan-red fw-bold">+2,089元</td>
+                                        <td class="text-taiwan-red fw-bold">+6.96%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2025-10-07</td><td>6.54</td>
+                                        <td>2025-10-08</td><td class="text-warning">1 天</td> <td>6.54</td>
+                                        <td class="text-taiwan-green fw-bold">-129元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.43%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2025-11-10</td><td>6.75</td>
+                                        <td>2025-11-19</td><td class="text-warning">9 天</td> <td>6.87</td>
+                                        <td class="text-taiwan-red fw-bold">+402元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.34%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>18</td><td>2025-11-24</td><td>6.83</td>
+                                        <td>2025-12-08</td><td class="text-warning">14 天</td> <td>7.02</td>
+                                        <td class="text-taiwan-red fw-bold">+702元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.34%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>19</td><td>2025-12-09</td><td>7.03</td>
+                                        <td>2026-01-05</td><td class="text-warning">27 天</td> <td>6.75</td>
+                                        <td class="text-taiwan-green fw-bold">-1,320元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.40%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>20</td><td>2026-01-09</td><td>7.14</td>
+                                        <td>2026-01-28</td><td class="text-warning">19 天</td> <td>7.4</td>
+                                        <td class="text-taiwan-red fw-bold">+959元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.20%</td>
+                                        <td class="text-muted-custom">移動鎖利(3.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>21</td><td>2026-01-29</td><td>7.42</td>
+                                        <td>2026-02-03</td><td class="text-warning">5 天</td> <td>6.93</td>
+                                        <td class="text-taiwan-green fw-bold">-2,105元</td>
+                                        <td class="text-taiwan-green fw-bold">-7.01%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>22</td><td>2026-02-26</td><td>7.22</td>
+                                        <td>2026-03-05</td><td class="text-warning">7 天</td> <td>7.07</td>
+                                        <td class="text-taiwan-green fw-bold">-751元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.50%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>23</td><td>2026-03-09</td><td>7.98</td>
+                                        <td>2026-04-13</td><td class="text-warning">35 天</td> <td>7.18</td>
+                                        <td class="text-taiwan-green fw-bold">-3,127元</td>
+                                        <td class="text-taiwan-green fw-bold">-10.42%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>24</td><td>2026-09-02</td><td>11.0</td>
+                                        <td>2026-09-03</td><td class="text-warning">1 天</td> <td>10.85</td>
+                                        <td class="text-taiwan-green fw-bold">-537元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.79%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>25</td><td>2026-09-23</td><td>10.7</td>
+                                        <td>2026-09-24</td><td class="text-warning">1 天</td> <td>10.6</td>
+                                        <td class="text-taiwan-green fw-bold">-409元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.36%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>26</td><td>2026-10-06</td><td>11.2</td>
+                                        <td>2026-10-14</td><td class="text-warning">8 天</td> <td>12.9</td>
+                                        <td class="text-taiwan-red fw-bold">+4,409元</td>
+                                        <td class="text-taiwan-red fw-bold">+14.69%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2031">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2031" aria-expanded="false" aria-controls="collapse_2031">
+                        📊 [💼 實戰持股] 2031 新光鋼 — 2年最佳化策略回測歷史明細紀錄 (共 17 筆)
+                        <span style="margin-left: 20px; color: #2cf3a0; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: -1,678 元 | 勝率: 35% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_2031" class="accordion-collapse collapse" aria-labelledby="heading_2031" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-01-17</td><td>45.6</td>
+                                        <td>2025-02-10</td><td class="text-warning">24 天</td> <td>45.8</td>
+                                        <td class="text-taiwan-red fw-bold">+1元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.00%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-02-12</td><td>46.85</td>
+                                        <td>2025-03-14</td><td class="text-warning">30 天</td> <td>52.6</td>
+                                        <td class="text-taiwan-red fw-bold">+3,540元</td>
+                                        <td class="text-taiwan-red fw-bold">+11.80%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-03-17</td><td>52.0</td>
+                                        <td>2025-03-18</td><td class="text-warning">1 天</td> <td>52.2</td>
+                                        <td class="text-taiwan-green fw-bold">-14元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.05%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-05-20</td><td>44.0</td>
+                                        <td>2025-05-27</td><td class="text-warning">7 天</td> <td>43.1</td>
+                                        <td class="text-taiwan-green fw-bold">-740元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.47%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-07-25</td><td>41.3</td>
+                                        <td>2025-08-27</td><td class="text-warning">33 天</td> <td>43.3</td>
+                                        <td class="text-taiwan-red fw-bold">+1,318元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.39%</td>
+                                        <td class="text-muted-custom">移動鎖利(5.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-09-03</td><td>44.25</td>
+                                        <td>2025-09-09</td><td class="text-warning">6 天</td> <td>43.35</td>
+                                        <td class="text-taiwan-green fw-bold">-737元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.46%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-11-28</td><td>39.1</td>
+                                        <td>2025-12-10</td><td class="text-warning">12 天</td> <td>37.85</td>
+                                        <td class="text-taiwan-green fw-bold">-1,085元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.62%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2026-01-08</td><td>40.4</td>
+                                        <td>2026-01-22</td><td class="text-warning">14 天</td> <td>38.45</td>
+                                        <td class="text-taiwan-green fw-bold">-1,571元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.24%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2026-01-30</td><td>40.1</td>
+                                        <td>2026-02-04</td><td class="text-warning">5 天</td> <td>39.0</td>
+                                        <td class="text-taiwan-green fw-bold">-949元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.16%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2026-02-05</td><td>39.7</td>
+                                        <td>2026-02-09</td><td class="text-warning">4 天</td> <td>39.1</td>
+                                        <td class="text-taiwan-green fw-bold">-581元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.94%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2026-02-23</td><td>40.35</td>
+                                        <td>2026-03-03</td><td class="text-warning">8 天</td> <td>38.75</td>
+                                        <td class="text-taiwan-green fw-bold">-1,314元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.38%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2026-03-19</td><td>39.9</td>
+                                        <td>2026-04-21</td><td class="text-warning">33 天</td> <td>40.5</td>
+                                        <td class="text-taiwan-red fw-bold">+319元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.06%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2026-05-04</td><td>40.65</td>
+                                        <td>2026-05-07</td><td class="text-warning">3 天</td> <td>39.45</td>
+                                        <td class="text-taiwan-green fw-bold">-1,012元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.37%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2026-06-02</td><td>39.6</td>
+                                        <td>2026-06-09</td><td class="text-warning">7 天</td> <td>41.6</td>
+                                        <td class="text-taiwan-red fw-bold">+1,380元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.60%</td>
+                                        <td class="text-muted-custom">移動鎖利(5.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2026-07-15</td><td>39.7</td>
+                                        <td>2026-07-31</td><td class="text-warning">16 天</td> <td>38.95</td>
+                                        <td class="text-taiwan-green fw-bold">-694元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.31%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2026-08-10</td><td>45.7</td>
+                                        <td>2026-09-03</td><td class="text-warning">24 天</td> <td>45.15</td>
+                                        <td class="text-taiwan-green fw-bold">-488元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.63%</td>
+                                        <td class="text-muted-custom">跌破防線(20MA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2026-09-30</td><td>45.7</td>
+                                        <td>2026-10-14</td><td class="text-warning">14 天</td> <td>47.35</td>
+                                        <td class="text-taiwan-red fw-bold">+949元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.16%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2520">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2520" aria-expanded="false" aria-controls="collapse_2520">
+                        📊 [💼 實戰持股] 2520 冠德 — 2年最佳化策略回測歷史明細紀錄 (共 17 筆)
+                        <span style="margin-left: 20px; color: #ff4a4a; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: +1,993 元 | 勝率: 35% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_2520" class="accordion-collapse collapse" aria-labelledby="heading_2520" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-02-04</td><td>51.4</td>
+                                        <td>2025-03-26</td><td class="text-warning">50 天</td> <td>58.0</td>
+                                        <td class="text-taiwan-red fw-bold">+3,706元</td>
+                                        <td class="text-taiwan-red fw-bold">+12.36%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-03-27</td><td>57.3</td>
+                                        <td>2025-03-31</td><td class="text-warning">4 天</td> <td>54.6</td>
+                                        <td class="text-taiwan-green fw-bold">-1,537元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.13%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-04-30</td><td>50.9</td>
+                                        <td>2025-06-06</td><td class="text-warning">37 天</td> <td>53.9</td>
+                                        <td class="text-taiwan-red fw-bold">+1,632元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.44%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-07-03</td><td>52.5</td>
+                                        <td>2025-07-29</td><td class="text-warning">26 天</td> <td>52.2</td>
+                                        <td class="text-taiwan-green fw-bold">-300元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.00%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-09-16</td><td>39.4</td>
+                                        <td>2025-09-22</td><td class="text-warning">6 天</td> <td>36.9</td>
+                                        <td class="text-taiwan-green fw-bold">-2,026元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.75%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-11-17</td><td>33.25</td>
+                                        <td>2025-11-19</td><td class="text-warning">2 天</td> <td>33.2</td>
+                                        <td class="text-taiwan-green fw-bold">-174元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.58%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-11-28</td><td>33.0</td>
+                                        <td>2025-12-02</td><td class="text-warning">4 天</td> <td>32.3</td>
+                                        <td class="text-taiwan-green fw-bold">-764元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.55%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2025-12-11</td><td>32.6</td>
+                                        <td>2025-12-12</td><td class="text-warning">1 天</td> <td>32.55</td>
+                                        <td class="text-taiwan-green fw-bold">-175元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.58%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2025-12-17</td><td>33.1</td>
+                                        <td>2026-01-05</td><td class="text-warning">19 天</td> <td>32.6</td>
+                                        <td class="text-taiwan-green fw-bold">-581元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.94%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2026-03-12</td><td>32.5</td>
+                                        <td>2026-03-20</td><td class="text-warning">8 天</td> <td>32.95</td>
+                                        <td class="text-taiwan-red fw-bold">+284元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.95%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2026-03-23</td><td>32.7</td>
+                                        <td>2026-03-24</td><td class="text-warning">1 天</td> <td>32.0</td>
+                                        <td class="text-taiwan-green fw-bold">-769元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.56%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2026-05-15</td><td>31.2</td>
+                                        <td>2026-05-20</td><td class="text-warning">5 天</td> <td>30.5</td>
+                                        <td class="text-taiwan-green fw-bold">-799元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.66%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2026-06-03</td><td>31.2</td>
+                                        <td>2026-06-15</td><td class="text-warning">12 天</td> <td>35.5</td>
+                                        <td class="text-taiwan-red fw-bold">+3,990元</td>
+                                        <td class="text-taiwan-red fw-bold">+13.30%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2026-07-06</td><td>35.0</td>
+                                        <td>2026-07-27</td><td class="text-warning">21 天</td> <td>34.9</td>
+                                        <td class="text-taiwan-green fw-bold">-214元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.71%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2026-08-14</td><td>35.5</td>
+                                        <td>2026-08-17</td><td class="text-warning">3 天</td> <td>34.65</td>
+                                        <td class="text-taiwan-green fw-bold">-845元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.82%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2026-08-19</td><td>35.85</td>
+                                        <td>2026-10-01</td><td class="text-warning">43 天</td> <td>36.5</td>
+                                        <td class="text-taiwan-red fw-bold">+412元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.37%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2026-10-12</td><td>37.05</td>
+                                        <td>2026-10-14</td><td class="text-warning">2 天</td> <td>37.4</td>
+                                        <td class="text-taiwan-red fw-bold">+153元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.51%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_5269">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_5269" aria-expanded="false" aria-controls="collapse_5269">
+                        📊 [💼 實戰持股] 5269 祥碩 — 2年最佳化策略回測歷史明細紀錄 (共 16 筆)
+                        <span style="margin-left: 20px; color: #2cf3a0; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: -9,851 元 | 勝率: 44% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_5269" class="accordion-collapse collapse" aria-labelledby="heading_5269" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-01-08</td><td>2025.0</td>
+                                        <td>2025-01-13</td><td class="text-warning">5 天</td> <td>1960.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,032元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.64%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-01-16</td><td>2000.0</td>
+                                        <td>2025-02-04</td><td class="text-warning">19 天</td> <td>2020.0</td>
+                                        <td class="text-taiwan-red fw-bold">+170元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.57%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-02-05</td><td>2055.0</td>
+                                        <td>2025-02-14</td><td class="text-warning">9 天</td> <td>2155.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,270元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.41%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-06-06</td><td>1980.0</td>
+                                        <td>2025-06-16</td><td class="text-warning">10 天</td> <td>1910.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,175元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.95%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-07-14</td><td>1995.0</td>
+                                        <td>2025-07-22</td><td class="text-warning">8 天</td> <td>1900.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,550元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.18%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-08-11</td><td>1930.0</td>
+                                        <td>2025-08-13</td><td class="text-warning">2 天</td> <td>1795.0</td>
+                                        <td class="text-taiwan-green fw-bold">-2,145元</td>
+                                        <td class="text-taiwan-green fw-bold">-7.40%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2026-01-09</td><td>1315.0</td>
+                                        <td>2026-01-13</td><td class="text-warning">4 天</td> <td>1380.0</td>
+                                        <td class="text-taiwan-red fw-bold">+1,299元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.49%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2026-01-28</td><td>1405.0</td>
+                                        <td>2026-02-03</td><td class="text-warning">6 天</td> <td>1280.0</td>
+                                        <td class="text-taiwan-green fw-bold">-2,745元</td>
+                                        <td class="text-taiwan-green fw-bold">-9.30%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2026-03-02</td><td>1265.0</td>
+                                        <td>2026-03-03</td><td class="text-warning">1 天</td> <td>1290.0</td>
+                                        <td class="text-taiwan-red fw-bold">+446元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.53%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2026-04-20</td><td>1285.0</td>
+                                        <td>2026-04-24</td><td class="text-warning">4 天</td> <td>1300.0</td>
+                                        <td class="text-taiwan-red fw-bold">+216元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.73%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2026-05-26</td><td>1560.0</td>
+                                        <td>2026-06-04</td><td class="text-warning">9 天</td> <td>1570.0</td>
+                                        <td class="text-taiwan-red fw-bold">+61元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.21%</td>
+                                        <td class="text-muted-custom">移動鎖利(4.5%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2026-06-10</td><td>1385.0</td>
+                                        <td>2026-06-11</td><td class="text-warning">1 天</td> <td>1310.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,697元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.83%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2026-07-01</td><td>1500.0</td>
+                                        <td>2026-07-20</td><td class="text-warning">19 天</td> <td>1435.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,426元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.75%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2026-08-13</td><td>1450.0</td>
+                                        <td>2026-08-17</td><td class="text-warning">4 天</td> <td>1380.0</td>
+                                        <td class="text-taiwan-green fw-bold">-1,522元</td>
+                                        <td class="text-taiwan-green fw-bold">-5.24%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2026-08-21</td><td>1425.0</td>
+                                        <td>2026-09-09</td><td class="text-warning">19 天</td> <td>1400.0</td>
+                                        <td class="text-taiwan-green fw-bold">-653元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.18%</td>
+                                        <td class="text-muted-custom">跌破防線(5WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2026-09-21</td><td>1505.0</td>
+                                        <td>2026-10-14</td><td class="text-warning">23 天</td> <td>1545.0</td>
+                                        <td class="text-taiwan-red fw-bold">+632元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.21%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2323">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2323" aria-expanded="false" aria-controls="collapse_2323">
+                        📊 [💼 實戰持股] 2323 中環 — 2年最佳化策略回測歷史明細紀錄 (共 39 筆)
+                        <span style="margin-left: 20px; color: #ff4a4a; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: +8,666 元 | 勝率: 49% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_2323" class="accordion-collapse collapse" aria-labelledby="heading_2323" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            
+                                    <tr>
+                                        <td>1</td><td>2025-02-10</td><td>9.88</td>
+                                        <td>2025-02-11</td><td class="text-warning">1 天</td> <td>9.8</td>
+                                        <td class="text-taiwan-green fw-bold">-371元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.24%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>2</td><td>2025-02-17</td><td>10.0</td>
+                                        <td>2025-02-18</td><td class="text-warning">1 天</td> <td>10.05</td>
+                                        <td class="text-taiwan-red fw-bold">+20元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.07%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>3</td><td>2025-02-21</td><td>10.15</td>
+                                        <td>2025-02-24</td><td class="text-warning">3 天</td> <td>10.2</td>
+                                        <td class="text-taiwan-red fw-bold">+17元</td>
+                                        <td class="text-taiwan-red fw-bold">+0.06%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>4</td><td>2025-02-25</td><td>10.1</td>
+                                        <td>2025-02-26</td><td class="text-warning">1 天</td> <td>10.1</td>
+                                        <td class="text-taiwan-green fw-bold">-129元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.43%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>5</td><td>2025-02-27</td><td>10.15</td>
+                                        <td>2025-03-03</td><td class="text-warning">4 天</td> <td>10.0</td>
+                                        <td class="text-taiwan-green fw-bold">-571元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.90%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>6</td><td>2025-03-06</td><td>10.3</td>
+                                        <td>2025-03-07</td><td class="text-warning">1 天</td> <td>10.1</td>
+                                        <td class="text-taiwan-green fw-bold">-710元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.37%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>7</td><td>2025-03-11</td><td>9.85</td>
+                                        <td>2025-03-12</td><td class="text-warning">1 天</td> <td>10.0</td>
+                                        <td class="text-taiwan-red fw-bold">+325元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.08%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>8</td><td>2025-05-02</td><td>7.95</td>
+                                        <td>2025-05-05</td><td class="text-warning">3 天</td> <td>8.15</td>
+                                        <td class="text-taiwan-red fw-bold">+622元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.07%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>9</td><td>2025-05-06</td><td>8.01</td>
+                                        <td>2025-05-07</td><td class="text-warning">1 天</td> <td>8.04</td>
+                                        <td class="text-taiwan-green fw-bold">-17元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.06%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>10</td><td>2025-05-12</td><td>8.08</td>
+                                        <td>2025-05-13</td><td class="text-warning">1 天</td> <td>8.29</td>
+                                        <td class="text-taiwan-red fw-bold">+647元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.16%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>11</td><td>2025-05-14</td><td>8.2</td>
+                                        <td>2025-05-15</td><td class="text-warning">1 天</td> <td>8.22</td>
+                                        <td class="text-taiwan-green fw-bold">-56元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.19%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>12</td><td>2025-05-20</td><td>8.68</td>
+                                        <td>2025-05-27</td><td class="text-warning">7 天</td> <td>8.53</td>
+                                        <td class="text-taiwan-green fw-bold">-646元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.15%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>13</td><td>2025-05-28</td><td>8.5</td>
+                                        <td>2025-05-29</td><td class="text-warning">1 天</td> <td>8.35</td>
+                                        <td class="text-taiwan-green fw-bold">-657元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.19%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>14</td><td>2025-06-30</td><td>8.07</td>
+                                        <td>2025-07-01</td><td class="text-warning">1 天</td> <td>8.06</td>
+                                        <td class="text-taiwan-green fw-bold">-166元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.55%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>15</td><td>2025-07-04</td><td>8.17</td>
+                                        <td>2025-07-07</td><td class="text-warning">3 天</td> <td>8.08</td>
+                                        <td class="text-taiwan-green fw-bold">-458元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.53%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>16</td><td>2025-07-15</td><td>8.08</td>
+                                        <td>2025-07-16</td><td class="text-warning">1 天</td> <td>8.01</td>
+                                        <td class="text-taiwan-green fw-bold">-388元</td>
+                                        <td class="text-taiwan-green fw-bold">-1.29%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>17</td><td>2025-07-29</td><td>8.0</td>
+                                        <td>2025-07-30</td><td class="text-warning">1 天</td> <td>7.98</td>
+                                        <td class="text-taiwan-green fw-bold">-204元</td>
+                                        <td class="text-taiwan-green fw-bold">-0.68%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>18</td><td>2025-08-07</td><td>8.4</td>
+                                        <td>2025-08-14</td><td class="text-warning">7 天</td> <td>8.79</td>
+                                        <td class="text-taiwan-red fw-bold">+1,258元</td>
+                                        <td class="text-taiwan-red fw-bold">+4.19%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>19</td><td>2025-08-15</td><td>8.65</td>
+                                        <td>2025-09-01</td><td class="text-warning">17 天</td> <td>8.97</td>
+                                        <td class="text-taiwan-red fw-bold">+976元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.25%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>20</td><td>2025-09-02</td><td>8.77</td>
+                                        <td>2025-09-09</td><td class="text-warning">7 天</td> <td>9.3</td>
+                                        <td class="text-taiwan-red fw-bold">+1,677元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.59%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>21</td><td>2025-09-10</td><td>9.1</td>
+                                        <td>2025-10-14</td><td class="text-warning">34 天</td> <td>9.31</td>
+                                        <td class="text-taiwan-red fw-bold">+560元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.87%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>22</td><td>2025-10-15</td><td>9.27</td>
+                                        <td>2025-11-05</td><td class="text-warning">21 天</td> <td>8.95</td>
+                                        <td class="text-taiwan-green fw-bold">-1,161元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.87%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>23</td><td>2025-11-10</td><td>9.59</td>
+                                        <td>2025-11-20</td><td class="text-warning">10 天</td> <td>9.32</td>
+                                        <td class="text-taiwan-green fw-bold">-971元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.23%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>24</td><td>2025-11-28</td><td>9.4</td>
+                                        <td>2025-12-05</td><td class="text-warning">7 天</td> <td>9.74</td>
+                                        <td class="text-taiwan-red fw-bold">+951元</td>
+                                        <td class="text-taiwan-red fw-bold">+3.17%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>25</td><td>2025-12-09</td><td>9.77</td>
+                                        <td>2025-12-15</td><td class="text-warning">6 天</td> <td>10.9</td>
+                                        <td class="text-taiwan-red fw-bold">+3,329元</td>
+                                        <td class="text-taiwan-red fw-bold">+11.09%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>26</td><td>2026-01-02</td><td>10.95</td>
+                                        <td>2026-01-05</td><td class="text-warning">3 天</td> <td>11.2</td>
+                                        <td class="text-taiwan-red fw-bold">+552元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.84%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>27</td><td>2026-01-06</td><td>10.7</td>
+                                        <td>2026-01-09</td><td class="text-warning">3 天</td> <td>10.9</td>
+                                        <td class="text-taiwan-red fw-bold">+429元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.43%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>28</td><td>2026-01-12</td><td>10.9</td>
+                                        <td>2026-02-03</td><td class="text-warning">22 天</td> <td>10.6</td>
+                                        <td class="text-taiwan-green fw-bold">-952元</td>
+                                        <td class="text-taiwan-green fw-bold">-3.17%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>29</td><td>2026-02-26</td><td>11.2</td>
+                                        <td>2026-03-05</td><td class="text-warning">7 天</td> <td>10.5</td>
+                                        <td class="text-taiwan-green fw-bold">-1,998元</td>
+                                        <td class="text-taiwan-green fw-bold">-6.66%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>30</td><td>2026-03-06</td><td>10.45</td>
+                                        <td>2026-03-10</td><td class="text-warning">4 天</td> <td>10.65</td>
+                                        <td class="text-taiwan-red fw-bold">+443元</td>
+                                        <td class="text-taiwan-red fw-bold">+1.48%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>31</td><td>2026-03-13</td><td>11.0</td>
+                                        <td>2026-03-16</td><td class="text-warning">3 天</td> <td>10.5</td>
+                                        <td class="text-taiwan-green fw-bold">-1,488元</td>
+                                        <td class="text-taiwan-green fw-bold">-4.96%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>32</td><td>2026-03-17</td><td>10.5</td>
+                                        <td>2026-03-18</td><td class="text-warning">1 天</td> <td>10.8</td>
+                                        <td class="text-taiwan-red fw-bold">+725元</td>
+                                        <td class="text-taiwan-red fw-bold">+2.42%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>33</td><td>2026-03-19</td><td>10.75</td>
+                                        <td>2026-03-24</td><td class="text-warning">5 天</td> <td>12.2</td>
+                                        <td class="text-taiwan-red fw-bold">+3,903元</td>
+                                        <td class="text-taiwan-red fw-bold">+13.00%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>34</td><td>2026-06-02</td><td>10.7</td>
+                                        <td>2026-06-05</td><td class="text-warning">3 天</td> <td>12.2</td>
+                                        <td class="text-taiwan-red fw-bold">+4,062元</td>
+                                        <td class="text-taiwan-red fw-bold">+13.53%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>35</td><td>2026-06-23</td><td>12.0</td>
+                                        <td>2026-07-15</td><td class="text-warning">22 天</td> <td>10.7</td>
+                                        <td class="text-taiwan-green fw-bold">-3,370元</td>
+                                        <td class="text-taiwan-green fw-bold">-11.23%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>36</td><td>2026-08-14</td><td>11.0</td>
+                                        <td>2026-08-18</td><td class="text-warning">4 天</td> <td>11.6</td>
+                                        <td class="text-taiwan-red fw-bold">+1,502元</td>
+                                        <td class="text-taiwan-red fw-bold">+5.00%</td>
+                                        <td class="text-muted-custom">移動鎖利(2.0%)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>37</td><td>2026-08-19</td><td>11.0</td>
+                                        <td>2026-08-21</td><td class="text-warning">2 天</td> <td>10.8</td>
+                                        <td class="text-taiwan-green fw-bold">-673元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.24%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>38</td><td>2026-09-01</td><td>10.95</td>
+                                        <td>2026-09-09</td><td class="text-warning">8 天</td> <td>10.7</td>
+                                        <td class="text-taiwan-green fw-bold">-811元</td>
+                                        <td class="text-taiwan-green fw-bold">-2.70%</td>
+                                        <td class="text-muted-custom">跌破防線(10WMA)</td>
+                                    </tr>
+                    
+                                    <tr>
+                                        <td>39</td><td>2026-10-13</td><td>10.95</td>
+                                        <td>2026-10-14</td><td class="text-warning">1 天</td> <td>11.9</td>
+                                        <td class="text-taiwan-red fw-bold">+2,465元</td>
+                                        <td class="text-taiwan-red fw-bold">+8.21%</td>
+                                        <td class="text-muted-custom">期末未平倉強制結算</td>
+                                    </tr>
+                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header fs-5 bg-dark">
+                    <button class="btn btn-link text-decoration-none fw-bold fs-5 w-100 text-start p-0 text-info" 
+                            type="button" data-bs-toggle="collapse" data-bs-target="#ledgerCollapse" 
+                            onclick="document.getElementById('ledgerCollapse').classList.toggle('show')">
+                        📋 📂 [點擊展開] 📊 大帳本：歷史戰績移動清算回顧與策略檢討
+                    </button>
+                </div>
+                <div class="collapse" id="ledgerCollapse">
+                    <div class="table-responsive">
+                        <table class="table table-custom-dark mb-0 text-center small">
+                            <thead><tr style="color: #ff9f43;"><th>代號/名稱</th><th>實戰交易時空區間</th><th>進場 → 出場價</th><th>結算股數</th><th>實打實淨損益</th><th>💀 戰略離場檢討原因</th></tr></thead>
+                            <tbody><tr><td>2867 三商壽</td><td>2026-07-29 ~ 2026-10-12</td><td>9.37 → 9.70</td><td>3201 股</td><td class='text-taiwan-red fw-bold'>+923元 (+3.1%)</td><td>停牌脫節(54天)</td></tr><tr><td>2376 技嘉</td><td>2026-09-29 ~ 2026-10-12</td><td>362.00 → 356.00</td><td>82 股</td><td class='text-taiwan-green fw-bold'>-619元 (-2.1%)</td><td>移動鎖利(9.0%)</td></tr><tr><td>6805 富世達</td><td>2026-09-18 ~ 2026-10-12</td><td>2295.00 → 2270.00</td><td>13 股</td><td class='text-taiwan-green fw-bold'>-453元 (-1.5%)</td><td>跌破防線(階段鎖利)</td></tr><tr><td>6129 普誠</td><td>2026-09-16 ~ 2026-10-12</td><td>14.90 → 14.05</td><td>2013 股</td><td class='text-taiwan-green fw-bold'>-1,835元 (-6.1%)</td><td>跌破防線(10MA)</td></tr><tr><td>3024 憶聲</td><td>2026-09-24 ~ 2026-10-06</td><td>14.60 → 13.65</td><td>2054 股</td><td class='text-taiwan-green fw-bold'>-2,075元 (-6.9%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2354 鴻準</td><td>2026-09-24 ~ 2026-10-01</td><td>65.90 → 66.20</td><td>455 股</td><td class='text-taiwan-red fw-bold'>+6元 (+0.0%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>2606 裕民</td><td>2026-09-18 ~ 2026-09-30</td><td>77.40 → 73.60</td><td>387 股</td><td class='text-taiwan-green fw-bold'>-1,595元 (-5.3%)</td><td>跌破均線(10MA·近3日破2次)</td></tr><tr><td>2520 冠德</td><td>2026-08-25 ~ 2026-09-30</td><td>35.40 → 36.50</td><td>847 股</td><td class='text-taiwan-red fw-bold'>+799元 (+2.7%)</td><td>移動鎖利(7.0%)</td></tr><tr><td>2474 可成</td><td>2026-09-16 ~ 2026-09-29</td><td>207.00 → 205.50</td><td>144 股</td><td class='text-taiwan-green fw-bold'>-344元 (-1.1%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2030 彰源</td><td>2026-09-17 ~ 2026-09-23</td><td>23.50 → 27.65</td><td>1276 股</td><td class='text-taiwan-red fw-bold'>+5,150元 (+17.2%)</td><td>移動鎖利(4.5%)</td></tr><tr><td>3024 憶聲</td><td>2026-09-10 ~ 2026-09-23</td><td>14.55 → 14.35</td><td>2061 股</td><td class='text-taiwan-green fw-bold'>-540元 (-1.8%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>2542 興富發</td><td>2026-09-01 ~ 2026-09-23</td><td>47.90 → 39.55</td><td>626 股</td><td class='text-taiwan-green fw-bold'>-5,341元 (-17.8%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2030 彰源</td><td>2026-09-08 ~ 2026-09-16</td><td>23.80 → 22.70</td><td>1260 股</td><td class='text-taiwan-green fw-bold'>-1,511元 (-5.0%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>2618 長榮航</td><td>2026-09-03 ~ 2026-09-14</td><td>42.80 → 42.05</td><td>700 股</td><td class='text-taiwan-green fw-bold'>-653元 (-2.2%)</td><td>跌破均線(5MA·近3日破2次)</td></tr><tr><td>6510 精測</td><td>2026-09-01 ~ 2026-09-11</td><td>3125.00 → 3480.00</td><td>9 股</td><td class='text-taiwan-red fw-bold'>+3,062元 (+10.9%)</td><td>移動鎖利(8.5%)</td></tr><tr><td>6277 宏正</td><td>2026-08-17 ~ 2026-09-11</td><td>87.50 → 76.30</td><td>342 股</td><td class='text-taiwan-green fw-bold'>-3,948元 (-13.2%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>3706 神達</td><td>2026-08-31 ~ 2026-09-10</td><td>92.50 → 82.00</td><td>324 股</td><td class='text-taiwan-green fw-bold'>-3,521元 (-11.7%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2474 可成</td><td>2026-09-07 ~ 2026-09-09</td><td>208.50 → 206.00</td><td>143 股</td><td class='text-taiwan-green fw-bold'>-485元 (-1.6%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>5269 祥碩</td><td>2026-09-01 ~ 2026-09-09</td><td>1470.00 → 1395.00</td><td>20 股</td><td class='text-taiwan-green fw-bold'>-1,623元 (-5.5%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2362 藍天</td><td>2026-09-04 ~ 2026-09-07</td><td>49.30 → 47.95</td><td>608 股</td><td class='text-taiwan-green fw-bold'>-947元 (-3.2%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>3005 神基</td><td>2026-08-17 ~ 2026-09-03</td><td>121.50 → 113.00</td><td>246 股</td><td class='text-taiwan-green fw-bold'>-2,214元 (-7.4%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>6409 旭隼</td><td>2026-08-14 ~ 2026-09-03</td><td>1015.00 → 972.00</td><td>29 股</td><td class='text-taiwan-green fw-bold'>-1,371元 (-4.7%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>2618 長榮航</td><td>2026-09-01 ~ 2026-09-02</td><td>42.40 → 42.15</td><td>707 股</td><td class='text-taiwan-green fw-bold'>-305元 (-1.0%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2618 長榮航</td><td>2026-08-21 ~ 2026-08-31</td><td>42.60 → 42.00</td><td>704 股</td><td class='text-taiwan-green fw-bold'>-550元 (-1.8%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2542 興富發</td><td>2026-08-06 ~ 2026-08-25</td><td>44.10 → 47.50</td><td>680 股</td><td class='text-taiwan-red fw-bold'>+2,176元 (+7.2%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>5269 祥碩</td><td>2026-08-19 ~ 2026-08-24</td><td>1460.00 → 1400.00</td><td>20 股</td><td class='text-taiwan-green fw-bold'>-1,324元 (-4.5%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2609 陽明</td><td>2026-08-17 ~ 2026-08-24</td><td>54.70 → 64.50</td><td>548 股</td><td class='text-taiwan-red fw-bold'>+5,224元 (+17.4%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>2615 萬海</td><td>2026-08-17 ~ 2026-08-18</td><td>99.60 → 105.00</td><td>301 股</td><td class='text-taiwan-red fw-bold'>+1,491元 (+5.0%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>5269 祥碩</td><td>2026-08-11 ~ 2026-08-17</td><td>1435.00 → 1385.00</td><td>20 股</td><td class='text-taiwan-green fw-bold'>-1,123元 (-3.9%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2476 鉅祥</td><td>2026-08-06 ~ 2026-08-14</td><td>127.50 → 120.00</td><td>235 股</td><td class='text-taiwan-green fw-bold'>-1,886元 (-6.3%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2027 大成鋼</td><td>2026-07-27 ~ 2026-08-14</td><td>44.55 → 47.60</td><td>673 股</td><td class='text-taiwan-red fw-bold'>+1,916元 (+6.4%)</td><td>移動鎖利(5.5%)</td></tr><tr><td>5388 中磊</td><td>2026-08-10 ~ 2026-08-13</td><td>93.60 → 81.10</td><td>320 股</td><td class='text-taiwan-green fw-bold'>-4,117元 (-13.7%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>5258 虹堡</td><td>2026-08-03 ~ 2026-08-13</td><td>53.50 → 49.95</td><td>560 股</td><td class='text-taiwan-green fw-bold'>-2,111元 (-7.0%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2618 長榮航</td><td>2026-07-31 ~ 2026-08-13</td><td>43.30 → 41.00</td><td>692 股</td><td class='text-taiwan-green fw-bold'>-1,716元 (-5.7%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>3712 永崴投控</td><td>2026-07-31 ~ 2026-08-12</td><td>18.00 → 22.80</td><td>1666 股</td><td class='text-taiwan-red fw-bold'>+7,843元 (+26.1%)</td><td>移動鎖利(2.5%)</td></tr><tr><td>2892 第一金</td><td>2026-07-27 ~ 2026-08-11</td><td>34.80 → 32.70</td><td>862 股</td><td class='text-taiwan-green fw-bold'>-1,934元 (-6.4%)</td><td>移動鎖利(4.0%)</td></tr><tr><td>3653 健策</td><td>2026-07-31 ~ 2026-08-10</td><td>3445.00 → 4135.00</td><td>8 股</td><td class='text-taiwan-red fw-bold'>+5,381元 (+19.5%)</td><td>移動鎖利(7.5%)</td></tr><tr><td>2845 遠東銀</td><td>2026-07-21 ~ 2026-08-06</td><td>13.40 → 13.15</td><td>2238 股</td><td class='text-taiwan-green fw-bold'>-687元 (-2.3%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2388 威盛</td><td>2026-08-03 ~ 2026-08-05</td><td>75.90 → 83.00</td><td>395 股</td><td class='text-taiwan-red fw-bold'>+2,666元 (+8.9%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>9938 百和</td><td>2026-07-27 ~ 2026-08-05</td><td>47.15 → 42.50</td><td>636 股</td><td class='text-taiwan-green fw-bold'>-3,078元 (-10.3%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2520 冠德</td><td>2026-07-02 ~ 2026-07-31</td><td>34.60 → 34.65</td><td>867 股</td><td class='text-taiwan-green fw-bold'>-86元 (-0.3%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>1210 大成</td><td>2026-07-24 ~ 2026-07-30</td><td>57.80 → 57.40</td><td>519 股</td><td class='text-taiwan-green fw-bold'>-336元 (-1.1%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>9941 裕融</td><td>2026-07-22 ~ 2026-07-30</td><td>82.00 → 81.40</td><td>365 股</td><td class='text-taiwan-green fw-bold'>-347元 (-1.2%)</td><td>跌破均線(10MA·近3日破2次)</td></tr><tr><td>2377 微星</td><td>2026-07-13 ~ 2026-07-30</td><td>149.50 → 136.00</td><td>200 股</td><td class='text-taiwan-green fw-bold'>-2,821元 (-9.4%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>3712 永崴投控</td><td>2026-07-23 ~ 2026-07-29</td><td>18.35 → 17.00</td><td>1634 股</td><td class='text-taiwan-green fw-bold'>-2,328元 (-7.8%)</td><td>跌破均線(10MA·近3日破2次)</td></tr><tr><td>1532 勤美</td><td>2026-07-16 ~ 2026-07-28</td><td>23.55 → 22.55</td><td>1273 股</td><td class='text-taiwan-green fw-bold'>-1,399元 (-4.7%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>1210 大成</td><td>2026-07-03 ~ 2026-07-23</td><td>58.00 → 56.90</td><td>517 股</td><td class='text-taiwan-green fw-bold'>-696元 (-2.3%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>6670 復盛應用</td><td>2026-07-22 ~ 2026-07-22</td><td>262.50 → 262.50</td><td>114 股</td><td class='text-taiwan-green fw-bold'>-129元 (-0.4%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2867 三商壽</td><td>2026-06-09 ~ 2026-07-22</td><td>7.97 → 9.28</td><td>1887 股</td><td class='text-taiwan-red fw-bold'>+2,379元 (+15.8%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>5269 祥碩</td><td>2026-07-14 ~ 2026-07-21</td><td>1525.00 → 1410.00</td><td>19 股</td><td class='text-taiwan-green fw-bold'>-2,305元 (-8.0%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>2705 六福</td><td>2026-07-03 ~ 2026-07-20</td><td>16.65 → 16.20</td><td>1801 股</td><td class='text-taiwan-green fw-bold'>-937元 (-3.1%)</td><td>跌破均線(5MA·近3日破2次)</td></tr><tr><td>2476 鉅祥</td><td>2026-07-03 ~ 2026-07-20</td><td>133.00 → 113.50</td><td>225 股</td><td class='text-taiwan-green fw-bold'>-4,503元 (-15.0%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2428 興勤</td><td>2026-07-03 ~ 2026-07-20</td><td>342.00 → 250.00</td><td>87 股</td><td class='text-taiwan-green fw-bold'>-8,109元 (-27.2%)</td><td>跌破均線(10WMA·近3日破2次)</td></tr><tr><td>2204 中華</td><td>2026-07-01 ~ 2026-07-20</td><td>56.50 → 56.40</td><td>3635 股</td><td class='text-taiwan-green fw-bold'>-1,140元 (-0.6%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>1709 和益</td><td>2026-07-03 ~ 2026-07-15</td><td>23.70 → 27.35</td><td>1265 股</td><td class='text-taiwan-red fw-bold'>+4,474元 (+14.9%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>4306 炎洲</td><td>2026-07-02 ~ 2026-07-13</td><td>16.35 → 14.75</td><td>1834 股</td><td class='text-taiwan-green fw-bold'>-3,055元 (-10.2%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>1532 勤美</td><td>2026-07-03 ~ 2026-07-09</td><td>23.40 → 23.05</td><td>1282 股</td><td class='text-taiwan-green fw-bold'>-576元 (-1.9%)</td><td>跌破均線(20MA·近3日破2次)</td></tr><tr><td>1342 八貫</td><td>2026-07-03 ~ 2026-07-09</td><td>115.50 → 110.50</td><td>259 股</td><td class='text-taiwan-green fw-bold'>-1,420元 (-4.7%)</td><td>跌破均線(10MA·近3日破2次)</td></tr><tr><td>3022 威強電</td><td>2026-07-02 ~ 2026-07-09</td><td>87.00 → 89.00</td><td>344 股</td><td class='text-taiwan-red fw-bold'>+557元 (+1.9%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>2103 台橡</td><td>2026-07-02 ~ 2026-07-09</td><td>21.40 → 23.05</td><td>1401 股</td><td class='text-taiwan-red fw-bold'>+2,175元 (+7.2%)</td><td>移動鎖利(9.5%)</td></tr><tr><td>1305 華夏</td><td>2026-07-02 ~ 2026-07-09</td><td>13.70 → 12.80</td><td>2189 股</td><td class='text-taiwan-green fw-bold'>-2,094元 (-7.0%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>6944 兆聯實業</td><td>2026-07-02 ~ 2026-07-08</td><td>1010.00 → 941.00</td><td>29 股</td><td class='text-taiwan-green fw-bold'>-2,122元 (-7.2%)</td><td>跌破均線(5WMA·近3日破2次)</td></tr><tr><td>1460 宏遠</td><td>2026-06-24 ~ 2026-07-06</td><td>7.29 → 8.08</td><td>4115 股</td><td class='text-taiwan-red fw-bold'>+3,111元 (+10.4%)</td><td>移動鎖利(3.5%)</td></tr><tr><td>3704 合勤控</td><td>2026-06-09 ~ 2026-06-30</td><td>49.50 → 46.55</td><td>606 股</td><td class='text-taiwan-green fw-bold'>-1,911元 (-6.4%)</td><td>跌破均線(10MA·2日確認)</td></tr><tr><td>6620 漢達</td><td>2026-06-18 ~ 2026-06-23</td><td>81.80 → 90.90</td><td>366 股</td><td class='text-taiwan-red fw-bold'>+3,191元 (+10.7%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>2409 友達</td><td>2026-06-11 ~ 2026-06-23</td><td>24.00 → 29.05</td><td>1000 股</td><td class='text-taiwan-red fw-bold'>+4,923元 (+20.5%)</td><td>移動鎖利(2.0%)</td></tr><tr><td>2368 金像電</td><td>2026-06-17 ~ 2026-06-23</td><td>1370.00 → 1265.00</td><td>21 股</td><td class='text-taiwan-green fw-bold'>-2,324元 (-8.1%)</td><td>跌破均線(10WMA)</td></tr><tr><td>4741 泓瀚</td><td>2026-06-09 ~ 2026-06-23</td><td>69.10 → 61.40</td><td>434 股</td><td class='text-taiwan-green fw-bold'>-3,460元 (-11.5%)</td><td>跌破均線(10WMA)</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="card">
+                <div class="card-header fs-5" style="color: #ff4a4a;">🔥【極端動能 · 鎖死漲停觀測區】</div>
+                <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
+                    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge bg-danger me-2">🔥 漲停鎖死</span> <strong>6278 台表科 (漲停鎖死)</strong></li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-header fs-5">🚀【真·正飆股 · 動能突破擊潰區】</div>
+                <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
+    <li class="list-group-item bg-transparent text-muted-custom small py-3">今日無剛發動標的。</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
+                <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
+    <li class="list-group-item bg-transparent text-muted-custom small py-3">今日無糾結壓縮標的。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="text-center py-4 text-muted-custom small mt-4" style="border-top: 1px solid #2d3548;">
+    海豚自動化管線系統 · 每日盤後自動化更新完成
+</footer>
+</body>
+</html>
