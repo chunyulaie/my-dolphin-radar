@@ -1,1 +1,1 @@
-﻿stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,max_price,best_ma,break_days_count,break_history,strategy_stars
+﻿stock_id,stock_name,buy_date,buy_price,buy_shares,buy_type,best_tp,best_drop,best_ma,max_price,break_days_count,strategy_stars
