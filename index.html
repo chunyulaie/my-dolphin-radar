@@ -30,7 +30,7 @@
 <body>
 <nav class="navbar navbar-dark px-4 py-3">
     <span class="navbar-brand mb-0 h1 fs-3">🐬 海豚量化自適應指揮官儀表板 <small class="fs-6 text-muted-custom">v1.47 終極拔管版</small></span>
-    <span class="text-muted-custom">📅 數據更新時間：2026-11-06</span>
+    <span class="text-muted-custom">📅 數據更新時間：2026-11-07</span>
 </nav>
 <div class="container-fluid p-4">
     <div class="row mb-4">
@@ -101,7 +101,35 @@
                 <div class="card-header fs-5 text-warning">🔍 舊版優化器歷史紀錄（不代表 V1.48 績效） (持股與雷達標的)</div>
                 <div class="card-body p-3">
                     <div class="accordion" id="optimizerAccordion">
-    <div class="text-muted-custom p-3 small">目前無在庫持股或雷達標的，無回測基因可供解析。</div>
+    
+            <div class="accordion-item bg-transparent border-secondary">
+                <h2 class="accordion-header" id="heading_2618">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_2618" aria-expanded="false" aria-controls="collapse_2618">
+                        📊 [🎯 雷達潛伏標的] 2618 長榮航 — 2年最佳化策略回測歷史明細紀錄 (共 0 筆)
+                        <span style="margin-left: 20px; color: #ff4a4a; font-weight: bold; letter-spacing: 0.5px;">
+                            [ 歷史總利潤: +0 元 | 勝率: 0% ]
+                        </span>
+                    </button>
+                </h2>
+                <div id="collapse_2618" class="accordion-collapse collapse" aria-labelledby="heading_2618" data-bs-parent="#optimizerAccordion">
+                    <div class="accordion-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-dark table-hover mb-0 text-center small">
+                                <thead>
+                                    <tr class="text-info">
+                                        <th>交易序號</th><th>買入日期</th><th>買入價格</th><th>賣出日期</th>
+                                        <th>持有天數</th><th>賣出價格</th><th>回測淨損益</th><th>報酬率 (%)</th><th>離場觸發原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            <tr><td colspan="9" class="text-muted-custom py-3">⚠️ 未偵測到明細資料，請確認 API 狀態 or 回測引擎是否順利完成。</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
                     </div>
                 </div>
             </div>
@@ -140,7 +168,7 @@
             <div class="card">
                 <div class="card-header fs-5">🎯【準·起飆股 · 鱷魚潛伏地底區】</div>
                 <ul class="list-group list-group-flush" style="background-color: #1a1f2c;">
-    <li class="list-group-item bg-transparent text-muted-custom small py-3">今日無糾結壓縮標的。</li>
+    <li class="list-group-item bg-transparent text-white border-secondary py-3"><span class="badge bg-success me-2">⭐⭐⭐ 潛伏</span> <strong>2618 長榮航</strong> <span class="text-muted-custom small ms-2">| 均線壓縮: 2.2% | 布林帶寬: 0.08 | MACD: 水上</span></li>
                 </ul>
             </div>
         </div>
