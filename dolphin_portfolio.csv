@@ -1,1 +1,3 @@
-﻿stock_id,stock_name,buy_date,buy_price,buy_shares,buy_type,best_tp,best_drop,best_ma,max_price,break_days_count,strategy_stars
+﻿stock_id,stock_name,buy_price,buy_shares,buy_type,buy_date,best_tp,best_drop,best_ma,max_price,break_days_count,strategy_stars
+2453,凌群,58.0,516,正飆(0天),2026-11-27,0.15,0.03,20MA,59.8,0,⭐⭐ | 糾結:0.8% | 帶寬:18.7% | MACD:+0.67
+1808,潤隆,35.7,839,正飆(0天),2026-11-27,0.15,0.03,20MA,37.25,0,🚀 | 糾結:5.7% | 帶寬:23.9% | MACD:+0.20
